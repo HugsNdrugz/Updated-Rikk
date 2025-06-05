@@ -135,8 +135,29 @@ const debugCommands = {
     checkState: debugGameState,
     checkHandlers: verifyEventHandlers,
     checkPhoneUI: debugPhoneUIState,
-    checkCustomer: debugCustomerInteraction
+    checkCustomer: debugCustomerInteraction,
         // Other commands will be added here
+    logRootDirectoryFiles: function() {
+        debugLogger.log('DebugUtil', 'Root directory files (simulated listing):');
+        const rootFiles = [
+            "LICENSE",
+            "assets/",
+            "bg.png",
+            "concepts/",
+            "data/",
+            "door.jpg",
+            "index.html",
+            "mark.md",
+            "phone_ambient_ui.js",
+            "query",
+            "script.js",
+            "start-bg.jpg",
+            "style.css"
+        ];
+        rootFiles.forEach(file => console.log(file));
+        // Note: This is a simulated list based on initial `ls()`.
+        // A true dynamic listing from within browser JS is not possible for local file systems.
+    }
 };
 
 window.rikkDebug = debugCommands;
@@ -579,7 +600,7 @@ function handlePhoneAppClick(event) {
 function initGame() {
     splashScreen.classList.add('active'); startScreen.classList.remove('active'); gameScreen.classList.remove('active'); endScreen.classList.remove('active');
     setTimeout(() => { splashScreen.classList.remove('active'); splashScreen.style.display = 'none'; startScreen.classList.add('active'); checkForSavedGame(); }, SPLASH_SCREEN_DURATION);
-    newGameBtn.addEventListener('click', handleStartNewGameClick); continueGameBtn.addEventListener('click', handleContinueGameClick); restartGameBtn.addEventListener('click', handleRestartGameBtn);
+    newGameBtn.addEventListener('click', handleStartNewGameClick); continueGameBtn.addEventListener('click', handleContinueGameClick); restartGameBtn.addEventListener('click', handleRestartGameClick);
     nextCustomerBtn.addEventListener('click', nextFiend); 
     openInventoryBtn.addEventListener('click', openInventoryModal); 
     closeModalBtn.addEventListener('click', closeInventoryModal);
@@ -601,6 +622,7 @@ function initGame() {
 }
 
 function initializeNewGameState() {
+    debugLogger.log('GameFlow', 'Initializing new game state', { STARTING_CASH, MAX_FIENDS });
     clearSavedGameState(); cash = STARTING_CASH; fiendsLeft = MAX_FIENDS; heat = 0; streetCred = STARTING_STREET_CRED; inventory = [];
     playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 }; activeWorldEvents = []; dayOfWeek = days[0]; gameActive = false;
     customersPool = []; nextCustomerId = 1;
@@ -608,6 +630,7 @@ function initializeNewGameState() {
 }
 
 function startGameFlow() {
+    debugLogger.log('GameFlow', 'Starting game flow. Game active:', gameActive);
     gameActive = true; splashScreen.classList.remove('active'); splashScreen.style.display = 'none'; startScreen.classList.remove('active'); endScreen.classList.remove('active'); gameScreen.classList.add('active');
     
     // Phone transitions from offscreen to home screen when game starts
@@ -617,6 +640,7 @@ function startGameFlow() {
 }
 
 function endGame(reason) {
+    debugLogger.log('GameFlow', 'Ending game', { reason });
     gameActive = false; gameScreen.classList.remove('active'); endScreen.classList.add('active');
     finalDaysDisplay.textContent = MAX_FIENDS - fiendsLeft; finalCashDisplay.textContent = cash; finalCredDisplay.textContent = streetCred;
     if (reason === "heat") { finalVerdictText.textContent = `The block's too hot, nigga! 5-0 swarming. Heat: ${heat}. Time to ghost.`; finalVerdictText.style.color = "var(--color-error)"; }
@@ -644,6 +668,7 @@ function advanceWorldEvents() { activeWorldEvents.forEach(eventState => { eventS
 
 function nextFiend() {
     if (!gameActive) return; if (fiendsLeft <= 0) { endGame("completed"); return; }
+    debugLogger.log('GameFlow', 'Proceeding to next fiend. Fiends left:', fiendsLeft -1);
     updateDayOfWeek(); advanceWorldEvents(); triggerWorldEvent();
     let heatReduction = 1 + playerSkills.lowProfile; activeWorldEvents.forEach(eventState => { if (eventState.event.effects && eventState.event.effects.heatReductionModifier) { heatReduction *= eventState.event.effects.heatReductionModifier; } });
     heat = Math.max(0, heat - Math.round(heatReduction));
@@ -1047,9 +1072,10 @@ function displayPhoneMessage(message, speaker) {
         const speakerNameElement = document.createElement('span'); // Renamed variable
         speakerNameElement.classList.add('speaker-name');
         if (speaker === 'customer') {
-            if (currentCustomer && typeof currentCustomer.name === 'string') { // Check type of name too
+            if (currentCustomer !== null && currentCustomer.name && typeof currentCustomer.name === 'string') { // Check type of name too
                 speakerNameElement.textContent = currentCustomer.name;
             } else {
+                debugLogger.log('DisplayMessage', 'Condition failed for customer message. currentCustomer:', currentCustomer);
                 debugLogger.error('DisplayMessage', 'currentCustomer is null, or has no name, or name is not a string, when trying to display customer message.', currentCustomer);
                 trackError(new Error('currentCustomer is null or has no/invalid name for customer message'), 'displayPhoneMessage - customer name issue');
                 speakerNameElement.textContent = '[Customer]'; // Fallback speaker name
@@ -1066,6 +1092,7 @@ function displaySystemMessage(message) { displayPhoneMessage(message, 'narration
 function displayChoices(choices) { choicesArea.innerHTML = ''; choices.forEach(choice => { const button = document.createElement('button'); button.classList.add('choice-button'); button.textContent = choice.text; if (choice.outcome.type.startsWith('decline') || choice.outcome.type.includes('kick_rocks')) button.classList.add('decline'); button.disabled = choice.disabled || false; if (!choice.disabled) { button.addEventListener('click', () => handleChoice(choice.outcome)); } choicesArea.appendChild(button); }); }
 
 function handleChoice(outcome) {
+    debugLogger.log('Interaction', 'Handling choice', { outcomeType: outcome.type, currentCash: cash, currentHeat: heat, currentCred: streetCred });
     clearChoices();
     let narrationText = "";
     let selectedCustomerReaction = "";
@@ -1369,6 +1396,7 @@ function playSound(audioElement) {
 
 function saveGameState() {
     if (!gameActive && fiendsLeft > 0) return; // Don't save if game not active unless it's end of game
+    debugLogger.log('GameSave', 'Attempting to save game state.');
     const stateToSave = {
         cash, fiendsLeft, heat, streetCred, inventory,
         playerSkills, activeWorldEvents, dayOfWeek,
@@ -1385,6 +1413,7 @@ function saveGameState() {
 
 function loadGameState() {
     const savedData = localStorage.getItem(SAVE_KEY);
+    debugLogger.log('GameSave', 'Attempting to load game state. Data found:', (savedData ? 'Yes' : 'No'));
     if (savedData) {
         try {
             const loadedState = JSON.parse(savedData);
