@@ -59,14 +59,14 @@
             <div id="game-scene">
                 <div id="knock-effect" class="hidden" aria-live="assertive">KNOCK! KNOCK!</div>
 
-                <!-- Rikk's Phone UI -->
-                <aside id="rikk-phone-ui" class="phone-container is-offscreen" role="complementary" aria-label="Customer Interaction Terminal">
+                <!-- Rikk's Phone Display -->
+                <aside id="rikk-phone-display" class="phone-container hidden" role="complementary" aria-label="Customer Interaction Terminal">
                     <!-- Physical buttons (outside screen area) -->
                     <div class="volume-btn"></div>
                     <div class="power-btn"></div>
 
                     <!-- Screen Area -->
-                    <div class="screen"> <!-- This is the inner screen element, not the main game screen -->
+                    <div class="phone-screen-area">
                         <div class="wallpaper"></div> <!-- Animated wallpaper effect -->
 
                         <!-- Notch always visible on the screen -->
@@ -85,13 +85,12 @@
                             </div>
                         </div>
 
-                        <!-- Android Home Screen Layer - visible when not in game chat -->
-                        <div id="android-home-screen" class="phone-content-area hidden">
+                        <!-- Android Ambient UI Layer - visible when not in chat -->
+                        <div id="android-ambient-ui" class="phone-mode active-mode">
                             <div class="time-display" id="current-time">00:00</div>
                             <div class="date-display" id="current-date">Monday, January 1</div>
                             <div class="notification" id="notification">
-                                <div class="notification-title"></div>
-                                <div class="notification-content"></div>
+                                <div class="notification-content">System Message</div>
                             </div>
                             <div class="app-grid">
                                 <div class="app-icon" data-action="messages">
@@ -124,33 +123,17 @@
                             </div>
                         </div>
 
-                        <!-- Game Chat View Layer - visible when in chat -->
-                        <div id="game-chat-view" class="phone-content-area hidden">
-                            <header class="phone-header-game">
-                                <button class="phone-back-button hidden" data-action="back-to-home">&lt;</button>
-                                <h3 id="phone-title-game">Street Talk</h3>
+                        <!-- Game Chat UI Layer - visible when in chat -->
+                        <div id="game-chat-ui" class="phone-mode inactive-mode">
+                            <header class="phone-header">
+                                <h3 id="phone-title">Street Talk</h3>
                             </header>
-                            <div id="chat-container-game" role="log" aria-live="polite">
+                            <div id="chat-container" class="phone-chat-body" role="log" aria-live="polite">
                                 <!-- Chat messages go here -->
                             </div>
-                            <footer id="choices-area-game" role="toolbar" aria-label="Response Choices">
+                            <footer id="choices-area" class="phone-footer-choices" role="toolbar" aria-label="Response Choices">
                                 <!-- Choices buttons go here -->
                             </footer>
-                        </div>
-                        
-                        <!-- Game App Menu View Layer - for future game specific apps -->
-                        <div id="game-app-menu-view" class="phone-content-area hidden">
-                            <header class="phone-header-game">
-                                <button class="phone-back-button" data-action="back-to-home">&lt;</button>
-                                <h3 id="phone-title-game-apps">Apps</h3>
-                            </header>
-                            <div id="phone-app-menu-game">
-                                <!-- Game-specific app icons go here -->
-                                <div class="app-icon" data-action="inventory">
-                                    <i class="fas fa-box-open"></i><div class="app-label">Inventory</div>
-                                </div>
-                                <!-- Add more game apps if needed -->
-                            </div>
                         </div>
 
                         <!-- Dock always visible on the screen, below the content layers -->
@@ -165,11 +148,6 @@
                         <div class="home-indicator"></div>
                     </div>
                 </aside>
-
-                <!-- Floating mini-phone icon when phone is hidden -->
-                <div id="phone-docked-indicator" class="phone-docked-indicator hidden">
-                    <i class="fas fa-mobile-alt"></i>
-                </div>
             </div>
 
             <nav id="player-hub" class="player-controls" role="navigation" aria-label="Player Actions">
@@ -231,8 +209,8 @@
     <!-- HELPER/MANAGER SCRIPTS -->
     <script src="CustomerManager.js"></script>
     <!-- PHONE UI SCRIPT -->
-    <script src="phone_ambient_ui.js" type="module"></script>
+    <script src="phone_ambient_ui.js"></script>
     <!-- MAIN SCRIPT LAST -->
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
