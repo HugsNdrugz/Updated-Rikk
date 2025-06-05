@@ -1,4 +1,4 @@
-// --- DOM Element References (Declared with 'let' for later assignment in initGame) ---
+// --- DOM Element References ---
 const splashScreen = document.getElementById('splash-screen');
 const gameViewport = document.getElementById('game-viewport');
 const startScreen = document.getElementById('start-screen');
@@ -20,15 +20,21 @@ const eventTicker = document.getElementById('event-ticker');
 const gameScene = document.getElementById('game-scene');
 const knockEffect = document.getElementById('knock-effect');
 
-// These will now be assigned in initGame()
-let rikkPhoneDisplay; 
-let androidAmbientUI; 
-let gameChatUI;
-let chatContainer;
-let choicesArea;
-let phoneTitleElement;
-let phoneDock;
-let phoneHomeIndicator;
+// --- Phone UI Elements (Renamed and new additions) ---
+const rikkPhoneUI = document.getElementById('rikk-phone-ui'); // Changed ID from rikk-phone-display
+const androidHomeScreen = document.getElementById('android-home-screen'); // Android Home screen content
+const gameChatView = document.getElementById('game-chat-view'); // Game Chat content
+const gameAppMenuView = document.getElementById('game-app-menu-view'); // Game Apps menu content (new)
+
+const chatContainer = document.getElementById('chat-container-game'); // Renamed ID
+const choicesArea = document.getElementById('choices-area-game'); // Renamed ID
+const phoneTitleGame = document.getElementById('phone-title-game'); // Title for game chat view
+const phoneTitleGameApps = document.getElementById('phone-title-game-apps'); // Title for game apps view
+const phoneBackButtons = document.querySelectorAll('.phone-back-button'); // Back buttons within phone apps (plural)
+
+const phoneDock = rikkPhoneUI.querySelector('.dock'); // Dock element within phone UI
+const phoneHomeIndicator = rikkPhoneUI.querySelector('.home-indicator'); // Home indicator within phone UI
+const phoneDockedIndicator = document.getElementById('phone-docked-indicator'); // Floating mini-phone icon
 
 const openInventoryBtn = document.getElementById('open-inventory-btn');
 const inventoryCountDisplay = document.getElementById('inventory-count-display');
@@ -78,6 +84,7 @@ const STARTING_STREET_CRED = 0;
 const MAX_HEAT = 100;
 const MAX_CUSTOMERS_IN_POOL = 20;
 
+
 // Import ambient phone UI functions
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 
@@ -91,51 +98,113 @@ function getRandomElement(arr) {
 // --- HANDLER FUNCTIONS ---
 function handleStartNewGameClick() { initializeNewGameState(); startGameFlow(); }
 function handleContinueGameClick() { if (loadGameState()) { startGameFlow(); } else { displaySystemMessage("System: No saved game found or data corrupted. Starting new game."); initializeNewGameState(); startGameFlow(); } }
-// Correctly define handleRestartGameClick
 function handleRestartGameClick() { initializeNewGameState(); startGameFlow(); }
+
+// --- Phone UI State Management Functions ---
+function setPhoneUIState(state) {
+    // Hide all content areas first
+    androidHomeScreen.classList.add('hidden');
+    gameChatView.classList.add('hidden');
+    gameAppMenuView.classList.add('hidden'); 
+
+    // Hide all back buttons by default
+    phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
+
+    // Manage phone visibility and active content area
+    if (state === 'chatting') {
+        rikkPhoneUI.classList.remove('is-offscreen', 'home-screen-active', 'app-menu-game');
+        rikkPhoneUI.classList.add('chatting-game');
+        gameChatView.classList.remove('hidden');
+        phoneDock.classList.add('hidden'); // Hide dock and home indicator in chat
+        phoneHomeIndicator.classList.add('hidden');
+        phoneDockedIndicator.classList.add('hidden'); // Hide floating icon too
+    } else if (state === 'home') {
+        rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'app-menu-game');
+        rikkPhoneUI.classList.add('home-screen-active');
+        androidHomeScreen.classList.remove('hidden');
+        phoneDock.classList.remove('hidden'); // Show dock and home indicator on home screen
+        phoneHomeIndicator.classList.remove('hidden');
+        phoneDockedIndicator.classList.add('hidden'); // Hide floating icon
+    } else if (state === 'app-menu') {
+        rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active');
+        rikkPhoneUI.classList.add('app-menu-game');
+        gameAppMenuView.classList.remove('hidden');
+        phoneDock.classList.remove('hidden'); // Show dock and home indicator
+        phoneHomeIndicator.classList.remove('hidden');
+        phoneBackButtons.forEach(btn => btn.classList.remove('hidden')); // Show back button
+        phoneDockedIndicator.classList.add('hidden'); // Hide floating icon
+    } else if (state === 'docked') { // Phone is docked (small icon visible)
+        rikkPhoneUI.classList.add('is-offscreen'); // Transition main phone off screen
+        rikkPhoneUI.classList.remove('chatting-game', 'home-screen-active', 'app-menu-game');
+        phoneDockedIndicator.classList.remove('hidden'); // Show floating icon
+    } else if (state === 'offscreen') { // Phone is completely off screen (no icon)
+        rikkPhoneUI.classList.add('is-offscreen');
+        rikkPhoneUI.classList.remove('chatting-game', 'home-screen-active', 'app-menu-game');
+        phoneDockedIndicator.classList.add('hidden'); // Hide floating icon
+    }
+}
+
+function handlePhoneAppClick(event) {
+    const action = event.currentTarget.dataset.action;
+    switch(action) {
+        case 'messages':
+            // If the game is ready for next customer, initiate it
+            if (!nextCustomerBtn.disabled && fiendsLeft > 0 && gameActive) {
+                nextFiend(); // This will trigger the knock and transition to chatting
+            } else if (currentCustomer) {
+                // If already in a conversation, switch to chat view
+                setPhoneUIState('chatting');
+            }
+            else {
+                phoneShowNotification("No new messages. Waiting for a customer.", "Rikk's Inbox");
+            }
+            break;
+        case 'inventory':
+            setPhoneUIState('app-menu'); // First go to app menu, then open modal via specific app icon
+            // Optionally, if you want direct modal opening:
+            // openInventoryModal();
+            break;
+        case 'back-to-home':
+            setPhoneUIState('home');
+            break;
+        case 'phone':
+        case 'user':
+        case 'compass':
+            phoneShowNotification(`App: "${action}" not implemented.`, "Phone Info");
+            break;
+        // The inventory app in the app menu
+        case 'inventory-app': // This is a specific app icon for inventory
+             openInventoryModal();
+             break;
+        default:
+            phoneShowNotification(`App: "${action}" not implemented.`, "Phone Info");
+            break;
+    }
+}
 
 
 // --- CORE GAME FUNCTIONS ---
 function initGame() {
-    // ALL DOM elements that might not be available at script parse time MUST be queried here
-    rikkPhoneDisplay = document.getElementById('rikk-phone-display');
-    androidAmbientUI = document.getElementById('android-ambient-ui');
-    gameChatUI = document.getElementById('game-chat-ui');
-    chatContainer = document.getElementById('chat-container');
-    choicesArea = document.getElementById('choices-area');
-    phoneTitleElement = document.getElementById('phone-title');
-    phoneDock = rikkPhoneDisplay.querySelector('.dock'); 
-    phoneHomeIndicator = rikkPhoneDisplay.querySelector('.home-indicator'); 
-
     splashScreen.classList.add('active'); startScreen.classList.remove('active'); gameScreen.classList.remove('active'); endScreen.classList.remove('active');
     setTimeout(() => { splashScreen.classList.remove('active'); splashScreen.style.display = 'none'; startScreen.classList.add('active'); checkForSavedGame(); }, SPLASH_SCREEN_DURATION);
-    
-    // Attach event listeners
-    newGameBtn.addEventListener('click', handleStartNewGameClick); 
-    continueGameBtn.addEventListener('click', handleContinueGameClick); 
-    restartGameBtn.addEventListener('click', handleRestartGameClick); 
+    newGameBtn.addEventListener('click', handleStartNewGameClick); continueGameBtn.addEventListener('click', handleContinueGameClick); restartGameBtn.addEventListener('click', handleRestartGameBtn);
     nextCustomerBtn.addEventListener('click', nextFiend); 
     openInventoryBtn.addEventListener('click', openInventoryModal); 
     closeModalBtn.addEventListener('click', closeInventoryModal);
     inventoryModal.addEventListener('click', (e) => { if (e.target === inventoryModal) closeInventoryModal(); });
 
-    // Initialize ambient phone UI
-    // Pass the main phone container to ambient UI script so it can scope its queries
-    initPhoneAmbientUI(rikkPhoneDisplay);
+    // Initialize ambient phone UI (time, battery, wallpaper)
+    initPhoneAmbientUI();
 
-    // Hide chat UI and show ambient UI by default
-    if (androidAmbientUI && gameChatUI && phoneDock && phoneHomeIndicator) { // Defensive check
-        androidAmbientUI.classList.add('active-mode');
-        androidAmbientUI.classList.remove('inactive-mode');
-        gameChatUI.classList.add('inactive-mode');
-        gameChatUI.classList.remove('active-mode');
-        
-        // Ensure phone is initially hidden in main game screen until interaction
-        rikkPhoneDisplay.classList.add('hidden');
-        rikkPhoneDisplay.classList.remove('active');
-    } else {
-        console.error("Critical: One or more phone UI elements not found. Game may not function correctly.");
-    }
+    // Attach click listeners for new phone UI app icons and dock icons
+    rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => {
+        icon.addEventListener('click', handlePhoneAppClick);
+    });
+    // Attach click listeners for back buttons within phone
+    phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick)); 
+
+    // Initialize phone state to offscreen (before game starts)
+    setPhoneUIState('offscreen');
 }
 
 function initializeNewGameState() {
@@ -148,16 +217,8 @@ function initializeNewGameState() {
 function startGameFlow() {
     gameActive = true; splashScreen.classList.remove('active'); splashScreen.style.display = 'none'; startScreen.classList.remove('active'); endScreen.classList.remove('active'); gameScreen.classList.add('active');
     
-    // Ensure phone starts in ambient mode
-    androidAmbientUI.classList.add('active-mode');
-    androidAmbientUI.classList.remove('inactive-mode');
-    gameChatUI.classList.add('inactive-mode');
-    gameChatUI.classList.remove('active-mode');
-    phoneDock.classList.remove('hidden'); // Show dock
-    phoneHomeIndicator.classList.remove('hidden'); // Show home indicator
-
-    rikkPhoneDisplay.classList.add('hidden'); // Phone starts hidden
-    rikkPhoneDisplay.classList.remove('active'); // Phone starts hidden
+    // Phone transitions from offscreen to home screen when game starts
+    setPhoneUIState('home');
     
     updateHUD(); updateInventoryDisplay(); clearChat(); clearChoices(); nextFiend();
 }
@@ -170,8 +231,7 @@ function endGame(reason) {
     else { if (cash >= STARTING_CASH * 3 && streetCred > MAX_FIENDS) { finalVerdictText.textContent = "You a certified KINGPIN! The streets whisper your name."; } else if (cash >= STARTING_CASH * 1.5 && streetCred > MAX_FIENDS / 2) { finalVerdictText.textContent = "Solid hustle, G. Made bank and respect."; } else if (cash > STARTING_CASH) { finalVerdictText.textContent = "Made some profit. Not bad for a night's work."; } else if (cash <= STARTING_CASH && streetCred < 0) { finalVerdictText.textContent = "Tough night. Lost dough and respect. This life ain't for everyone."; } else { finalVerdictText.textContent = "Broke even or worse. Gotta step your game up, Rikk."; } finalVerdictText.style.color = cash > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)"; }
     
     // Hide phone completely on game end
-    rikkPhoneDisplay.classList.add('hidden'); 
-    rikkPhoneDisplay.classList.remove('active');
+    setPhoneUIState('offscreen');
     
     clearSavedGameState();
 }
@@ -190,45 +250,28 @@ function updateEventTicker() { if (activeWorldEvents.length > 0) { const current
 function advanceWorldEvents() { activeWorldEvents.forEach(eventState => { eventState.turnsLeft--; }); activeWorldEvents = activeWorldEvents.filter(eventState => eventState.turnsLeft > 0); }
 
 function nextFiend() {
-    if (!gameActive) return; 
-    if (fiendsLeft <= 0) { endGame("completed"); return; }
-
-    updateDayOfWeek(); 
-    advanceWorldEvents(); 
-    triggerWorldEvent();
-    
-    let heatReduction = 1 + playerSkills.lowProfile; 
-    activeWorldEvents.forEach(eventState => { 
-        if (eventState.event.effects && eventState.event.effects.heatReductionModifier) { 
-            heatReduction *= eventState.event.effects.heatReductionModifier; 
-        } 
-    });
+    if (!gameActive) return; if (fiendsLeft <= 0) { endGame("completed"); return; }
+    updateDayOfWeek(); advanceWorldEvents(); triggerWorldEvent();
+    let heatReduction = 1 + playerSkills.lowProfile; activeWorldEvents.forEach(eventState => { if (eventState.event.effects && eventState.event.effects.heatReductionModifier) { heatReduction *= eventState.event.effects.heatReductionModifier; } });
     heat = Math.max(0, heat - Math.round(heatReduction));
+    updateHUD(); clearChat(); clearChoices(); nextCustomerBtn.disabled = true;
     
-    updateHUD(); 
-    clearChat(); 
-    clearChoices(); 
-    nextCustomerBtn.disabled = true;
+    // Phone transitions from home screen to docked before knock, then to chat
+    setPhoneUIState('docked'); // Phone slides out, mini-icon appears
     
-    // Phone goes from ambient to chat mode when a customer interaction starts
-    rikkPhoneDisplay.classList.remove('active'); 
-    setTimeout(() => {
-        rikkPhoneDisplay.classList.add('hidden'); // Fully hide phone briefly for knock transition
-        // Start knock animation
-        playSound(doorKnockSound); 
-        knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`; 
-        knockEffect.classList.remove('hidden'); 
-        knockEffect.style.animation = 'none'; 
-        void knockEffect.offsetWidth; // Trigger reflow
-        knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
-        
-        setTimeout(() => { 
-            knockEffect.classList.add('hidden'); 
-            rikkPhoneDisplay.classList.remove('hidden'); // Show phone again
-            setTimeout(() => rikkPhoneDisplay.classList.add('active'), 50); // Animate phone in
-            startCustomerInteraction(); 
-        }, KNOCK_ANIMATION_DURATION);
-    }, PHONE_ANIMATION_DURATION); // Wait for phone to slide out before knock
+    playSound(doorKnockSound); 
+    knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`; 
+    knockEffect.classList.remove('hidden'); 
+    knockEffect.style.animation = 'none'; 
+    void knockEffect.offsetWidth; 
+    knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
+
+    setTimeout(() => { 
+        knockEffect.classList.add('hidden'); 
+        setPhoneUIState('chatting'); // Phone slides in to chat mode
+        startCustomerInteraction(); 
+        phoneShowNotification(`Incoming message from: ${currentCustomer.name}`, "New Customer"); // Notify through ambient UI
+    }, KNOCK_ANIMATION_DURATION);
     saveGameState();
 }
 
@@ -352,17 +395,16 @@ function selectOrGenerateCustomerFromPool() {
 }
 
 function generateCustomerInteractionData() {
-    // This function now returns the customerData directly,
-    // and `currentCustomer` is set in `startCustomerInteraction`
     const customerData = selectOrGenerateCustomerFromPool();
     if (typeof customerArchetypes === 'undefined' || !customerArchetypes[customerData.archetypeKey]) {
         console.error("customerArchetypes not loaded or archetypeKey invalid:", customerData.archetypeKey);
-        return {
+        currentCustomer = {
             data: customerData, name: customerData.name || "Error Customer",
             dialogue: [{ speaker: "narration", text: "Error: Customer type undefined." }],
             choices: [{ text: "OK", outcome: { type: "acknowledge_error" } }],
             itemContext: null, archetypeKey: "ERROR_ARCHETYPE", mood: "neutral"
         };
+        return;
     }
     const archetype = customerArchetypes[customerData.archetypeKey];
 
@@ -551,8 +593,7 @@ function generateCustomerInteractionData() {
         choices.push({ text: "Aight, my bad. Later.", outcome: { type: "acknowledge_empty_stash" } });
     }
 
-    // Return the generated interaction data
-    return {
+    currentCustomer = {
         data: customerData,
         name: customerData.name,
         dialogue,
@@ -564,30 +605,14 @@ function generateCustomerInteractionData() {
 }
 
 function startCustomerInteraction() {
-    // Hide ambient UI, show chat UI
-    androidAmbientUI.classList.remove('active-mode');
-    androidAmbientUI.classList.add('inactive-mode');
-    gameChatUI.classList.remove('inactive-mode');
-    gameChatUI.classList.add('active-mode');
-    phoneDock.classList.add('hidden'); // Hide dock during chat
-    phoneHomeIndicator.classList.add('hidden'); // Hide home indicator during chat
-
-    // Now, assign the result of generateCustomerInteractionData to currentCustomer
-    currentCustomer = generateCustomerInteractionData();
-    
-    // Defensive check: Ensure currentCustomer is valid before proceeding
-    if (!currentCustomer || !currentCustomer.name) {
-        console.error("startCustomerInteraction: currentCustomer is null or invalid after generation.");
-        displaySystemMessage("System Error: Failed to generate customer data. Ending interaction.");
-        setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME);
-        return;
-    }
-
-    if (phoneTitleElement) { 
-        phoneTitleElement.textContent = currentCustomer.name;
+    // Phone UI state already set to 'chatting' in nextFiend
+    // Now just set up the content
+    if (phoneTitleGame && currentCustomer && currentCustomer.name) {
+        phoneTitleGame.textContent = currentCustomer.name;
+    } else if (phoneTitleGame) {
+        phoneTitleGame.textContent = 'Street Talk';
     }
     let dialogueIndex = 0;
-
     clearChat();
 
     const displayNext = () => {
@@ -599,7 +624,7 @@ function startCustomerInteraction() {
         } else if (currentCustomer) {
             displayChoices(currentCustomer.choices);
         } else {
-            console.error("startCustomerInteraction: currentCustomer became null during dialogue display (after initial check).");
+            console.error("startCustomerInteraction: currentCustomer became null during dialogue display.");
             endCustomerInteraction();
         }
     };
@@ -612,17 +637,16 @@ function displayPhoneMessage(message, speaker) {
         message = (speaker === 'rikk') ? "(Rikk mumbles something incoherent...)" : "(They trail off awkwardly...)";
     }
     playSound(chatBubbleSound); const bubble = document.createElement('div'); bubble.classList.add('chat-bubble', speaker); 
-    // Only try to add speaker name if currentCustomer exists and is not null
-    if ((speaker === 'customer' || speaker === 'rikk') && currentCustomer && currentCustomer.name) { // Added currentCustomer.name check
-        const speakerName = document.createElement('span'); 
-        speakerName.classList.add('speaker-name'); 
-        speakerName.textContent = (speaker === 'customer' ? currentCustomer.name : 'Rikk'); 
-        bubble.appendChild(speakerName); 
-    } 
-    const textNode = document.createTextNode(message); 
-    bubble.appendChild(textNode); 
-    chatContainer.appendChild(bubble); 
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    // Add speaker name only if it's not a narration
+    if (speaker === 'customer' || speaker === 'rikk') {
+        const speakerName = document.createElement('span');
+        speakerName.classList.add('speaker-name');
+        speakerName.textContent = (speaker === 'customer' && currentCustomer ? currentCustomer.name : 'Rikk');
+        bubble.appendChild(speakerName);
+    }
+    
+    const textNode = document.createTextNode(message); bubble.appendChild(textNode); chatContainer.appendChild(bubble); chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 function displaySystemMessage(message) { displayPhoneMessage(message, 'narration'); phoneShowNotification(message, "System Alert"); } // Use phone notification as well
 function displayChoices(choices) { choicesArea.innerHTML = ''; choices.forEach(choice => { const button = document.createElement('button'); button.classList.add('choice-button'); button.textContent = choice.text; if (choice.outcome.type.startsWith('decline') || choice.outcome.type.includes('kick_rocks')) button.classList.add('decline'); button.disabled = choice.disabled || false; if (!choice.disabled) { button.addEventListener('click', () => handleChoice(choice.outcome)); } choicesArea.appendChild(button); }); }
@@ -635,7 +659,7 @@ function handleChoice(outcome) {
     let credChange = 0;
 
     if (!currentCustomer || !currentCustomer.archetypeKey || !currentCustomer.data || typeof customerArchetypes === 'undefined' || !customerArchetypes[currentCustomer.archetypeKey]) {
-        console.error("Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined. (in handleChoice)", currentCustomer);
+        console.error("Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined.", currentCustomer);
         displaySystemMessage("System Error: Customer data missing or type undefined. Ending interaction.");
         setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME);
         return;
@@ -839,18 +863,13 @@ function handleChoice(outcome) {
 
 function endCustomerInteraction() {
     clearChoices();
-    if (phoneTitleElement) {
-        phoneTitleElement.textContent = 'Street Talk';
+    if (phoneTitleGame) { // Use the correct title element for the game chat view
+        phoneTitleGame.textContent = 'Street Talk';
     }
     currentCustomer = null;
 
     // Transition phone back to ambient UI mode
-    gameChatUI.classList.remove('active-mode');
-    gameChatUI.classList.add('inactive-mode');
-    androidAmbientUI.classList.remove('inactive-mode');
-    androidAmbientUI.classList.add('active-mode');
-    phoneDock.classList.remove('hidden'); // Show dock
-    phoneHomeIndicator.classList.remove('hidden'); // Show home indicator
+    setPhoneUIState('home');
 
     if (fiendsLeft > 0 && gameActive && heat < MAX_HEAT && (cash > 0 || inventory.length > 0) ) { // Can continue if not bankrupt
         nextCustomerBtn.disabled = false;
@@ -904,27 +923,19 @@ function updateInventoryDisplay() {
 function openInventoryModal() {
     updateInventoryDisplay(); // Ensure it's up-to-date when opened
     inventoryModal.classList.add('active');
-    // Hide phone completely when inventory is open
-    rikkPhoneDisplay.classList.remove('active');
-    rikkPhoneDisplay.classList.add('hidden');
+    // Hide phone completely when inventory is open and show the floating icon
+    setPhoneUIState('offscreen');
 }
 function closeInventoryModal() {
     inventoryModal.classList.remove('active');
-    // Re-show phone if game is active and not finished
-    if (gameActive && fiendsLeft > 0 && heat < MAX_HEAT && (cash > 0 || inventory.length > 0)) {
-        rikkPhoneDisplay.classList.remove('hidden');
-        rikkPhoneDisplay.classList.add('active');
-        // Ensure correct phone UI mode is active when closing inventory
-        if (currentCustomer) { // If there's an ongoing interaction, show chat UI
-            androidAmbientUI.classList.add('inactive-mode');
-            gameChatUI.classList.add('active-mode');
-            phoneDock.classList.add('hidden');
-            phoneHomeIndicator.classList.add('hidden');
-        } else { // Otherwise, show ambient UI
-            androidAmbientUI.classList.add('active-mode');
-            gameChatUI.classList.add('inactive-mode');
-            phoneDock.classList.remove('hidden');
-            phoneHomeIndicator.classList.remove('hidden');
+    // Reappear phone to home screen state (or appropriate state)
+    if (currentCustomer) { // If a conversation was active, return to chatting
+        setPhoneUIState('chatting');
+    } else { // Otherwise, return to home screen (or docked if next customer not ready)
+        if (nextCustomerBtn.disabled === false) {
+             setPhoneUIState('home');
+        } else {
+             setPhoneUIState('docked');
         }
     }
 }
@@ -987,5 +998,11 @@ function checkForSavedGame() {
         continueGameBtn.classList.add('hidden');
     }
 }
+
+// Event listener for the floating phone icon
+phoneDockedIndicator.addEventListener('click', () => {
+    // If clicked, open the phone to the home screen
+    setPhoneUIState('home');
+});
 
 document.addEventListener('DOMContentLoaded', initGame);
