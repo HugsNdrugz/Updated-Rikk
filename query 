@@ -1,0 +1,100 @@
+
+document.addEventListener('DOMContentLoaded', () => {
+    const rikkPhoneDisplay = document.querySelector('#rikkPhoneDisplay'); // Assuming this is the correct selector
+
+    if (!rikkPhoneDisplay) {
+        console.error('rikkPhoneDisplay not found');
+        return;
+    }
+
+    const phoneDock = rikkPhoneDisplay.querySelector('.dock');
+    const phoneHomeIndicator = rikkPhoneDisplay.querySelector('.home-indicator');
+
+    if (!phoneDock || !phoneHomeIndicator) {
+        console.error('Required elements .dock or .home-indicator not found');
+        return;
+    }
+
+    splashScreen.classList.add('active'); 
+    startScreen.classList.remove('active'); 
+    gameScreen.classList.remove('active'); 
+    endScreen.classList.remove('active');
+
+    setTimeout(() => { 
+        splashScreen.classList.remove('active'); 
+        splashScreen.style.display = 'none'; 
+        startScreen.classList.add('active'); 
+        checkForSavedGame(); 
+    }, SPLASH_SCREEN_DURATION);
+
+    // Attach event listeners
+    newGameBtn.addEventListener('click', handleStartNewGameClick); 
+    continueGameBtn.addEventListener('click', handleContinueGameClick); 
+    restartGameBtn.addEventListener('click', handleRestartGameClick); 
+    nextCustomerBtn.addEventListener('click', nextFiend); 
+    openInventoryBtn.addEventListener('click', openInventoryModal); 
+    closeModalBtn.addEventListener('click', closeInventoryModal);
+    
+    inventoryModal.addEventListener('click', (e) => { 
+        if (e.target === inventoryModal) closeInventoryModal(); 
+    });
+
+    // Initialize ambient phone UI
+    initPhoneAmbientUI();
+
+    // Hide chat UI and show ambient UI by default
+    if (androidAmbientUI && gameChatUI && phoneDock && phoneHomeIndicator) { // Defensive check
+        androidAmbientUI.classList.add('active-mode');
+        androidAmbientUI.classList.remove('inactive-mode');
+        gameChatUI.classList.add('inactive-mode');
+        gameChatUI.classList.remove('active-mode');
+    }
+});
+The error message "Cannot read properties of null (reading 'querySelector')" indicates that the code is trying to call `querySelector` on a `null` value, meaning that the element you are trying to select does not exist in the DOM at the time your script runs.
+
+Here’s how you can debug and fix this issue:
+
+1. **Check Your Selector**: Ensure that the selector you’re using in `querySelector` is correct. Double-check the ID or class names in your HTML.
+
+2. **Element Exists**: Make sure that the element exists in the DOM when your script is running. If your script runs before the DOM is fully loaded, it may not find the specified element.
+
+3. **Use `DOMContentLoaded` Event**: If your script is placed in the `<head>` section or before the relevant HTML elements, wrap your code inside an event listener for `DOMContentLoaded`:
+
+   ```javascript
+   document.addEventListener('DOMContentLoaded', function() {
+       initGame();
+   });
+   ```
+
+4. **Add Null Check**: Before using `querySelector`, you can add a null check to avoid this error:
+
+   ```javascript
+   function initGame() {
+       const element = document.querySelector('#your-element-id');
+       if (element) {
+           // Proceed with logic here if element exists
+       } else {
+           console.error('Element not found');
+       }
+   }
+   ```
+
+Here’s an example of how these pieces fit together:
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+    initGame();
+});
+
+function initGame() {
+    const element = document.querySelector('#your-element-id');
+    if (element) {
+        // Do something with the element
+        console.log('Element found:', element);
+    } else {
+        console.error('Element not found');
+    }
+}
+```
+
+Replace `'#your-element-id'` with the actual selector you're trying to use. This should help you address the "cannot read properties of null" error effectively.
