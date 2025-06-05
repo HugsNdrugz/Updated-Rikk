@@ -75,7 +75,6 @@ let nextCustomerId = 1;
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100;
 const KNOCK_ANIMATION_DURATION = 1000;
-const PHONE_ANIMATION_DURATION = 500;
 const SAVE_KEY = 'myNiggaRikkSaveDataV6'; // Incremented for new dialogue structure
 const STARTING_CASH = 500;
 const MAX_FIENDS = 15;

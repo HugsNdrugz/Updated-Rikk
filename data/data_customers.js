@@ -253,7 +253,7 @@ const customerArchetypes = {
             return greetings[moodKey][Math.floor(Math.random() * greetings[moodKey].length)];
         },
         sellsOnly: true,
-        itemPool: ["info_cops", "info_rival", "burner_phone", "info_sting_op"],
+        itemPool: ["info_cops", "info_rival", "burner_phone"],
         priceToleranceFactor: 1.3, heatImpact: -1, credImpactBuy: 4,
         initialMood: "cautious",
         dialogueVariations: {
