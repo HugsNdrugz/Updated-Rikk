@@ -1,4 +1,7 @@
-// --- DOM Element References (Declared with 'let' for later assignment in initGame) ---
+"use strict";
+import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
+
+// --- DOM Element References (Declared with 'let' for later assignment in initGame) ---// --- DOM Element References (Declared with 'let' for later assignment in initGame) ---
 const splashScreen = document.getElementById('splash-screen');
 const gameViewport = document.getElementById('game-viewport');
 const startScreen = document.getElementById('start-screen');
@@ -78,7 +81,8 @@ const STARTING_STREET_CRED = 0;
 const MAX_HEAT = 100;
 const MAX_CUSTOMERS_IN_POOL = 20;
 
-import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
+// Import ambient phone UI functions
+
 
 // --- Helper function to get a random element from an array ---
 function getRandomElement(arr) {
