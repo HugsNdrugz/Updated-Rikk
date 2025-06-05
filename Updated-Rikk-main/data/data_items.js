@@ -1,20 +1,20 @@
 // data_items.js
 
-const ITEM_QUALITY_LEVELS = {
+export const ITEM_QUALITY_LEVELS = {
     DRUG: ["Stepped On", "Decent Batch", "Pure Fire"],
     STOLEN_GOOD: ["Rough Shape", "Used", "Mint Condition"],
     INFORMATION: ["Basic Intel", "Solid Tip", "Verified Blueprint"],
     TOOL: ["Shoddy", "Standard", "Pro Grade"]
 };
 
-const ITEM_QUALITY_MODIFIERS = {
+export const ITEM_QUALITY_MODIFIERS = {
     DRUG: [0.6, 1.0, 1.5],
     STOLEN_GOOD: [0.5, 1.0, 1.8],
     INFORMATION: [0.8, 1.0, 1.3],
     TOOL: [0.7, 1.0, 1.4]
 };
 
-const itemTypes = [
+export const itemTypes = [
     // --- Standard Drugs ---
     { id: "green_crack", name: "Bag of 'Green Crack'", baseValue: 60, range: 20, type: "DRUG", subType: "STIMULANT", heat: 3, description: "Budget-friendly, gets the job done.", effects: ["energy_boost", "jitters"], addictionChance: 0.1 },
     { id: "blue_magic", name: "Few 'Blue Magic' Pills", baseValue: 40, range: 15, type: "DRUG", subType: "PARTY", heat: 2, description: "Small pills, big promises.", effects: ["euphoria", "sociability"], addictionChance: 0.15 },

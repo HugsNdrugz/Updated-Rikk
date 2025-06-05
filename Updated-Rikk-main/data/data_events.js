@@ -1,6 +1,6 @@
 // data_events.js
 
-const possibleWorldEvents = [
+export const possibleWorldEvents = [
     {
         id: "police_crackdown",
         name: "Police Crackdown!",
@@ -29,5 +29,4 @@ const possibleWorldEvents = [
         duration: 3,
         effects: { itemScarcity: true, allPriceModifier: 1.15 }
     }
-    // You can add more event objects here
 ];

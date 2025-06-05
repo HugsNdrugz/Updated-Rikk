@@ -177,19 +177,12 @@
     <audio id="denied-sound" src="assets/audio/denied.mp3" preload="auto"></audio>
     <audio id="chat-bubble-sound" src="assets/audio/chat-pop.mp3" preload="auto"></audio>
     
-    <!-- DATA FILES FIRST -->
-    <script src="data/data_items.js"></script>
-    <script src="data/data_customers.js"></script>
-    <script src="data/data_events.js"></script>
-    
-    <!-- HELPER/MANAGER SCRIPTS -->
-    <!-- Assuming CustomerManager.js is for future use or part of a larger structure -->
-     <script src="./classes/CustomerManager.js"></script>
-
-    <!-- PHONE UI SCRIPT (MUST BE MODULE) -->
+    <!-- SCRIPT LOADING ORDER - ALL ARE NOW MODULES TO ENSURE CORRECT DEPENDENCY LOADING -->
+    <script src="data/data_items.js" type="module"></script>
+    <script src="data/data_customers.js" type="module"></script>
+    <script src="data/data_events.js" type="module"></script>
+    <script src="./classes/CustomerManager.js" type="module"></script>
     <script src="phone_ambient_ui.js" type="module"></script>
-    
-    <!-- MAIN SCRIPT LAST (MUST BE MODULE TO IMPORT) -->
     <script src="script.js" type="module"></script>
 </body>
 
