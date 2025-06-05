@@ -1292,7 +1292,18 @@ function handleChoice(outcome) {
         if (narrationText) displayPhoneMessage(narrationText, 'narration');
         // Display customer reaction only if it's not an error acknowledgement
         if (selectedCustomerReaction && outcome.type !== "acknowledge_error") {
-            displayPhoneMessage(`"${currentCustomer.name}: ${selectedCustomerReaction}"`, 'customer');
+            if (currentCustomer && typeof currentCustomer.name === 'string') { // Ensure currentCustomer and its name are valid
+                displayPhoneMessage(`"${currentCustomer.name}: ${selectedCustomerReaction}"`, 'customer');
+            } else {
+                // Log that we intended to show a customer reaction but currentCustomer was null or name invalid
+                debugLogger.log('Interaction', 'Skipping customer reaction message: currentCustomer is null or name is invalid.', {
+                    reactionExists: !!selectedCustomerReaction,
+                    currentCustomerState: currentCustomer // Be cautious logging potentially large objects, but for debug this is okay
+                });
+                // Display the reaction without the name, if desired, or just skip.
+                // For now, we just log and skip. If you want to display reaction without name:
+                // displayPhoneMessage(`${selectedCustomerReaction}`, 'customer'); // This would need further thought on presentation
+            }
         }
         setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
     }, CUSTOMER_WAIT_TIME / 2);
