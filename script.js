@@ -1044,10 +1044,20 @@ function displayPhoneMessage(message, speaker) {
     
     // Add speaker name only if it's not a narration
     if (speaker === 'customer' || speaker === 'rikk') {
-        const speakerName = document.createElement('span');
-        speakerName.classList.add('speaker-name');
-        speakerName.textContent = (speaker === 'customer' && currentCustomer ? currentCustomer.name : 'Rikk');
-        bubble.appendChild(speakerName);
+        const speakerNameElement = document.createElement('span'); // Renamed variable
+        speakerNameElement.classList.add('speaker-name');
+        if (speaker === 'customer') {
+            if (currentCustomer && typeof currentCustomer.name === 'string') { // Check type of name too
+                speakerNameElement.textContent = currentCustomer.name;
+            } else {
+                debugLogger.error('DisplayMessage', 'currentCustomer is null, or has no name, or name is not a string, when trying to display customer message.', currentCustomer);
+                trackError(new Error('currentCustomer is null or has no/invalid name for customer message'), 'displayPhoneMessage - customer name issue');
+                speakerNameElement.textContent = '[Customer]'; // Fallback speaker name
+            }
+        } else { // speaker === 'rikk'
+            speakerNameElement.textContent = 'Rikk';
+        }
+        bubble.appendChild(speakerNameElement);
     }
     
     const textNode = document.createTextNode(message); bubble.appendChild(textNode); chatContainer.appendChild(bubble); chatContainer.scrollTop = chatContainer.scrollHeight;
