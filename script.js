@@ -72,6 +72,399 @@ const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 let customersPool = [];
 let nextCustomerId = 1;
 
+// --- DEBUG FRAMEWORK START ---
+let rikkDebugInterval = null; // Define at a scope accessible by initDebugMode and toggleDebug
+
+const debugLogger = {
+    log: (component, message, data) => {
+        if (DEBUG_MODE) console.log(`[${component}] ${message}`, data || '');
+    },
+    error: (component, message, error) => {
+        if (DEBUG_MODE) console.error(`[${component} ERROR] ${message}`, error || '');
+    }
+};
+
+function trackError(error, context = 'General') {
+    debugLogger.error('ErrorTracker', `Context: ${context} | Message: ${error.message}`, error.stack);
+
+    try {
+        const errors = JSON.parse(sessionStorage.getItem('rikkErrors') || '[]');
+        errors.push({
+            timestamp: new Date().toISOString(),
+            message: error.message,
+            stack: error.stack,
+            context: context,
+            gameCash: typeof cash !== 'undefined' ? cash : 'N/A', // Add some game state
+            gameDay: typeof fiendsLeft !== 'undefined' ? (MAX_FIENDS - fiendsLeft) : 'N/A',
+            currentCustomerName: typeof currentCustomer !== 'undefined' && currentCustomer ? currentCustomer.name : 'N/A'
+        });
+        // Keep only the last 20 errors to prevent sessionStorage bloat
+        if (errors.length > 20) {
+            errors.splice(0, errors.length - 20);
+        }
+        sessionStorage.setItem('rikkErrors', JSON.stringify(errors));
+    } catch (e) {
+        debugLogger.error('ErrorTracker', 'Failed to save error to sessionStorage:', e);
+    }
+}
+
+let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // Initialize from localStorage or default to false
+
+function toggleDebug(enable) {
+    DEBUG_MODE = typeof enable === 'boolean' ? enable : !DEBUG_MODE;
+    localStorage.setItem('rikkDebugMode', DEBUG_MODE);
+    debugLogger.log('System', `Debug mode ${DEBUG_MODE ? 'enabled' : 'disabled'}`);
+    if (DEBUG_MODE && document.getElementById('debug-overlay') === null) {
+        // If debug mode is enabled and overlay isn't there, try to init it.
+        // This handles enabling debug after initial load.
+        if (typeof initDebugMode === 'function') initDebugMode();
+    } else if (!DEBUG_MODE) { // Simplified condition for disabling
+        const overlay = document.getElementById('debug-overlay');
+        if (overlay) overlay.remove();
+        if (rikkDebugInterval) { // Check if interval exists
+            clearInterval(rikkDebugInterval);
+            rikkDebugInterval = null; // Reset interval variable
+            debugLogger.log('DebugToggle', 'Periodic state check interval stopped.');
+        }
+    }
+}
+
+const debugCommands = {
+    toggleDebug: toggleDebug, // Add the toggle function itself to the commands
+    validateDOM: validateDOMElements,
+    checkState: debugGameState,
+    checkHandlers: verifyEventHandlers,
+    checkPhoneUI: debugPhoneUIState,
+    checkCustomer: debugCustomerInteraction
+        // Other commands will be added here
+};
+
+window.rikkDebug = debugCommands;
+
+function validateDOMElements() {
+    debugLogger.log('DOMValidation', 'Starting DOM Element Validation...');
+    const requiredElements = {
+        // Main Screens & Viewport
+        'splash-screen': 'Splash Screen',
+        'game-viewport': 'Game Viewport',
+        'start-screen': 'Start Screen',
+        'game-screen': 'Game Screen',
+        'end-screen': 'End Screen',
+
+        // Buttons
+        'new-game-btn': 'New Game Button',
+        'continue-game-btn': 'Continue Game Button',
+        'restart-game-btn': 'Restart Game Button',
+        'next-customer-btn': 'Next Customer Button',
+        'open-inventory-btn': 'Open Inventory Button',
+        // Note: closeModalBtn is a class selector in script.js, not ID.
+        // Consider if class-based checks are needed or if critical modals should have IDs.
+        // For now, sticking to IDs as per the debug plan's function structure.
+
+        // HUD Elements
+        'cash-display': 'Cash Display HUD',
+        'day-display': 'Day/Fiends Left Display HUD',
+        'heat-display': 'Heat Display HUD',
+        'cred-display': 'Cred Display HUD',
+        'final-cred-display': 'Final Cred Display (End Screen)',
+        'event-ticker': 'Event Ticker',
+
+        // Game Scene & Effects
+        'game-scene': 'Game Scene Container',
+        'knock-effect': 'Knock Effect Div',
+
+        // Phone UI Main Structure
+        'rikk-phone-ui': 'Rikk Phone UI Main Container',
+        'android-home-screen': 'Phone Android Home Screen',
+        'game-chat-view': 'Phone Game Chat View',
+        'game-app-menu-view': 'Phone Game App Menu View',
+        'chat-container-game': 'Phone Chat Container',
+        'choices-area-game': 'Phone Choices Area',
+        'phone-title-game': 'Phone Title (Chat)',
+        'phone-title-game-apps': 'Phone Title (Apps)',
+        'phone-docked-indicator': 'Phone Docked Indicator Icon',
+        // Specific elements within phone like dock/home-indicator are queried relative to rikk-phone-ui,
+        // so their top-level container 'rikk-phone-ui' is the most critical to check.
+
+        // Inventory Modal
+        'inventory-modal': 'Inventory Modal Overlay',
+        // 'inventory-dialog': 'Inventory Dialog Content', // This is an ID, can be added.
+        'inventory-list': 'Inventory List Area',
+        'modal-inventory-slots-display': 'Modal Inventory Slots Display',
+
+        // End Screen Stats
+        'final-days-display': 'Final Days Display (End Screen)',
+        'final-cash-display': 'Final Cash Display (End Screen)',
+        'final-verdict-text': 'Final Verdict Text (End Screen)',
+
+        // Audio Elements (though not visible, they are referenced by ID)
+        'door-knock-sound': 'Door Knock Sound Audio Element',
+        'cash-sound': 'Cash Sound Audio Element',
+        'denied-sound': 'Denied Sound Audio Element',
+        'chat-bubble-sound': 'Chat Bubble Sound Audio Element'
+    };
+
+    const missingElements = [];
+    for (const [id, description] of Object.entries(requiredElements)) {
+        if (!document.getElementById(id)) {
+            missingElements.push(`${description} (${id})`);
+        }
+    }
+
+    if (missingElements.length > 0) {
+        debugLogger.error('DOMValidation', 'Missing required DOM elements:', missingElements.join(', '));
+        return false;
+    }
+    debugLogger.log('DOMValidation', 'All required DOM elements are present.');
+    return true;
+}
+
+function debugGameState() {
+    debugLogger.log('GameState', 'Checking game state integrity...');
+    const stateChecks = {
+        cash: () => typeof cash === 'number' && cash >= 0,
+        inventory: () => Array.isArray(inventory),
+        fiendsLeft: () => typeof fiendsLeft === 'number' && fiendsLeft >= 0,
+        heat: () => typeof heat === 'number' && heat >= 0 && heat <= MAX_HEAT,
+        streetCred: () => typeof streetCred === 'number', // Added streetCred
+        gameActive: () => typeof gameActive === 'boolean', // Added gameActive
+        dayOfWeek: () => typeof dayOfWeek === 'string' && days.includes(dayOfWeek), // Added dayOfWeek
+        currentCustomer: () => currentCustomer === null || (
+            typeof currentCustomer === 'object' &&
+            currentCustomer.hasOwnProperty('name') &&
+            currentCustomer.hasOwnProperty('archetypeKey') &&
+            currentCustomer.hasOwnProperty('data') // Added check for data property
+        )
+    };
+
+    const stateErrors = [];
+    for (const [stateKey, check] of Object.entries(stateChecks)) {
+        try {
+            if (!check()) {
+                // Safely try to stringify the state value for logging
+                let stateValueStr = 'N/A';
+                try {
+                    stateValueStr = JSON.stringify(eval(stateKey));
+                } catch (e) {
+                    stateValueStr = eval(stateKey)?.toString() || 'Could not retrieve value';
+                }
+                stateErrors.push(`Invalid ${stateKey}. Current value: ${stateValueStr}`);
+            }
+        } catch (e) {
+            stateErrors.push(`Error checking state ${stateKey}: ${e.message}`);
+        }
+    }
+
+    if (stateErrors.length > 0) {
+        debugLogger.error('GameState', 'State errors detected:', stateErrors.join('; '));
+        return stateErrors;
+    }
+    debugLogger.log('GameState', 'Game state appears consistent.');
+    return []; // Return empty array for no errors
+}
+
+function verifyEventHandlers() {
+    debugLogger.log('EventHandlers', 'Verifying event handlers...');
+    const handlers = [
+        { elementId: 'new-game-btn', event: 'click', handlerName: 'handleStartNewGameClick', handlerFunc: typeof handleStartNewGameClick !== 'undefined' ? handleStartNewGameClick : null },
+        { elementId: 'continue-game-btn', event: 'click', handlerName: 'handleContinueGameClick', handlerFunc: typeof handleContinueGameClick !== 'undefined' ? handleContinueGameClick : null },
+        { elementId: 'restart-game-btn', event: 'click', handlerName: 'handleRestartGameClick', handlerFunc: typeof handleRestartGameClick !== 'undefined' ? handleRestartGameClick : null },
+        { elementId: 'next-customer-btn', event: 'click', handlerName: 'nextFiend', handlerFunc: typeof nextFiend !== 'undefined' ? nextFiend : null },
+        { elementId: 'open-inventory-btn', event: 'click', handlerName: 'openInventoryModal', handlerFunc: typeof openInventoryModal !== 'undefined' ? openInventoryModal : null },
+        // closeModalBtn is referenced by class selector: document.querySelector('#inventory-dialog .close-modal-btn');
+        // inventoryModal is referenced by: document.querySelector('#inventory-modal.modal-overlay');
+        // These need a different approach if we want to check their handlers, perhaps checking the element found by querySelector.
+        // For now, focusing on ID-based elements as per original plan structure.
+        // phoneDockedIndicator is also an ID, can be added.
+        { elementId: 'phone-docked-indicator', event: 'click', handlerName: 'setPhoneUIStateHome', handlerFunc: null } // Handler is an anonymous arrow function in script.js
+    ];
+
+    // Add checks for dynamically added listeners (e.g., phone app icons) if feasible,
+    // though this is harder to verify without more complex tracking.
+    // For rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon') and phoneBackButtons,
+    // we can at least verify the parent elements and that the handler 'handlePhoneAppClick' exists.
+
+    const issues = [];
+    handlers.forEach(({elementId, event, handlerName, handlerFunc}) => {
+        const el = document.getElementById(elementId);
+        if (!el) {
+            issues.push(`Element ${elementId} not found.`);
+        } else {
+            // Check if the handler function itself is defined
+            if (handlerFunc === null && handlerName !== 'setPhoneUIStateHome' /*Don't check anon func this way*/) {
+                issues.push(`Handler function ${handlerName} for ${elementId} is not defined.`);
+            }
+            // The original check for el.onclick or getAttribute('onclick') is unlikely to work
+            // for addEventListener. This function will primarily serve as a checklist
+            // and a verifier that the elements and named handler functions exist.
+            // For anonymous functions like on phoneDockedIndicator, we just note it.
+            if (elementId === 'phone-docked-indicator' && el.onclick === undefined && !el.hasAttribute('onclick')) {
+                 // This is expected if addEventListener was used, which it was for phoneDockedIndicator.
+                 // No direct issue to report here unless we had a way to inspect listeners.
+            }
+        }
+    });
+
+    // Check for handlePhoneAppClick function used by multiple listeners
+    if (typeof handlePhoneAppClick === 'undefined') {
+        issues.push('Global handler function handlePhoneAppClick is not defined.');
+    }
+
+
+    if (issues.length > 0) {
+        debugLogger.error('EventHandlers', 'Event handler issues detected:', issues.join('; '));
+        return issues;
+    }
+    debugLogger.log('EventHandlers', 'Event handler setup appears consistent (elements and named handlers exist).');
+    return []; // Return empty array for no errors
+}
+
+function debugPhoneUIState() {
+    debugLogger.log('PhoneUIState', 'Checking phone UI state...');
+    const phoneUI = document.getElementById('rikk-phone-ui'); // Updated ID
+
+    if (!phoneUI) {
+        debugLogger.error('PhoneUIState', 'Phone UI element (#rikk-phone-ui) not found.');
+        return { error: 'Phone UI element not found' };
+    }
+
+    const states = {
+        classList: Array.from(phoneUI.classList).join(', '), // General: show all classes
+        isOffscreen: phoneUI.classList.contains('is-offscreen'),
+        chattingGame: phoneUI.classList.contains('chatting-game'),
+        homeScreenActive: phoneUI.classList.contains('home-screen-active'),
+        appMenuGame: phoneUI.classList.contains('app-menu-game')
+        // Add other relevant state classes if needed
+    };
+
+    debugLogger.log('PhoneUIState', 'Current phone UI class states:', states);
+
+    // Additionally, check visibility of main content areas
+    const contentAreaStates = {
+        androidHomeScreenVisible: !androidHomeScreen.classList.contains('hidden'),
+        gameChatViewVisible: !gameChatView.classList.contains('hidden'),
+        gameAppMenuViewVisible: !gameAppMenuView.classList.contains('hidden'),
+        phoneDockedIndicatorVisible: !phoneDockedIndicator.classList.contains('hidden')
+    };
+    debugLogger.log('PhoneUIState', 'Content area visibility:', contentAreaStates);
+
+    return { currentClasses: states, contentVisibility: contentAreaStates };
+}
+
+function debugCustomerInteraction() {
+    debugLogger.log('CustomerInteraction', 'Checking current customer interaction state...');
+
+    if (!currentCustomer) {
+        debugLogger.log('CustomerInteraction', 'No active customer.');
+        return null;
+    }
+
+    // Log general currentCustomer object for a quick overview
+    debugLogger.log('CustomerInteraction', 'Current customer object:', currentCustomer);
+
+    // Prepare a more structured summary for the return value and detailed logging
+    const customerSummary = {
+        name: currentCustomer.name,
+        archetypeKey: currentCustomer.archetypeKey,
+        mood: currentCustomer.data?.mood, // Access safely with optional chaining
+        cashOnHand: currentCustomer.data?.cashOnHand,
+        loyaltyToRikk: currentCustomer.data?.loyaltyToRikk,
+        hasMetRikkBefore: currentCustomer.data?.hasMetRikkBefore,
+        patience: currentCustomer.data?.patience,
+        dialogueLength: currentCustomer.dialogue?.length,
+        choicesCount: currentCustomer.choices?.length,
+        itemContextName: currentCustomer.itemContext?.name,
+        itemContextQuality: currentCustomer.itemContext?.quality
+    };
+
+    debugLogger.log('CustomerInteraction', 'Current customer summary:', customerSummary);
+
+    if (currentCustomer.itemContext) {
+        debugLogger.log('CustomerInteraction', 'Full itemContext:', currentCustomer.itemContext);
+    }
+    if (currentCustomer.data) {
+         debugLogger.log('CustomerInteraction', 'Full customer data (from currentCustomer.data):', currentCustomer.data);
+    }
+
+
+    return customerSummary; // Return the summary
+}
+
+function initDebugMode() {
+    if (!DEBUG_MODE) {
+        // Ensure overlay is removed if debug mode was disabled then page reloaded
+        const existingOverlay = document.getElementById('debug-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        if (rikkDebugInterval) clearInterval(rikkDebugInterval); // Clear interval if it exists
+        return;
+    }
+
+    if (document.getElementById('debug-overlay')) {
+        debugLogger.log('DebugInit', 'Debug overlay already exists. Re-initializing periodic check.');
+        if (rikkDebugInterval) clearInterval(rikkDebugInterval); // Clear existing before setting new
+    } else {
+        debugLogger.log('DebugInit', 'Initializing Debug Mode UI...');
+        const debugOverlay = document.createElement('div');
+        debugOverlay.id = 'debug-overlay';
+        debugOverlay.style.cssText = `
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: auto;
+            min-width: 200px; /* Min width for better layout */
+            max-width: 300px;
+            background: rgba(0,0,0,0.75);
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 10px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            z-index: 9999;
+            opacity: 0.9;
+        `;
+
+        const title = document.createElement('div');
+        title.textContent = 'Rikk Debugger (DEBUG ON)';
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '5px';
+        title.style.borderBottom = '1px solid #0f0';
+        title.style.paddingBottom = '5px';
+        debugOverlay.appendChild(title);
+
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'debug-status-content';
+        statusDiv.textContent = 'Initializing periodic updates...';
+        debugOverlay.appendChild(statusDiv);
+
+        document.body.appendChild(debugOverlay);
+    }
+
+    // Initialize debug monitoring (periodic game state check)
+    rikkDebugInterval = setInterval(() => {
+        if (!DEBUG_MODE) {
+            clearInterval(rikkDebugInterval);
+            const overlay = document.getElementById('debug-overlay');
+            if (overlay) overlay.remove();
+            return;
+        }
+        const stateErrors = debugGameState();
+        const statusContent = document.getElementById('debug-status-content');
+        if (statusContent) {
+            if (stateErrors.length > 0) {
+                statusContent.textContent = `State Errors: ${stateErrors.length}. See console.`;
+                statusContent.style.color = 'red';
+                debugLogger.error('DebugUpdate', 'Periodic state check found errors:', stateErrors.join('; '));
+            } else {
+                statusContent.textContent = `State OK [${new Date().toLocaleTimeString()}] Cash: $${cash}, Heat: ${heat}, Cred: ${streetCred}, Day: ${MAX_FIENDS - fiendsLeft}`;
+                statusContent.style.color = '#0f0';
+            }
+        }
+    }, 5000);
+    debugLogger.log('DebugInit', 'Periodic state check interval started/restarted.');
+}
+// --- DEBUG FRAMEWORK END ---
+
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100;
 const KNOCK_ANIMATION_DURATION = 1000;
@@ -204,6 +597,7 @@ function initGame() {
 
     // Initialize phone state to offscreen (before game starts)
     setPhoneUIState('offscreen');
+    initDebugMode(); // Add this call
 }
 
 function initializeNewGameState() {
@@ -281,7 +675,12 @@ function calculateItemEffectiveValue(item, purchaseContext = true, customerData 
     }
 
     let baseValue = purchaseContext ? item.purchasePrice : item.estimatedResaleValue;
-    if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') { console.error("Invalid item structure for value calculation:", item); return baseValue;  }
+    if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') {
+        const error = new Error("Invalid item structure for value calculation");
+        debugLogger.error("ItemValuation", error.message, item);
+        trackError(error, 'calculateItemEffectiveValue - invalid item structure');
+        return baseValue;
+    }
 
     let qualityModifier = 1.0;
     if (typeof ITEM_QUALITY_MODIFIERS !== 'undefined' && ITEM_QUALITY_MODIFIERS[item.itemTypeObj.type]) {
@@ -298,7 +697,9 @@ function calculateItemEffectiveValue(item, purchaseContext = true, customerData 
 
 function generateRandomItem(archetypeData = null) {
     if (typeof itemTypes === 'undefined' || itemTypes.length === 0) {
-        console.error("itemTypes data is not loaded or empty!");
+        const error = new Error("itemTypes data is not loaded or empty!");
+        debugLogger.error("ItemGeneration", error.message);
+        trackError(error, 'generateRandomItem - no itemTypes');
         return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0, description:"Data missing"}, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1, fullDescription: "Data load error." };
     }
 
@@ -334,7 +735,9 @@ function generateRandomItem(archetypeData = null) {
 
 function selectOrGenerateCustomerFromPool() {
     if (typeof customerArchetypes === 'undefined' || Object.keys(customerArchetypes).length === 0) {
-        console.error("customerArchetypes data is not loaded or empty!");
+        const error = new Error("customerArchetypes data is not loaded or empty!");
+        debugLogger.error("CustomerGeneration", error.message);
+        trackError(error, 'selectOrGenerateCustomerFromPool - no customerArchetypes');
         return { id: `customer_error_${nextCustomerId++}`, name: "Error Customer", archetypeKey: "ERROR_ARCHETYPE", loyaltyToRikk: 0, mood: "neutral", cashOnHand: 50, preferredDrugSubTypes: [], addictionLevel: {}, hasMetRikkBefore: false, lastInteractionWithRikk: null, patience: 3 };
     }
 
@@ -358,7 +761,7 @@ function selectOrGenerateCustomerFromPool() {
             returningCustomer.cashOnHand = Math.floor(Math.random() * 80) + 20;
             returningCustomer.mood = "neutral";
         }
-        console.log("Returning customer:", returningCustomer.name, "New Mood:", returningCustomer.mood);
+        debugLogger.log("CustomerLogic", "Returning customer selected:", { name: returningCustomer.name, mood: returningCustomer.mood });
         return returningCustomer;
     }
 
@@ -389,14 +792,16 @@ function selectOrGenerateCustomerFromPool() {
     } else {
         customersPool[Math.floor(Math.random() * MAX_CUSTOMERS_IN_POOL)] = newCustomer;
     }
-    console.log("New customer generated:", newCustomer.name, "Archetype:", newCustomer.archetypeKey, "Initial Mood:", newCustomer.mood);
+    debugLogger.log("CustomerLogic", "New customer generated:", { name: newCustomer.name, archetype: newCustomer.archetypeKey, mood: newCustomer.mood });
     return newCustomer;
 }
 
 function generateCustomerInteractionData() {
     const customerData = selectOrGenerateCustomerFromPool();
     if (typeof customerArchetypes === 'undefined' || !customerArchetypes[customerData.archetypeKey]) {
-        console.error("customerArchetypes not loaded or archetypeKey invalid:", customerData.archetypeKey);
+        const errorMsg = `customerArchetypes not loaded or archetypeKey invalid: ${customerData.archetypeKey}`;
+        debugLogger.error("InteractionSetup", errorMsg, customerData);
+        trackError(new Error(errorMsg), 'generateCustomerInteractionData - invalid archetype');
         currentCustomer = {
             data: customerData, name: customerData.name || "Error Customer",
             dialogue: [{ speaker: "narration", text: "Error: Customer type undefined." }],
@@ -623,7 +1028,7 @@ function startCustomerInteraction() {
         } else if (currentCustomer) {
             displayChoices(currentCustomer.choices);
         } else {
-            console.error("startCustomerInteraction: currentCustomer became null during dialogue display.");
+            debugLogger.error("InteractionFlow", "startCustomerInteraction: currentCustomer became null during dialogue display.");
             endCustomerInteraction();
         }
     };
@@ -632,7 +1037,7 @@ function startCustomerInteraction() {
 
 function displayPhoneMessage(message, speaker) {
     if (typeof message === 'undefined' || message === null) {
-        console.warn(`Attempted to display undefined/null message for speaker: ${speaker}`);
+        debugLogger.log('PhoneUI', `Attempted to display undefined/null message for speaker: ${speaker}`);
         message = (speaker === 'rikk') ? "(Rikk mumbles something incoherent...)" : "(They trail off awkwardly...)";
     }
     playSound(chatBubbleSound); const bubble = document.createElement('div'); bubble.classList.add('chat-bubble', speaker); 
@@ -658,7 +1063,9 @@ function handleChoice(outcome) {
     let credChange = 0;
 
     if (!currentCustomer || !currentCustomer.archetypeKey || !currentCustomer.data || typeof customerArchetypes === 'undefined' || !customerArchetypes[currentCustomer.archetypeKey]) {
-        console.error("Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined.", currentCustomer);
+        const errorMsg = "Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined.";
+        debugLogger.error('ChoiceHandler', errorMsg, currentCustomer);
+        trackError(new Error(errorMsg), 'handleChoice - missing customer data');
         displaySystemMessage("System Error: Customer data missing or type undefined. Ending interaction.");
         setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME);
         return;
@@ -815,7 +1222,7 @@ function handleChoice(outcome) {
              narrationText = "System error acknowledged by Rikk. What a mess.";
              break;
         default:
-            console.error("Unhandled outcome type in handleChoice:", outcome.type);
+            debugLogger.error("ChoiceHandler", "Unhandled outcome type in handleChoice:", outcome.type);
             narrationText = "System: Rikk's brain just short-circuited. Action not recognized.";
             break;
     }
@@ -943,7 +1350,10 @@ function clearChoices() { choicesArea.innerHTML = ''; }
 function playSound(audioElement) {
     if (audioElement) {
         audioElement.currentTime = 0;
-        audioElement.play().catch(e => console.warn("Audio play failed:", e.name, e.message));
+        audioElement.play().catch(e => {
+            debugLogger.log('Audio', `Play failed: ${e.name}`, e.message);
+            trackError(e, `playSound - ${audioElement ? audioElement.src : 'unknown_audio'}`);
+        });
     }
 }
 
@@ -956,8 +1366,11 @@ function saveGameState() {
     };
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
-        console.log("Game state saved.");
-    } catch (e) { console.error("Error saving game state:", e); }
+        debugLogger.log('GameSave', "Game state saved.");
+    } catch (e) {
+        debugLogger.error('GameSave', "Error saving game state:", e);
+        trackError(e, 'saveGameState');
+    }
 }
 
 function loadGameState() {
@@ -976,10 +1389,11 @@ function loadGameState() {
             customersPool = Array.isArray(loadedState.customersPool) ? loadedState.customersPool : [];
             nextCustomerId = loadedState.nextCustomerId || 1;
             updateEventTicker();
-            console.log("Game state loaded.");
+            debugLogger.log('GameLoad', "Game state loaded.");
             return true;
         } catch (e) {
-            console.error("Error parsing saved game state:", e);
+            debugLogger.error('GameLoad', "Error parsing saved game state:", e);
+            trackError(e, 'loadGameState - parsing');
             clearSavedGameState();
             return false;
         }
@@ -988,7 +1402,7 @@ function loadGameState() {
 }
 function clearSavedGameState() {
     localStorage.removeItem(SAVE_KEY);
-    console.log("Saved game state cleared.");
+    debugLogger.log('GameSave', "Saved game state cleared.");
 }
 function checkForSavedGame() {
     if (localStorage.getItem(SAVE_KEY)) {
