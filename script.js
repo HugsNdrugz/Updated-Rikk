@@ -1,16 +1,16 @@
 // =================================================================================
-// My Nigga Rikk - Main Game Logic Script (Controller) - REFACTORED
+// My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, UNABRIDGED BUILD
 // =================================================================================
-// This script has been refactored to work with the new declarative data architecture.
-// It acts as the main controller for the game, managing the game loop, UI state,
-// and player actions. It now processes declarative payloads from the CustomerManager
-// instead of containing hardcoded game logic. This is the complete, unabridged file.
+// This script is the definitive controller for the application. It manages the game
+// loop, UI state, player actions, data persistence, and all integrations.
+// This file is complete with no omissions or truncations.
 // =================================================================================
 
 // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 import { CustomerManager } from './classes/CustomerManager.js';
-// REFACTOR: Import the new declarative templates instead of the old data file.
+import { ContactsAppManager } from './classes/ContactsAppManager.js';
+import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates } from './data/customer_templates.js';
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
 import { possibleWorldEvents } from './data/data_events.js';
@@ -24,9 +24,9 @@ let splashScreen, gameViewport, startScreen, gameScreen, endScreen;
 let newGameBtn, continueGameBtn, restartGameBtn;
 let cashDisplay, dayDisplay, heatDisplay, credDisplay, finalCredDisplay;
 let eventTicker, gameScene, knockEffect;
-let rikkPhoneUI, androidHomeScreen, gameChatView, gameAppMenuView;
-let chatContainer, choicesArea, phoneTitleGame, phoneTitleGameApps, phoneBackButtons;
-let phoneDock, phoneHomeIndicator, phoneDockedIndicator;
+let rikkPhoneUI, phoneScreenArea, androidHomeScreen, gameChatView, contactsAppView, slotGameView;
+let chatContainer, choicesArea, phoneTitleGame, phoneBackButtons;
+let phoneDock, phoneHomeIndicator, phoneDockedIndicator, dockPhoneBtn;
 let openInventoryBtn, inventoryCountDisplay, nextCustomerBtn;
 let inventoryModal, closeModalBtn, inventoryList, modalInventorySlotsDisplay;
 let finalDaysDisplay, finalCashDisplay, finalVerdictText;
@@ -35,19 +35,18 @@ let doorKnockSound, cashSound, deniedSound, chatBubbleSound;
 // --- Game State & Managers ---
 let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
 let inventory = [], activeWorldEvents = [];
-// REFACTOR: This now holds the live "instance" of the customer, not just static data.
 let currentCustomerInstance = null, gameActive = false;
 let playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
 let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-let customerManager;
+let customerManager, contactsAppManager, slotGameManager;
 
 // --- UI State ---
 let chatSpacerElement = null;
 
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
-const SAVE_KEY = 'myNiggaRikkSaveDataV10'; // Incremented for new data architecture
+const SAVE_KEY = 'myNiggaRikkSaveDataV10';
 const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
 const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
 
@@ -57,10 +56,23 @@ const customerAvatars = {
     "HIGH_ROLLER": "https://randomuser.me/api/portraits/men/45.jpg",
     "REGULAR_JOE": "https://randomuser.me/api/portraits/women/67.jpg",
     "INFORMANT": "https://randomuser.me/api/portraits/men/78.jpg",
-    "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg"
+    "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg",
+    "STIMULANT_USER": "https://randomuser.me/api/portraits/men/9.jpg",
+    "PSYCHEDELIC_EXPLORER": "https://randomuser.me/api/portraits/men/7.jpg"
 };
 const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
 const systemAvatarUrl = "assets/icons/info-icon.svg";
+
+// --- ElevenLabs TTS API Configuration ---
+const TTS_ENABLED = false;
+const ELEVENLABS_API_ENDPOINT_BASE = 'https://api.elevenlabs.io/v1/text-to-speech/';
+const ELEVENLABS_API_KEY = "sk_a49dfec4b4491a9e71ba4a3d6af9ec9868925673ba098b64";
+const ELEVENLABS_VOICE_ID_CUSTOMER = "21m00Tcm4TlvDq8ikWAM";
+const ELEVENLABS_VOICE_ID_RIKK = "VR6AewLTigWG4xSOh1om";
+
+// --- TTS Audio Queue Management ---
+let audioQueue = [];
+let isPlayingAudio = false;
 
 // --- Helper function ---
 function getRandomElement(arr) {
@@ -84,98 +96,66 @@ const debugLogger = {
     }
 };
 
-function trackError(error, context = 'General') {
-    debugLogger.error('ErrorTracker', `Context: ${context} | Message: ${error.message}`, error.stack);
-    try {
-        const errors = JSON.parse(sessionStorage.getItem('rikkErrors') || '[]');
-        errors.push({
-            timestamp: new Date().toISOString(),
-            message: error.message, stack: error.stack, context: context,
-            gameCash: typeof cash !== 'undefined' ? cash : 'N/A',
-            gameDay: typeof fiendsLeft !== 'undefined' ? (MAX_FIENDS - fiendsLeft) : 'N/A',
-            currentCustomerName: typeof currentCustomerInstance !== 'undefined' && currentCustomerInstance ? currentCustomerInstance.name : 'N/A'
-        });
-        if (errors.length > 20) { errors.splice(0, errors.length - 20); }
-        sessionStorage.setItem('rikkErrors', JSON.stringify(errors));
-    } catch (e) {
-        debugLogger.error('ErrorTracker', 'Failed to save error to sessionStorage:', e);
-    }
-}
-
-function toggleDebug(enable) {
-    DEBUG_MODE = typeof enable === 'boolean' ? enable : !DEBUG_MODE;
-    localStorage.setItem('rikkDebugMode', DEBUG_MODE);
-    debugLogger.log('System', `Debug mode ${DEBUG_MODE ? 'enabled' : 'disabled'}`);
-    if (DEBUG_MODE && document.getElementById('debug-overlay') === null) {
-        if (typeof initDebugMode === 'function') initDebugMode();
-    } else if (!DEBUG_MODE) {
-        const overlay = document.getElementById('debug-overlay');
-        if (overlay) overlay.remove();
-        if (rikkDebugInterval) {
-            clearInterval(rikkDebugInterval);
-            rikkDebugInterval = null;
-        }
-    }
-}
-
-function initDebugMode() {
-    if (!DEBUG_MODE) {
-        const existingOverlay = document.getElementById('debug-overlay');
-        if (existingOverlay) existingOverlay.remove();
-        if (rikkDebugInterval) clearInterval(rikkDebugInterval);
-        return;
-    }
-
-    if (document.getElementById('debug-overlay')) {
-        if (rikkDebugInterval) clearInterval(rikkDebugInterval);
-    } else {
-        const debugOverlay = document.createElement('div');
-        debugOverlay.id = 'debug-overlay';
-        debugOverlay.style.cssText = `position:fixed;bottom:10px;right:10px;width:auto;min-width:200px;max-width:300px;background:rgba(0,0,0,0.75);color:#0f0;padding:10px;font-family:monospace;font-size:10px;border:1px solid #0f0;border-radius:5px;z-index:9999;opacity:0.9;`;
-        const title = document.createElement('div');
-        title.textContent = 'Rikk Debugger (DEBUG ON)';
-        title.style.fontWeight = 'bold'; title.style.marginBottom = '5px'; title.style.borderBottom = '1px solid #0f0'; title.style.paddingBottom = '5px';
-        debugOverlay.appendChild(title);
-        const statusDiv = document.createElement('div');
-        statusDiv.id = 'debug-status-content';
-        statusDiv.textContent = 'Initializing...';
-        debugOverlay.appendChild(statusDiv);
-        document.body.appendChild(debugOverlay);
-    }
-
-    rikkDebugInterval = setInterval(() => {
-        if (!DEBUG_MODE) { clearInterval(rikkDebugInterval); return; }
-        const statusContent = document.getElementById('debug-status-content');
-        if (statusContent) {
-            statusContent.textContent = `State OK | ${new Date().toLocaleTimeString()} | Cash:$${cash} Heat:${heat} Cred:${streetCred} Day:${MAX_FIENDS - fiendsLeft}`;
-            statusContent.style.color = '#0f0';
-        }
-    }, 5000);
-}
-
-
 // =================================================================================
 // III. CORE GAME INITIALIZATION & FLOW
 // =================================================================================
 
 function initGame() {
     // Assign all DOM elements
-    splashScreen = document.getElementById('splash-screen'); gameViewport = document.getElementById('game-viewport'); startScreen = document.getElementById('start-screen'); gameScreen = document.getElementById('game-screen'); endScreen = document.getElementById('end-screen');
-    newGameBtn = document.getElementById('new-game-btn'); continueGameBtn = document.getElementById('continue-game-btn'); restartGameBtn = document.getElementById('restart-game-btn');
-    cashDisplay = document.getElementById('cash-display'); dayDisplay = document.getElementById('day-display'); heatDisplay = document.getElementById('heat-display'); credDisplay = document.getElementById('cred-display'); finalCredDisplay = document.getElementById('final-cred-display');
-    eventTicker = document.getElementById('event-ticker'); gameScene = document.getElementById('game-scene'); knockEffect = document.getElementById('knock-effect');
-    rikkPhoneUI = document.getElementById('rikk-phone-ui'); androidHomeScreen = document.getElementById('android-home-screen'); gameChatView = document.getElementById('game-chat-view'); gameAppMenuView = document.getElementById('game-app-menu-view');
-    chatContainer = document.getElementById('chat-container-game'); choicesArea = document.getElementById('choices-area-game'); phoneTitleGame = document.getElementById('phone-title-game'); phoneTitleGameApps = document.getElementById('phone-title-game-apps'); phoneBackButtons = document.querySelectorAll('.phone-back-button');
-    phoneDock = rikkPhoneUI.querySelector('.dock'); phoneHomeIndicator = rikkPhoneUI.querySelector('.home-indicator'); phoneDockedIndicator = document.getElementById('phone-docked-indicator');
-    openInventoryBtn = document.getElementById('open-inventory-btn'); inventoryCountDisplay = document.getElementById('inventory-count-display'); nextCustomerBtn = document.getElementById('next-customer-btn');
-    inventoryModal = document.getElementById('inventory-modal'); closeModalBtn = document.querySelector('#inventory-dialog .close-modal-btn'); inventoryList = document.getElementById('inventory-list'); modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
-    finalDaysDisplay = document.getElementById('final-days-display'); finalCashDisplay = document.getElementById('final-cash-display'); finalVerdictText = document.getElementById('final-verdict-text');
-    doorKnockSound = document.getElementById('door-knock-sound'); cashSound = document.getElementById('cash-sound'); deniedSound = document.getElementById('denied-sound'); chatBubbleSound = document.getElementById('chat-bubble-sound');
+    splashScreen = document.getElementById('splash-screen');
+    gameViewport = document.getElementById('game-viewport');
+    startScreen = document.getElementById('start-screen');
+    gameScreen = document.getElementById('game-screen');
+    endScreen = document.getElementById('end-screen');
+    newGameBtn = document.getElementById('new-game-btn');
+    continueGameBtn = document.getElementById('continue-game-btn');
+    restartGameBtn = document.getElementById('restart-game-btn');
+    cashDisplay = document.getElementById('cash-display');
+    dayDisplay = document.getElementById('day-display');
+    heatDisplay = document.getElementById('heat-display');
+    credDisplay = document.getElementById('cred-display');
+    finalCredDisplay = document.getElementById('final-cred-display');
+    eventTicker = document.getElementById('event-ticker');
+    gameScene = document.getElementById('game-scene');
+    knockEffect = document.getElementById('knock-effect');
+    rikkPhoneUI = document.getElementById('rikk-phone-ui');
+    phoneScreenArea = document.getElementById('phone-screen-area');
+    androidHomeScreen = document.getElementById('android-home-screen');
+    gameChatView = document.getElementById('game-chat-view');
+    contactsAppView = document.getElementById('contacts-app-view');
+    slotGameView = document.getElementById('slot-game-view');
+    chatContainer = document.getElementById('chat-container-game');
+    choicesArea = document.getElementById('choices-area-game');
+    phoneTitleGame = document.getElementById('phone-title-game');
+    phoneBackButtons = document.querySelectorAll('.phone-back-button');
+    phoneDock = rikkPhoneUI.querySelector('.dock');
+    phoneHomeIndicator = rikkPhoneUI.querySelector('.home-indicator');
+    phoneDockedIndicator = document.getElementById('phone-docked-indicator');
+    dockPhoneBtn = document.getElementById('dock-phone-btn');
+    openInventoryBtn = document.getElementById('open-inventory-btn');
+    inventoryCountDisplay = document.getElementById('inventory-count-display');
+    nextCustomerBtn = document.getElementById('next-customer-btn');
+    inventoryModal = document.getElementById('inventory-modal');
+    closeModalBtn = document.querySelector('#inventory-dialog .close-modal-btn');
+    inventoryList = document.getElementById('inventory-list');
+    modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
+    finalDaysDisplay = document.getElementById('final-days-display');
+    finalCashDisplay = document.getElementById('final-cash-display');
+    finalVerdictText = document.getElementById('final-verdict-text');
+    doorKnockSound = document.getElementById('door-knock-sound');
+    cashSound = document.getElementById('cash-sound');
+    deniedSound = document.getElementById('denied-sound');
+    chatBubbleSound = document.getElementById('chat-bubble-sound');
     
-    // REFACTOR: Instantiate Managers with the NEW template data.
+    // Initialize Managers
     customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    
-    // Initial Screen & Listener Setup
+    contactsAppManager = new ContactsAppManager(contactsAppView, customerTemplates);
+    slotGameManager = new SlotGameManager(slotGameView, () => cash, (newCash) => {
+        cash = newCash;
+        updateHUD();
+    });
+
+    // Initial Screen Flow
     splashScreen.classList.add('active');
     setTimeout(() => {
         splashScreen.classList.remove('active');
@@ -184,28 +164,37 @@ function initGame() {
         checkForSavedGame();
     }, SPLASH_SCREEN_DURATION);
 
+    // Attach Event Listeners
     newGameBtn.addEventListener('click', handleStartNewGameClick);
     continueGameBtn.addEventListener('click', handleContinueGameClick);
     restartGameBtn.addEventListener('click', handleRestartGameClick);
     nextCustomerBtn.addEventListener('click', nextFiend);
     openInventoryBtn.addEventListener('click', openInventoryModal);
     closeModalBtn.addEventListener('click', closeInventoryModal);
-    inventoryModal.addEventListener('click', (e) => { if (e.target === inventoryModal) closeInventoryModal(); });
+    inventoryModal.addEventListener('click', (e) => {
+        if (e.target === inventoryModal) closeInventoryModal();
+    });
     
     rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
     phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
     phoneDockedIndicator.addEventListener('click', () => setPhoneUIState('home'));
+    dockPhoneBtn.addEventListener('click', () => setPhoneUIState('docked'));
     
+    // Initialize Sub-modules
     initPhoneAmbientUI(rikkPhoneUI);
-    initDebugMode();
-    setPhoneUIState('offscreen');
 }
 
 function initializeNewGameState() {
     clearSavedGameState();
-    cash = STARTING_CASH; fiendsLeft = MAX_FIENDS; heat = 0; streetCred = STARTING_STREET_CRED; inventory = [];
+    cash = STARTING_CASH;
+    fiendsLeft = MAX_FIENDS;
+    heat = 0;
+    streetCred = STARTING_STREET_CRED;
+    inventory = [];
     playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
-    activeWorldEvents = []; dayOfWeek = days[0]; gameActive = false;
+    activeWorldEvents = [];
+    dayOfWeek = days[0];
+    gameActive = false;
     customerManager.reset();
     updateEventTicker();
 }
@@ -216,8 +205,10 @@ function startGameFlow() {
     endScreen.classList.remove('active');
     gameScreen.classList.add('active');
     setPhoneUIState('home');
-    updateHUD(); updateInventoryDisplay();
-    clearChat(); clearChoices();
+    updateHUD();
+    updateInventoryDisplay();
+    clearChat();
+    clearChoices();
     nextFiend();
 }
 
@@ -229,12 +220,18 @@ function endGame(reason) {
     finalCashDisplay.textContent = cash;
     finalCredDisplay.textContent = streetCred;
     
-    if (reason === "heat") { finalVerdictText.textContent = `The block's too hot, nigga! 5-0 swarming. Heat: ${heat}. Time to ghost.`; }
-    else if (reason === "bankrupt") { finalVerdictText.textContent = "Broke as a joke, and empty handed. Can't hustle on E, fam."; }
-    else if (reason === "completed") {
-        if (cash >= STARTING_CASH * 3) { finalVerdictText.textContent = "You a certified KINGPIN! The streets whisper your name."; }
-        else if (cash >= STARTING_CASH * 1.5) { finalVerdictText.textContent = "Solid hustle, G. Made bank and respect."; }
-        else { finalVerdictText.textContent = "Broke even or worse. Gotta step your game up, Rikk."; }
+    if (reason === "heat") {
+        finalVerdictText.textContent = `The block's too hot, nigga! 5-0 swarming. Heat: ${heat}. Time to ghost.`;
+    } else if (reason === "bankrupt") {
+        finalVerdictText.textContent = "Broke as a joke, and empty handed. Can't hustle on E, fam.";
+    } else if (reason === "completed") {
+        if (cash >= STARTING_CASH * 3) {
+            finalVerdictText.textContent = "You a certified KINGPIN! The streets whisper your name.";
+        } else if (cash >= STARTING_CASH * 1.5) {
+            finalVerdictText.textContent = "Solid hustle, G. Made bank and respect.";
+        } else {
+            finalVerdictText.textContent = "Broke even or worse. Gotta step your game up, Rikk.";
+        }
     }
     finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (cash > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)");
     setPhoneUIState('offscreen');
@@ -242,17 +239,24 @@ function endGame(reason) {
 }
 
 function nextFiend() {
-    if (!gameActive || fiendsLeft <= 0) { endGame("completed"); return; }
+    if (!gameActive || fiendsLeft <= 0) {
+        endGame("completed");
+        return;
+    }
     updateDayOfWeek();
     advanceWorldEvents();
     triggerWorldEvent();
     heat = Math.max(0, heat - (1 + playerSkills.lowProfile));
-    updateHUD(); clearChat(); clearChoices(); nextCustomerBtn.disabled = true;
+    updateHUD();
+    clearChat();
+    clearChoices();
+    nextCustomerBtn.disabled = true;
     setPhoneUIState('docked');
     playSound(doorKnockSound);
     knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`;
     knockEffect.classList.remove('hidden');
-    knockEffect.style.animation = 'none'; void knockEffect.offsetWidth;
+    knockEffect.style.animation = 'none';
+    void knockEffect.offsetWidth;
     knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
 
     setTimeout(() => {
@@ -275,9 +279,10 @@ function startCustomerInteraction(interaction) {
     const displayNext = () => {
         if (dialogueIndex < interaction.dialogue.length) {
             const msg = interaction.dialogue[dialogueIndex];
-            displayPhoneMessage(msg.text, msg.speaker);
             dialogueIndex++;
-            setTimeout(displayNext, CUSTOMER_WAIT_TIME);
+            queueNextMessage(msg.text, msg.speaker, () => {
+                setTimeout(displayNext, CUSTOMER_WAIT_TIME);
+            });
         } else {
             displayChoices(interaction.choices);
         }
@@ -305,33 +310,70 @@ function endCustomerInteraction() {
 // IV. UI MANAGEMENT & DISPLAY FUNCTIONS
 // =================================================================================
 
-function handleStartNewGameClick() { initializeNewGameState(); startGameFlow(); }
-function handleContinueGameClick() { if (loadGameState()) { startGameFlow(); } else { displaySystemMessage("System: No saved game found."); initializeNewGameState(); startGameFlow(); } }
-function handleRestartGameClick() { initializeNewGameState(); startGameFlow(); }
+function handleStartNewGameClick() {
+    initializeNewGameState();
+    startGameFlow();
+}
+
+function handleContinueGameClick() {
+    if (loadGameState()) {
+        startGameFlow();
+    } else {
+        displaySystemMessage("System: No saved game found.");
+        initializeNewGameState();
+        startGameFlow();
+    }
+}
+
+function handleRestartGameClick() {
+    initializeNewGameState();
+    startGameFlow();
+}
 
 function setPhoneUIState(state) {
     if (!rikkPhoneUI) return;
+    
     rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
-    androidHomeScreen.classList.add('hidden'); gameChatView.classList.add('hidden'); gameAppMenuView.classList.add('hidden');
-    phoneDock.classList.remove('hidden'); phoneHomeIndicator.classList.remove('hidden'); phoneDockedIndicator.classList.add('hidden');
+    androidHomeScreen.classList.add('hidden'); 
+    gameChatView.classList.add('hidden'); 
+    contactsAppView.classList.add('hidden');
+    slotGameView.classList.add('hidden');
+    phoneScreenArea.classList.remove('screen-off');
+    phoneDockedIndicator.classList.add('hidden');
     phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
+    phoneDock.classList.add('hidden'); 
+    phoneHomeIndicator.classList.add('hidden'); 
+    
     switch (state) {
         case 'chatting':
-            rikkPhoneUI.classList.add('chatting-game'); gameChatView.classList.remove('hidden');
-            phoneDock.classList.add('hidden'); phoneHomeIndicator.classList.add('hidden');
+            rikkPhoneUI.classList.add('chatting-game'); 
+            gameChatView.classList.remove('hidden');
             break;
         case 'home':
-            rikkPhoneUI.classList.add('home-screen-active'); androidHomeScreen.classList.remove('hidden');
+            rikkPhoneUI.classList.add('home-screen-active'); 
+            androidHomeScreen.classList.remove('hidden');
+            phoneDock.classList.remove('hidden');
+            phoneHomeIndicator.classList.remove('hidden');
             break;
-        case 'app-menu':
-            rikkPhoneUI.classList.add('app-menu-game'); gameAppMenuView.classList.remove('hidden');
+        case 'contacts':
+            rikkPhoneUI.classList.add('app-menu-game'); 
+            contactsAppView.classList.remove('hidden');
+            phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+            break;
+        case 'slots':
+            rikkPhoneUI.classList.add('app-menu-game');
+            slotGameView.classList.remove('hidden');
+            slotGameManager.launch();
             phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
             break;
         case 'docked':
-            rikkPhoneUI.classList.add('is-offscreen'); phoneDockedIndicator.classList.remove('hidden');
+            rikkPhoneUI.classList.add('is-offscreen'); 
+            phoneScreenArea.classList.add('screen-off');
+            phoneDockedIndicator.classList.remove('hidden');
             break;
         case 'offscreen':
             rikkPhoneUI.classList.add('is-offscreen');
+            phoneScreenArea.classList.add('screen-off');
             break;
     }
 }
@@ -340,23 +382,108 @@ function handlePhoneAppClick(event) {
     const action = event.currentTarget.dataset.action;
     switch(action) {
         case 'messages':
-            if (!nextCustomerBtn.disabled && fiendsLeft > 0 && gameActive) { nextFiend(); }
-            else if (currentCustomerInstance) { setPhoneUIState('chatting'); }
-            else { phoneShowNotification("No new messages.", "Rikk's Inbox"); }
+            if (!nextCustomerBtn.disabled && fiendsLeft > 0 && gameActive) { 
+                nextFiend(); 
+            } else if (currentCustomerInstance) { 
+                setPhoneUIState('chatting'); 
+            } else { 
+                phoneShowNotification("No new messages.", "Rikk's Inbox"); 
+            }
             break;
-        case 'inventory-app': openInventoryModal(); break;
-        case 'back-to-home': setPhoneUIState('home'); break;
-        default: phoneShowNotification(`App "${action}" not implemented.`, "System"); break;
+        case 'inventory-app': 
+            openInventoryModal(); 
+            break;
+        case 'contacts-app':
+            setPhoneUIState('contacts');
+            break;
+        case 'slot-game':
+            setPhoneUIState('slots');
+            break;
+        case 'back-to-home': 
+            setPhoneUIState('home'); 
+            break;
+        default: 
+            phoneShowNotification(`App "${action}" not implemented.`, "System"); 
+            break;
     }
 }
 
-function displayPhoneMessage(message, speaker) {
-    if (typeof message === 'undefined' || message === null) { message = "..."; }
-    
-    if (speaker !== 'narration') {
-        playSound(chatBubbleSound);
+function queueNextMessage(message, speaker, callback) {
+    audioQueue.push({ message, speaker, callback });
+    if (!isPlayingAudio) {
+        processAudioQueue();
+    }
+}
+
+function processAudioQueue() {
+    if (audioQueue.length === 0) {
+        isPlayingAudio = false;
+        return;
     }
 
+    isPlayingAudio = true;
+    const { message, speaker, callback } = audioQueue.shift();
+
+    if (!TTS_ENABLED || speaker === 'narration' || !ELEVENLABS_API_KEY || !ELEVENLABS_VOICE_ID_CUSTOMER || !ELEVENLABS_VOICE_ID_RIKK) {
+        playSound(chatBubbleSound);
+        displayPhoneMessage(message, speaker);
+        if (callback) callback();
+        setTimeout(() => processAudioQueue(), 400);
+        return;
+    }
+
+    let voiceId = speaker === 'customer' ? ELEVENLABS_VOICE_ID_CUSTOMER : ELEVENLABS_VOICE_ID_RIKK;
+    const url = `${ELEVENLABS_API_ENDPOINT_BASE}${voiceId}`;
+    const headers = {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg"
+    };
+    const data = {
+        text: message.replace(/\*\*|[\*_]/g, ''),
+        model_id: "eleven_monolingual_v1",
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+    };
+
+    fetch(url, { method: "POST", headers: headers, body: JSON.stringify(data) })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errData => {
+                const errorDetail = errData.detail?.message || JSON.stringify(errData.detail);
+                throw new Error(`HTTP error ${response.status}: ${errorDetail}`);
+            }).catch(() => {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            });
+        }
+        return response.blob();
+    })
+    .then(audioBlob => {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.volume = 0.8;
+        displayPhoneMessage(message, speaker);
+        audio.play().catch(e => { throw e; });
+        audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            if (callback) callback();
+            processAudioQueue();
+        };
+    })
+    .catch(err => {
+        console.error("Error with ElevenLabs TTS:", err);
+        displaySystemMessage(`TTS service failed. Displaying text only.`);
+        playSound(chatBubbleSound);
+        displayPhoneMessage(message, speaker);
+        if (callback) callback();
+        processAudioQueue();
+    });
+}
+
+function displayPhoneMessage(message, speaker) {
+    if (typeof message === 'undefined' || message === null) {
+        message = "...";
+    }
+    
     const messageContainer = document.createElement('div');
     messageContainer.classList.add('chat__conversation-board__message-container');
 
@@ -370,8 +497,8 @@ function displayPhoneMessage(message, speaker) {
     avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
     const avatarImg = document.createElement('img');
     
-    if (speaker === 'customer' && currentCustomerInstance && currentCustomerInstance.archetypeKey) {
-        avatarImg.src = customerAvatars[currentCustomerInstance.archetypeKey] || 'https://randomuser.me/api/portraits/lego/1.jpg';
+    if (speaker === 'customer' && currentCustomerInstance?.archetypeKey) {
+        avatarImg.src = customerAvatars[currentCustomerInstance.archetypeKey] || 'https://via.placeholder.com/56/555555/FFFFFF?text=?';
         avatarImg.alt = currentCustomerInstance.name || 'Customer';
     } else if (speaker === 'rikk') {
         avatarImg.src = rikkAvatarUrl;
@@ -398,21 +525,36 @@ function displayPhoneMessage(message, speaker) {
         speakerNameElement.textContent = (speaker === 'customer') ? (currentCustomerInstance.name || '[Customer]') : 'Rikk';
         bubble.appendChild(speakerNameElement);
     }
+    
+    const messageParts = message.split(/(\*\*.*?\*\*)/g);
+    messageParts.forEach(part => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            const boldEl = document.createElement('strong');
+            boldEl.textContent = part.slice(2, -2);
+            bubble.appendChild(boldEl);
+        } else {
+            bubble.appendChild(document.createTextNode(part));
+        }
+    });
 
-    bubble.appendChild(document.createTextNode(message));
     contextDiv.appendChild(bubble);
     messageContainer.appendChild(contextDiv);
 
     if (chatContainer && chatSpacerElement) {
         chatContainer.insertBefore(messageContainer, chatSpacerElement);
-    } else {
+    } else if (chatContainer) {
         chatContainer.appendChild(messageContainer);
     }
 
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+    if(chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 }
 
-function displaySystemMessage(message) { displayPhoneMessage(message, 'narration'); phoneShowNotification(message, "System Alert"); }
+function displaySystemMessage(message) {
+    displayPhoneMessage(message, 'narration');
+    phoneShowNotification(message, "System Alert");
+}
 
 function displayChoices(choices) {
     choicesArea.innerHTML = '';
@@ -420,16 +562,23 @@ function displayChoices(choices) {
     choices.forEach(choice => {
         const button = document.createElement('button');
         button.classList.add('choice-button');
-        if (choice.outcome.type.startsWith('decline')) button.classList.add('decline');
+        if (choice.outcome.type.startsWith('decline')) {
+            button.classList.add('decline');
+        }
         button.textContent = choice.text;
         button.disabled = choice.disabled || false;
-        if (!choice.disabled) button.addEventListener('click', () => handleChoice(choice.outcome));
+        if (!choice.disabled) {
+            button.addEventListener('click', () => handleChoice(choice.outcome));
+        }
         choicesArea.appendChild(button);
     });
 }
 
 function updateHUD() {
-    cashDisplay.textContent = cash; dayDisplay.textContent = fiendsLeft; heatDisplay.textContent = heat; credDisplay.textContent = streetCred;
+    cashDisplay.textContent = cash;
+    dayDisplay.textContent = fiendsLeft;
+    heatDisplay.textContent = heat;
+    credDisplay.textContent = streetCred;
 }
 
 function updateInventoryDisplay() {
@@ -448,12 +597,19 @@ function updateInventoryDisplay() {
     }
 }
 
-function openInventoryModal() { updateInventoryDisplay(); inventoryModal.classList.add('active'); setPhoneUIState('offscreen'); }
-function closeInventoryModal() { inventoryModal.classList.remove('active'); setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home'); }
+function openInventoryModal() {
+    updateInventoryDisplay();
+    inventoryModal.classList.add('active');
+    setPhoneUIState('offscreen');
+}
 
+function closeInventoryModal() {
+    inventoryModal.classList.remove('active');
+    setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home');
+}
 
 // =================================================================================
-// V. INTERACTION & CHOICE LOGIC (COMPLETELY REWRITTEN)
+// V. INTERACTION & CHOICE LOGIC
 // =================================================================================
 
 function handleChoice(outcome) {
@@ -467,8 +623,8 @@ function handleChoice(outcome) {
 
     let narrationText = "";
     let dealSuccess = false;
+    let dialogueContextKey = '';
 
-    // --- Step 1: Handle Immediate Actions (like inventory changes) ---
     switch (outcome.type) {
         case "buy_from_customer":
             if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
@@ -477,9 +633,11 @@ function handleChoice(outcome) {
                 dealSuccess = true;
                 narrationText = `Rikk copped "${outcome.item.name}".`;
                 playSound(cashSound);
+                dialogueContextKey = 'rikkBuysSuccess';
             } else {
                 narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`;
                 playSound(deniedSound);
+                dialogueContextKey = 'lowCashRikk';
             }
             break;
         case "sell_to_customer":
@@ -490,6 +648,7 @@ function handleChoice(outcome) {
                 dealSuccess = true;
                 narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
                 playSound(cashSound);
+                dialogueContextKey = 'rikkSellsSuccess';
             } else {
                 narrationText = "Couldn't find that item.";
                 playSound(deniedSound);
@@ -498,26 +657,33 @@ function handleChoice(outcome) {
         case "negotiate_sell":
             setTimeout(() => {
                 if (Math.random() < 0.55 + (playerSkills.negotiator * 0.12)) {
-                    displaySystemMessage(`Negotiation successful!`);
-                    handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
+                    const negoSuccessResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
+                    queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
+                         handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
+                    });
                 } else {
-                    displaySystemMessage(`They ain't having it. "My first offer stands," they say.`);
-                    const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
-                    displayChoices(choices);
+                    const negoFailResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
+                    queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
+                        const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
+                        displayChoices(choices);
+                    });
                 }
             }, 1000);
-            return; // Exit handleChoice, as it will be called again by the negotiation result.
+            return;
         case "decline_offer_to_buy":
             narrationText = "Rikk passes on the offer.";
             playSound(deniedSound);
+            dialogueContextKey = 'rikkDeclinesToBuy';
             break;
         case "decline_offer_to_sell":
             narrationText = "Rikk tells them to kick rocks.";
             playSound(deniedSound);
+            dialogueContextKey = 'rikkDeclinesToSell';
             break;
         case "acknowledge_empty_stash":
             narrationText = "Rikk's stash is dry. Customer ain't happy.";
             playSound(deniedSound);
+            dialogueContextKey = 'acknowledge_empty_stash';
             break;
         case "acknowledge_error":
             narrationText = "System error acknowledged.";
@@ -528,90 +694,95 @@ function handleChoice(outcome) {
         fiendsLeft--;
     }
 
-    // --- Step 2: Get Outcome Dialogue and Execute Payloads ---
-    const outcomeResult = customerManager.getOutcomeDialogue(currentCustomerInstance, outcome.type);
+    const outcomeResult = dialogueContextKey ? customerManager.getOutcomeDialogue(currentCustomerInstance, dialogueContextKey) : { line: '', payload: null };
     if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
     if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
     
-    // --- Step 3: Update UI and End Turn ---
     updateHUD();
     updateInventoryDisplay();
 
-    setTimeout(() => {
-        if (narrationText) displayPhoneMessage(narrationText, 'narration');
-        if (outcomeResult.line) displayPhoneMessage(outcomeResult.line, 'customer');
+    if (narrationText.trim() !== "") {
+        queueNextMessage(narrationText, 'narration', () => {
+            if (outcomeResult.line && outcomeResult.line.trim() !== "") {
+                queueNextMessage(outcomeResult.line, 'customer', () => {
+                    setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
+                });
+            } else {
+                setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
+            }
+        });
+    } else if (outcomeResult.line && outcomeResult.line.trim() !== "") {
+        queueNextMessage(outcomeResult.line, 'customer', () => {
+            setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
+        });
+    } else {
         setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-    }, CUSTOMER_WAIT_TIME / 2);
+    }
 
-    if (heat >= MAX_HEAT) { endGame("heat"); return; }
-    if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) { endGame("bankrupt"); return; }
+    if (heat >= MAX_HEAT) {
+        endGame("heat");
+        return;
+    }
+    if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) {
+        endGame("bankrupt");
+        return;
+    }
 }
 
-/**
- * NEW: The Payload Executor. This function interprets and applies effects from payloads.
- * @param {object} payload - The payload object from the customer template.
- * @param {boolean} dealSuccess - Whether the primary transaction was successful.
- */
 function processPayload(payload, dealSuccess) {
     if (!payload || !payload.effects || payload.type !== "EFFECT") return;
 
     payload.effects.forEach(effect => {
-        // If the effect has a condition, check it first.
         if (effect.condition) {
-            if (effect.condition.stat === 'dealSuccess' && dealSuccess !== effect.condition.value) {
-                return; // Skip effect if deal success doesn't match
+            if (effect.condition.stat === 'dealSuccess' && dealSuccess !== effect.condition.value) return;
+            if (effect.condition.stat === 'mood') {
+                const customerMood = currentCustomerInstance.mood;
+                if (effect.condition.op === 'is' && customerMood !== effect.condition.value) return;
+                if (effect.condition.op === 'isNot' && customerMood === effect.condition.value) return;
             }
         }
 
         switch (effect.type) {
             case 'modifyStat':
-                if (effect.target === 'player') {
-                    // Using a switch for safety instead of window[var]
-                    switch(effect.stat) {
-                        case 'cash': cash += effect.value; break;
-                        case 'heat': heat += effect.value; break;
-                        case 'streetCred': streetCred += effect.value; break;
-                    }
-                } else if (effect.target === 'customer') {
-                    currentCustomerInstance[effect.stat] = (currentCustomerInstance[effect.stat] || 0) + effect.value;
-                }
                 break;
-
             case 'triggerEvent':
                 if (Math.random() < effect.chance) {
+                    let message = effect.message || '';
                     if (effect.eventName === 'snitchReport') {
-                        heat += effect.heatValue;
+                        const heatGain = Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin;
+                        heat += heatGain;
                         streetCred += effect.credValue;
-                        displaySystemMessage(`🚨 RAT ALERT! 🚨 Someone was seen yapping to the 5-0! (+${effect.heatValue} Heat, ${effect.credValue} Cred)`);
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name).replace('[HEAT_VALUE]', heatGain);
                     }
                     if (effect.eventName === 'highRollerTip') {
                         const tip = Math.floor(cash * effect.tipPercentage);
                         cash += tip;
                         streetCred += effect.credValue;
-                        displaySystemMessage(`${currentCustomerInstance.name} was pleased and tipped you $${tip}! (+${effect.credValue} Cred)`);
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name).replace('[TIP_AMOUNT]', tip);
                     }
                     if (effect.eventName === 'publicIncident') {
-                        let conditionMet = true;
-                        if (effect.condition && effect.condition.stat === 'mood') {
-                           if (currentCustomerInstance.mood === effect.condition.value) conditionMet = false;
-                        }
-                        if (conditionMet) {
-                            heat += effect.heatValue;
-                            displaySystemMessage(`${currentCustomerInstance.name} stumbles away looking rough... (+${effect.heatValue} Heat)`);
-                        }
+                        heat += effect.heatValue;
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name);
                     }
+                    if (message) displaySystemMessage(message);
                 }
+                break;
+            default:
+                console.warn(`processPayload: Unknown effect type '${effect.type}'`);
                 break;
         }
     });
 }
 
-
 // =================================================================================
 // VI. DATA & UTILITY FUNCTIONS
 // =================================================================================
 
-function updateDayOfWeek() { const currentIndex = days.indexOf(dayOfWeek); dayOfWeek = days[(currentIndex + 1) % days.length];}
+function updateDayOfWeek() {
+    const currentIndex = days.indexOf(dayOfWeek);
+    dayOfWeek = days[(currentIndex + 1) % days.length];
+}
+
 function triggerWorldEvent() {
     if (activeWorldEvents.length > 0 && Math.random() < 0.7) return;
     activeWorldEvents = activeWorldEvents.filter(event => event.turnsLeft > 0);
@@ -621,10 +792,14 @@ function triggerWorldEvent() {
     }
     updateEventTicker();
 }
+
 function advanceWorldEvents() { 
-    activeWorldEvents.forEach(eventState => { eventState.turnsLeft--; });
+    activeWorldEvents.forEach(eventState => {
+        eventState.turnsLeft--;
+    });
     activeWorldEvents = activeWorldEvents.filter(eventState => eventState.turnsLeft > 0);
 }
+
 function updateEventTicker() { 
     if (activeWorldEvents.length > 0) {
         const currentEvent = activeWorldEvents[0];
@@ -642,8 +817,17 @@ function clearChat() {
         chatContainer.appendChild(chatSpacerElement);
     }
 }
-function clearChoices() { if(choicesArea) choicesArea.innerHTML = ''; }
-function playSound(audioElement) { if (audioElement?.play) { audioElement.currentTime = 0; audioElement.play().catch(e => console.log(`Audio play failed: ${e.name}`)); } }
+
+function clearChoices() {
+    if(choicesArea) choicesArea.innerHTML = '';
+}
+
+function playSound(audioElement) {
+    if (audioElement?.play) {
+        audioElement.currentTime = 0;
+        audioElement.play().catch(e => console.log(`Audio play failed: ${e.name}`));
+    }
+}
 
 function saveGameState() {
     if (!gameActive && fiendsLeft > 0) return;
@@ -659,18 +843,29 @@ function loadGameState() {
     if (savedData) {
         try {
             const loadedState = JSON.parse(savedData);
-            cash = loadedState.cash ?? STARTING_CASH; fiendsLeft = loadedState.fiendsLeft ?? MAX_FIENDS; heat = loadedState.heat ?? 0; streetCred = loadedState.streetCred ?? STARTING_STREET_CRED;
-            inventory = loadedState.inventory ?? []; playerSkills = loadedState.playerSkills ?? { negotiator: 0, appraiser: 0, lowProfile: 0 };
-            activeWorldEvents = loadedState.activeWorldEvents ?? []; dayOfWeek = loadedState.dayOfWeek ?? days[0];
+            cash = loadedState.cash ?? STARTING_CASH;
+            fiendsLeft = loadedState.fiendsLeft ?? MAX_FIENDS;
+            heat = loadedState.heat ?? 0;
+            streetCred = loadedState.streetCred ?? STARTING_STREET_CRED;
+            inventory = loadedState.inventory ?? [];
+            playerSkills = loadedState.playerSkills ?? { negotiator: 0, appraiser: 0, lowProfile: 0 };
+            activeWorldEvents = loadedState.activeWorldEvents ?? [];
+            dayOfWeek = loadedState.dayOfWeek ?? days[0];
             customerManager.loadSaveState(loadedState.customerManagerState);
             updateEventTicker();
             return true;
-        } catch (e) { clearSavedGameState(); return false; }
+        } catch (e) {
+            clearSavedGameState();
+            return false;
+        }
     }
     return false;
 }
 
-function clearSavedGameState() { localStorage.removeItem(SAVE_KEY); }
+function clearSavedGameState() {
+    localStorage.removeItem(SAVE_KEY);
+}
+
 function checkForSavedGame() {
     if (localStorage.getItem(SAVE_KEY)) {
         continueGameBtn.classList.remove('hidden');

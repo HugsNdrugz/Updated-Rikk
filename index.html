@@ -5,11 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My Nigga Rikk - Street Hustle</title>
+    <!-- Main Game Styles -->
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- NEW: Add Lato font for chat - needed by the new mockChat styles -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato'>
+    <!-- NEW: Slot Game Dependencies -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Permanent+Marker&family=Roboto:ital,wght@1,300&display=swap">
 </head>
 
 <body>
@@ -69,7 +74,7 @@
                     <div class="volume-btn"></div>
                     <div class="power-btn"></div>
                     
-                    <div class="phone-screen-area">
+                    <div id="phone-screen-area" class="phone-screen-area">
                         <div class="wallpaper"></div>
                         <div class="notch"><div class="camera"></div><div class="speaker"></div></div>
                         
@@ -93,30 +98,62 @@
                             <div class="app-grid">
                                 <div class="app-icon" data-action="messages"><i class="fas fa-comment-dots"></i><div class="app-label">Messages</div></div>
                                 <div class="app-icon" data-action="inventory-app"><i class="fas fa-briefcase"></i><div class="app-label">Inventory</div></div>
-                                <div class="app-icon" data-action="maps"><i class="fas fa-map-marker-alt"></i><div class="app-label">Maps</div></div>
-                                <div class="app-icon" data-action="camera"><i class="fas fa-camera"></i><div class="app-label">Camera</div></div>
+                                <div class="app-icon" data-action="contacts-app"><i class="fas fa-address-book"></i><div class="app-label">Contacts</div></div>
+                                <div class="app-icon" data-action="slot-game"><i class="fas fa-dice-five"></i><div class="app-label">Slots</div></div>
                                 <div class="app-icon" data-action="music"><i class="fas fa-music"></i><div class="app-label">Music</div></div>
                                 <div class="app-icon" data-action="clock"><i class="fas fa-clock"></i><div class="app-label">Clock</div></div>
                             </div>
                         </div>
 
-                        <!-- MODIFIED: Added mockchat class to game-chat-view -->
                         <div id="game-chat-view" class="phone-content-view hidden mockchat">
                              <header class="phone-header">
                                 <button class="phone-back-button hidden" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
                                 <h3 id="phone-title-game">Street Talk</h3>
                             </header>
-                            <!-- #chat-container-game will now serve as the .app equivalent for mockchat -->
                             <div id="chat-container-game" class="phone-chat-body" role="log" aria-live="polite"></div>
                             <footer id="choices-area-game" class="phone-footer-choices" role="toolbar"></footer>
                         </div>
                         
-                        <div id="game-app-menu-view" class="phone-content-view hidden">
-                           <header class="phone-header">
-                                <button class="phone-back-button hidden" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
-                                <h3 id="phone-title-game-apps">Apps</h3>
+                        <div id="contacts-app-view" class="phone-content-view hidden">
+                            <!-- The ContactsAppManager will render its UI content here -->
+                        </div>
+
+                        <!-- NEW: Container for the Slot Game App -->
+                        <div id="slot-game-view" class="phone-content-view hidden">
+                             <header class="phone-header">
+                                <button class="phone-back-button" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
+                                <h3 id="phone-title-slot-game">Slots</h3>
                             </header>
-                            <!-- This area could be populated with more apps or settings later -->
+                            <!-- Slot Game HTML structure injected here -->
+                            <div class="game-container">
+                                <div class="winner-display mb-3">
+                                  <span>WIN: <span id="win-amount">$0</span></span>
+                                </div>
+                                <canvas id="slot" width="440" height="240"></canvas>
+                                <div class="controls d-flex align-items-end px-1 mt-3">
+                                  <div class="text-warning left d-flex flex-column align-items-start justify-content-between h-100">
+                                    <span>Credit: <span id="credits" class="credit text-white">$0</span></span>
+                                    <span>Bet: <span id="bet" class="bet text-white">$0</span></span>
+                                  </div>
+                                  <div class="mx-4 middle d-flex align-items-end justify-content-between">
+                                    <button id="minus-bet" class="bet-action-btn"><i class="fas fa-minus"></i></button>
+                                    <button class="align-items-center d-flex gap-2" id="spin-manual"><i class="fas fa-sync-alt"></i><b>SPIN</b></button>
+                                    <button id="plus-bet" class="bet-action-btn"><i class="fas fa-plus"></i></button>
+                                  </div>
+                                  <div class="right d-flex flex-column align-items-end justify-content-between gap-1">
+                                    <button class="align-items-center d-flex gap-1" id="pay-table" data-bs-toggle="modal" data-bs-target="#pay-table-modal"><i class="fas fa-table"></i><b>Pay Table</b></button>
+                                    <button class="align-items-center control-btn d-flex gap-1" id="spin-auto"><i class="fas fa-play"></i><b>AUTO | OFF</b></button>
+                                  </div>
+                                </div>
+                            </div>
+                            <div class="modal fade modal-fullscreen-sm-down modal-lg" id="pay-table-modal">
+                                <div class="modal-dialog modal-dialog-centered">
+                                  <div class="modal-content">
+                                    <div class="modal-header"><h5 class="modal-title">Pay Table</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                                    <div class="modal-body"></div>
+                                  </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="dock">
@@ -127,10 +164,11 @@
                         </div>
                         
                         <div class="home-indicator"></div>
+
+                        <button id="dock-phone-btn" aria-label="Dock Phone"><i class="fas fa-arrow-down"></i></button>
                     </div>
                 </aside>
 
-                 <!-- Floating Phone Icon -->
                 <div id="phone-docked-indicator" class="hidden">
                     <i class="fas fa-mobile-alt"></i>
                 </div>
@@ -179,14 +217,20 @@
     <audio id="door-knock-sound" src="assets/audio/door-knock.mp3" preload="auto"></audio>
     <audio id="cash-sound" src="assets/audio/cash-register.mp3" preload="auto"></audio>
     <audio id="denied-sound" src="assets/audio/denied.mp3" preload="auto"></audio>
-    <!-- Corrected ID to match script.js reference -->
     <audio id="chat-bubble-sound" src="assets/audio/chat-pop.mp3" preload="auto"></audio>
     
-    <!-- SCRIPT LOADING ORDER - ALL ARE NOW MODULES TO ENSURE CORRECT DEPENDENCY LOADING -->
+    <!-- NEW: Slot Game Dependencies (Scripts) -->
+    <script src="https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.umd.js"></script>
+    <script src="https://unpkg.com/@n1md7/html-table-builder@1.0.1/dist/table_builder.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SCRIPT LOADING ORDER -->
     <script src="data/data_items.js" type="module"></script>
-    <script src="data/data_customers.js" type="module"></script>
+    <script src="data/customer_templates.js" type="module"></script>
     <script src="data/data_events.js" type="module"></script>
     <script src="./classes/CustomerManager.js" type="module"></script>
+    <script src="./classes/ContactsAppManager.js" type="module"></script>
+    <script src="./classes/SlotGameManager.js" type="module"></script>
     <script src="phone_ambient_ui.js" type="module"></script>
     <script src="script.js" type="module"></script>
 </body>

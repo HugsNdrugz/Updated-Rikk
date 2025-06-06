@@ -78,7 +78,7 @@ export class CustomerManager {
             } else {
                 choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
             }
-            choices.push({ text: "Nah, pass.", outcome: { type: "decline_offer_to_buy", payload: declineResult.payload } });
+            choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy'", payload: declineResult.payload } });
 
         } else if (inventory.length > 0) {
             // --- Scenario B: Customer is BUYING an item FROM Rikk ---
@@ -105,7 +105,7 @@ export class CustomerManager {
                 const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
                 choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
             }
-            choices.push({ text: "Nah, kick rocks.", outcome: { type: "decline_offer_to_sell", payload: declineResult.payload } });
+            choices.push({ text: "Nah, kick rocks.", outcome: { type: "rikkDeclinesToSell", payload: declineResult.payload } });
 
         } else {
             // --- Scenario C: Rikk has no inventory to sell ---
