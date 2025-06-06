@@ -1,29 +1,28 @@
 // =================================================================================
-// CustomerManager Class
+// CustomerManager Class (Refactored)
 // =================================================================================
-// This class is the definitive authority on all customer-related logic. It handles
-// the generation of customer profiles, dialogue, interaction scenarios (buy/sell),
-// item generation for customers, and value calculation. It is designed to be
-// instantiated once by the main game script and fed the necessary game data,
-// ensuring a clean separation of concerns.
+// This class is the definitive authority on all customer-related logic.
+// It has been refactored into a data INTERPRETER, not a logic container. It reads
+// declarative templates from customer_templates.js, creates live instances of customers,
+// and uses the data to drive interactions, including dialogue and game effects.
 // =================================================================================
 
 export class CustomerManager {
     /**
-     * Initializes the CustomerManager with all necessary data dependencies.
-     * @param {object} customerArchetypesData - Data from data_customers.js
-     * @param {object} itemTypesData - Data from data_items.js
-     * @param {object} itemQualityLevelsData - Data from data_items.js
-     * @param {object} itemQualityModifiersData - Data from data_items.js
+     * Initializes the CustomerManager with the new template data and other game data.
+     * @param {object} customerTemplatesData - Data from the new customer_templates.js.
+     * @param {object} itemTypesData - Data from data_items.js.
+     * @param {object} itemQualityLevelsData - Data from data_items.js.
+     * @param {object} itemQualityModifiersData - Data from data_items.js.
      */
-    constructor(customerArchetypesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData) {
-        // Store references to all required game data, injected upon creation
-        this.customerArchetypes = customerArchetypesData;
+    constructor(customerTemplatesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData) {
+        // Store references to all required game data.
+        this.customerTemplates = customerTemplatesData;
         this.itemTypes = itemTypesData;
         this.itemQualityLevels = itemQualityLevelsData;
         this.itemQualityModifiers = itemQualityModifiersData;
 
-        // Internal state for managing the pool of unique customers
+        // Internal state for managing the pool of unique customer instances.
         this.customersPool = [];
         this.nextCustomerId = 1;
         this.MAX_CUSTOMERS_IN_POOL = 20; // Internal configuration
@@ -31,141 +30,188 @@ export class CustomerManager {
 
     /**
      * The main public method to generate a complete customer interaction object.
-     * The main script.js will call this single method to get everything it needs for an interaction.
      * @param {object} gameState - An object containing relevant state from the main script.
-     * @returns {object} A fully-formed `currentCustomer` object for the interaction.
+     * @returns {object} A fully-formed interaction object for the main script to use.
      */
     generateInteraction(gameState) {
         const { inventory, cash, playerSkills, activeWorldEvents } = gameState;
-        const customerData = this._selectOrGenerateCustomerFromPool();
+        const customerInstance = this._selectOrGenerateCustomerFromPool();
 
-        // Safety check in case the archetype data is missing or corrupt
-        if (!this.customerArchetypes || !this.customerArchetypes[customerData.archetypeKey]) {
-            console.error(`CustomerManager: Invalid archetypeKey provided: ${customerData.archetypeKey}`);
-            return {
-                data: customerData, name: customerData.name || "Error Customer",
-                dialogue: [{ speaker: "narration", text: "Error: Customer data is corrupted." }],
-                choices: [{ text: "OK", outcome: { type: "acknowledge_error" } }],
-                itemContext: null, archetypeKey: "ERROR_ARCHETYPE", mood: "error"
-            };
+        // Retrieve the base template for this customer.
+        const template = this.customerTemplates[customerInstance.archetypeKey];
+        if (!template) {
+            console.error(`CustomerManager: Invalid archetypeKey provided: ${customerInstance.archetypeKey}`);
+            return this._createErrorInteraction(customerInstance);
         }
+        
+        // Get the initial dialogue using the new interpreter method.
+        const greetingResult = this._getDialogue(customerInstance, 'greeting');
+        let dialogue = [
+            { speaker: "customer", text: greetingResult.line },
+            { speaker: "rikk", text: this._getRandomElement(["Aight, what's the word?", "Yo. Lay it on me.", "Speak."]) }
+        ];
 
-        const archetype = this.customerArchetypes[customerData.archetypeKey];
-        let dialogue = [];
         let choices = [];
         let itemContext = null;
 
-        // --- Step 1: Generate Initial Dialogue ---
-        let greetingText = archetype.greeting(customerData, null);
-        dialogue.push({ speaker: "customer", text: greetingText });
-        const rikkOpeners = ["Aight, what's the word?", "Yo. Lay it on me.", "Speak. You buyin' or sellin'?"];
-        dialogue.push({ speaker: "rikk", text: this._getRandomElement(rikkOpeners) });
-
-        // --- Step 2: Determine Interaction Type (Customer Sells vs. Customer Buys) ---
+        // Determine interaction type (buy vs. sell)
         let customerWillOfferItemToRikk = Math.random() < 0.5;
         if (inventory.length === 0) customerWillOfferItemToRikk = true;
         if (inventory.length >= 10) customerWillOfferItemToRikk = false;
-
-        if (archetype.sellsOnly) {
+        if (template.sellsOnly) {
             customerWillOfferItemToRikk = true;
         }
 
         if (customerWillOfferItemToRikk) {
             // --- Scenario A: Customer is SELLING an item TO Rikk ---
-            itemContext = this._generateRandomItem(archetype);
-            const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerData });
-            let offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
+            itemContext = this._generateRandomItem(template);
+            customerInstance.currentItemName = itemContext.name;
+            
+            const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance });
+            const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
             dialogue.push({ speaker: "customer", text: offerText });
+
+            const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
 
             if (cash >= customerDemandsPrice) {
                 choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
             } else {
                 choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
             }
-            choices.push({ text: "Nah, pass.", outcome: { type: "decline_offer_to_buy" } });
+            choices.push({ text: "Nah, pass.", outcome: { type: "decline_offer_to_buy", payload: declineResult.payload } });
 
         } else if (inventory.length > 0) {
             // --- Scenario B: Customer is BUYING an item FROM Rikk ---
-            itemContext = this._getRandomElement(inventory); // Pick a random item from Rikk's stash
-            const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerData });
-            let customerOfferPrice = Math.round(rikkBaseSellPrice * archetype.priceToleranceFactor);
-            customerOfferPrice = Math.min(customerOfferPrice, customerData.cashOnHand);
+            itemContext = this._getRandomElement(inventory);
+            customerInstance.currentItemName = itemContext.name;
 
-            let askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
+            const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerInstance });
+            const template = this.customerTemplates[customerInstance.archetypeKey];
+            let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
+            customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
+
+            const askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
             dialogue.push({ speaker: "customer", text: askText });
 
-            if (customerData.cashOnHand >= customerOfferPrice) {
+            const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToSell');
+
+            if (customerInstance.cashOnHand >= customerOfferPrice) {
                 choices.push({ text: `Serve 'em ($${customerOfferPrice})`, outcome: { type: "sell_to_customer", item: itemContext, price: customerOfferPrice } });
             } else {
                 choices.push({ text: `Serve 'em ($${customerOfferPrice}) (Short!)`, outcome: { type: "sell_to_customer" }, disabled: true });
             }
 
-            if (!archetype.negotiationResists && rikkBaseSellPrice > customerOfferPrice + 5) {
-                const hagglePrice = Math.min(customerData.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
+            if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + 5) {
+                const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
                 choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
             }
-            choices.push({ text: "Nah, kick rocks.", outcome: { type: "decline_offer_to_sell" } });
+            choices.push({ text: "Nah, kick rocks.", outcome: { type: "decline_offer_to_sell", payload: declineResult.payload } });
 
         } else {
             // --- Scenario C: Rikk has no inventory to sell ---
+            const emptyStashResult = this._getDialogue(customerInstance, 'acknowledge_empty_stash');
             dialogue.push({ speaker: "rikk", text: "Stash is drier than a popcorn fart, G. Nothin' to move right now." });
-            choices.push({ text: "Aight, my bad. Later.", outcome: { type: "acknowledge_empty_stash" } });
+            choices.push({ text: "Aight, my bad. Later.", outcome: { type: "acknowledge_empty_stash", payload: emptyStashResult ? emptyStashResult.payload : null } });
         }
 
-        // --- Step 3: Return the complete interaction object ---
         return {
-            data: customerData, name: customerData.name,
-            dialogue, choices, itemContext,
-            archetypeKey: customerData.archetypeKey, mood: customerData.mood
+            instance: customerInstance,
+            name: customerInstance.name,
+            dialogue,
+            choices,
+            itemContext,
+            archetypeKey: customerInstance.archetypeKey,
+            mood: customerInstance.mood
         };
     }
+    
+    getOutcomeDialogue(customerInstance, contextKey) {
+        return this._getDialogue(customerInstance, contextKey);
+    }
 
-    // --- Internal "Private" Helper Methods ---
+    _getDialogue(customerInstance, contextKey) {
+        const template = this.customerTemplates[customerInstance.archetypeKey];
+        if (!template || !template.dialogue || !template.dialogue[contextKey]) {
+            return { line: `... (missing dialogue: ${contextKey})`, payload: null };
+        }
 
+        const dialogueNode = template.dialogue[contextKey];
+
+        for (const block of dialogueNode) {
+            let allConditionsMet = true;
+            if (block.conditions && block.conditions.length > 0) {
+                for (const condition of block.conditions) {
+                    if (!this._checkCondition(customerInstance, condition)) {
+                        allConditionsMet = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allConditionsMet) {
+                const randomLine = this._getRandomElement(block.lines) || `(missing lines for ${contextKey})`;
+                const processedLine = randomLine
+                    .replace(/\[ITEM_NAME\]/g, customerInstance.currentItemName || 'the stuff')
+                    .replace(/\[CUSTOMER_NAME\]/g, customerInstance.name);
+                return { line: processedLine, payload: block.payload || null };
+            }
+        }
+
+        return { line: `... (no matching dialogue block for ${contextKey})`, payload: null };
+    }
+
+    _checkCondition(customerInstance, condition) {
+        const customerStatValue = customerInstance[condition.stat];
+        const checkValue = condition.value;
+
+        switch (condition.op) {
+            case 'is': return customerStatValue === checkValue;
+            case 'isNot': return customerStatValue !== checkValue;
+            case 'gt': return customerStatValue > checkValue;
+            case 'gte': return customerStatValue >= checkValue;
+            case 'lt': return customerStatValue < checkValue;
+            case 'lte': return customerStatValue <= checkValue;
+            default: return false;
+        }
+    }
+    
     _selectOrGenerateCustomerFromPool() {
         if (this.customersPool.length > 0 && Math.random() < 0.35) {
             const returningCustomer = this._getRandomElement(this.customersPool);
             returningCustomer.hasMetRikkBefore = true;
-            const archetype = this.customerArchetypes[returningCustomer.archetypeKey];
-            if (archetype) {
-                returningCustomer.cashOnHand = Math.floor(Math.random() * (archetype.priceToleranceFactor * 90)) + 25;
-                const moodRoll = Math.random();
-                if (moodRoll < 0.15) returningCustomer.mood = "happy";
-                else if (moodRoll < 0.30) returningCustomer.mood = "paranoid";
-                else if (moodRoll < 0.45) returningCustomer.mood = "angry";
-                else { returningCustomer.mood = this._getRandomElement(["neutral", "chill", "desperate", "cautious"]); }
+            const template = this.customerTemplates[returningCustomer.archetypeKey];
+            if (template) {
+                returningCustomer.mood = template.baseStats.mood || 'chill';
+                returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * 90)) + 25;
             }
             return returningCustomer;
         }
 
-        const archetypeKeys = Object.keys(this.customerArchetypes);
+        const archetypeKeys = Object.keys(this.customerTemplates);
         const selectedArchetypeKey = this._getRandomElement(archetypeKeys);
-        const archetypeData = this.customerArchetypes[selectedArchetypeKey];
-        const newCustomer = {
+        const template = this.customerTemplates[selectedArchetypeKey];
+        
+        const newCustomerInstance = {
             id: `customer_${this.nextCustomerId++}`,
-            name: `${archetypeData.baseName} #${this.nextCustomerId - 1}`,
+            name: `${template.baseName} #${this.nextCustomerId - 1}`,
             archetypeKey: selectedArchetypeKey,
-            loyaltyToRikk: Math.floor(Math.random() * 3) - 1,
-            mood: archetypeData.initialMood || "neutral",
-            cashOnHand: Math.floor(Math.random() * (archetypeData.priceToleranceFactor * 100)) + 30,
-            hasMetRikkBefore: false,
-            patience: 3 + Math.floor(Math.random() * 3),
-            data: {} // Reserved for future state like addiction levels, etc.
+            ...JSON.parse(JSON.stringify(template.baseStats)), 
+            cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * 100)) + 30,
+            hasMetRikkBefore: false
         };
 
-        if (this.customersPool.length < this.MAX_CUSTOMERS_IN_POOL) { this.customersPool.push(newCustomer); }
-        else { this.customersPool[Math.floor(Math.random() * this.MAX_CUSTOMERS_IN_POOL)] = newCustomer; }
-        return newCustomer;
+        if (this.customersPool.length < this.MAX_CUSTOMERS_IN_POOL) { this.customersPool.push(newCustomerInstance); }
+        else { this.customersPool[Math.floor(Math.random() * this.MAX_CUSTOMERS_IN_POOL)] = newCustomerInstance; }
+        return newCustomerInstance;
     }
 
-    _generateRandomItem(archetypeData = null) {
+    _generateRandomItem(template = null) {
         if (!this.itemTypes || this.itemTypes.length === 0) {
-            console.error("CustomerManager: itemTypes data not loaded or empty!");
-            return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0, description:"Data missing"}, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
+            return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1 };
         }
         let availableItemTypes = [...this.itemTypes];
-        if (archetypeData && archetypeData.itemPool && archetypeData.itemPool.length > 0) {
-             availableItemTypes = this.itemTypes.filter(it => archetypeData.itemPool.includes(it.id));
+        if (template && template.itemPool && template.itemPool.length > 0) {
+             availableItemTypes = this.itemTypes.filter(it => template.itemPool.includes(it.id));
         }
         if (availableItemTypes.length === 0) availableItemTypes = [...this.itemTypes];
 
@@ -177,7 +223,7 @@ export class CustomerManager {
         
         const item = {
           id: selectedType.id, name: selectedType.name, itemTypeObj: selectedType, quality, qualityIndex,
-          description: selectedType.description, uses: selectedType.uses || null, effect: selectedType.effect || null,
+          description: selectedType.description,
         };
         
         const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
@@ -187,10 +233,10 @@ export class CustomerManager {
     }
 
     _calculateItemValue(item, purchaseContext = true, context) {
-        const { playerSkills, activeWorldEvents, customerData } = context;
-        let customerArchetype = null;
-        if (customerData && customerData.archetypeKey) {
-            customerArchetype = this.customerArchetypes[customerData.archetypeKey];
+        const { playerSkills, activeWorldEvents, customerInstance } = context;
+        let customerTemplate = null;
+        if (customerInstance && customerInstance.archetypeKey) {
+            customerTemplate = this.customerTemplates[customerInstance.archetypeKey];
         }
         let baseValue = purchaseContext ? item.purchasePrice : item.estimatedResaleValue;
         if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') { return baseValue; }
@@ -203,18 +249,13 @@ export class CustomerManager {
         
         if (activeWorldEvents) {
             activeWorldEvents.forEach(eventState => {
-                // *** THE FIX IS HERE ***
-                // The object in the array *is* the state, which has an `effects` property.
-                // It does not have a nested `event` property.
                 const effects = eventState.effects; 
-                // *** END OF FIX ***
-
                 if (effects && effects.allPriceModifier) { effectiveValue *= effects.allPriceModifier; }
                 if (effects && item.itemTypeObj.type === "DRUG" && effects.drugPriceModifier) { effectiveValue *= effects.drugPriceModifier; }
             });
         }
 
-        if (customerArchetype && !purchaseContext) { effectiveValue *= customerArchetype.priceToleranceFactor; }
+        if (customerTemplate && !purchaseContext) { effectiveValue *= customerTemplate.priceToleranceFactor; }
         return Math.max(5, Math.round(effectiveValue));
     }
     
@@ -222,8 +263,16 @@ export class CustomerManager {
         if (!arr || arr.length === 0) return null;
         return arr[Math.floor(Math.random() * arr.length)];
     }
+    
+    _createErrorInteraction(customerInstance) {
+        return {
+            instance: customerInstance, name: customerInstance.name || "Error Customer",
+            dialogue: [{ speaker: "narration", text: "Error: Customer data is corrupted." }],
+            choices: [{ text: "OK", outcome: { type: "acknowledge_error" } }],
+            itemContext: null, archetypeKey: "ERROR_ARCHETYPE", mood: "error"
+        };
+    }
 
-    // --- State Management Methods ---
     reset() {
         this.customersPool = [];
         this.nextCustomerId = 1;

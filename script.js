@@ -1,16 +1,17 @@
 // =================================================================================
-// My Nigga Rikk - Main Game Logic Script (Controller)
+// My Nigga Rikk - Main Game Logic Script (Controller) - REFACTORED
 // =================================================================================
-// This script acts as the main controller for the game, managing the game loop,
-// UI state, and player actions. It offloads all customer-specific logic to the
-// CustomerManager class by importing it and its data dependencies as ES6 modules.
-// It is a single, self-contained file with no omitted or simplified functions.
+// This script has been refactored to work with the new declarative data architecture.
+// It acts as the main controller for the game, managing the game loop, UI state,
+// and player actions. It now processes declarative payloads from the CustomerManager
+// instead of containing hardcoded game logic. This is the complete, unabridged file.
 // =================================================================================
 
 // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 import { CustomerManager } from './classes/CustomerManager.js';
-import { customerArchetypes } from './data/data_customers.js';
+// REFACTOR: Import the new declarative templates instead of the old data file.
+import { customerTemplates } from './data/customer_templates.js';
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
 import { possibleWorldEvents } from './data/data_events.js';
 
@@ -34,18 +35,19 @@ let doorKnockSound, cashSound, deniedSound, chatBubbleSound;
 // --- Game State & Managers ---
 let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
 let inventory = [], activeWorldEvents = [];
-let currentCustomer = null, gameActive = false;
+// REFACTOR: This now holds the live "instance" of the customer, not just static data.
+let currentCustomerInstance = null, gameActive = false;
 let playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
 let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 let customerManager;
 
 // --- UI State ---
-let chatSpacerElement = null; // NEW: To hold reference to the dynamic spacer div
+let chatSpacerElement = null;
 
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
-const SAVE_KEY = 'myNiggaRikkSaveDataV9'; // Incremented for module architecture
+const SAVE_KEY = 'myNiggaRikkSaveDataV10'; // Incremented for new data architecture
 const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
 const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
 
@@ -57,8 +59,8 @@ const customerAvatars = {
     "INFORMANT": "https://randomuser.me/api/portraits/men/78.jpg",
     "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg"
 };
-const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg"; // Placeholder Rikk avatar
-const systemAvatarUrl = "assets/icons/info-icon.svg"; // A generic icon for system messages (ensure path is correct)
+const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
+const systemAvatarUrl = "assets/icons/info-icon.svg";
 
 // --- Helper function ---
 function getRandomElement(arr) {
@@ -91,7 +93,7 @@ function trackError(error, context = 'General') {
             message: error.message, stack: error.stack, context: context,
             gameCash: typeof cash !== 'undefined' ? cash : 'N/A',
             gameDay: typeof fiendsLeft !== 'undefined' ? (MAX_FIENDS - fiendsLeft) : 'N/A',
-            currentCustomerName: typeof currentCustomer !== 'undefined' && currentCustomer ? currentCustomer.name : 'N/A'
+            currentCustomerName: typeof currentCustomerInstance !== 'undefined' && currentCustomerInstance ? currentCustomerInstance.name : 'N/A'
         });
         if (errors.length > 20) { errors.splice(0, errors.length - 20); }
         sessionStorage.setItem('rikkErrors', JSON.stringify(errors));
@@ -151,6 +153,7 @@ function initDebugMode() {
     }, 5000);
 }
 
+
 // =================================================================================
 // III. CORE GAME INITIALIZATION & FLOW
 // =================================================================================
@@ -169,8 +172,8 @@ function initGame() {
     finalDaysDisplay = document.getElementById('final-days-display'); finalCashDisplay = document.getElementById('final-cash-display'); finalVerdictText = document.getElementById('final-verdict-text');
     doorKnockSound = document.getElementById('door-knock-sound'); cashSound = document.getElementById('cash-sound'); deniedSound = document.getElementById('denied-sound'); chatBubbleSound = document.getElementById('chat-bubble-sound');
     
-    // Instantiate Managers with imported data
-    customerManager = new CustomerManager(customerArchetypes, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+    // REFACTOR: Instantiate Managers with the NEW template data.
+    customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     
     // Initial Screen & Listener Setup
     splashScreen.classList.add('active');
@@ -255,30 +258,28 @@ function nextFiend() {
     setTimeout(() => {
         knockEffect.classList.add('hidden');
         const gameState = { inventory, cash, playerSkills, activeWorldEvents };
-        currentCustomer = customerManager.generateInteraction(gameState);
-        startCustomerInteraction();
+        const interaction = customerManager.generateInteraction(gameState);
+        currentCustomerInstance = interaction.instance;
+        startCustomerInteraction(interaction);
     }, KNOCK_ANIMATION_DURATION);
     saveGameState();
 }
 
-function startCustomerInteraction() {
+function startCustomerInteraction(interaction) {
     setPhoneUIState('chatting');
-    if (currentCustomer && currentCustomer.name) {
-        phoneTitleGame.textContent = currentCustomer.name;
-        phoneShowNotification(`Incoming message from: ${currentCustomer.name}`, "New Customer");
-    } else {
-        phoneTitleGame.textContent = 'Street Talk';
-    }
+    phoneTitleGame.textContent = interaction.name;
+    phoneShowNotification(`Incoming message from: ${interaction.name}`, "New Customer");
+    
     clearChat();
     let dialogueIndex = 0;
     const displayNext = () => {
-        if (currentCustomer && dialogueIndex < currentCustomer.dialogue.length) {
-            const msg = currentCustomer.dialogue[dialogueIndex];
+        if (dialogueIndex < interaction.dialogue.length) {
+            const msg = interaction.dialogue[dialogueIndex];
             displayPhoneMessage(msg.text, msg.speaker);
             dialogueIndex++;
             setTimeout(displayNext, CUSTOMER_WAIT_TIME);
-        } else if (currentCustomer) {
-            displayChoices(currentCustomer.choices);
+        } else {
+            displayChoices(interaction.choices);
         }
     };
     displayNext();
@@ -287,7 +288,7 @@ function startCustomerInteraction() {
 function endCustomerInteraction() {
     clearChoices();
     phoneTitleGame.textContent = 'Street Talk';
-    currentCustomer = null;
+    currentCustomerInstance = null;
     setPhoneUIState('home');
     if (gameActive && fiendsLeft > 0 && heat < MAX_HEAT && (cash > 0 || inventory.length > 0)) {
         nextCustomerBtn.disabled = false;
@@ -340,7 +341,7 @@ function handlePhoneAppClick(event) {
     switch(action) {
         case 'messages':
             if (!nextCustomerBtn.disabled && fiendsLeft > 0 && gameActive) { nextFiend(); }
-            else if (currentCustomer) { setPhoneUIState('chatting'); }
+            else if (currentCustomerInstance) { setPhoneUIState('chatting'); }
             else { phoneShowNotification("No new messages.", "Rikk's Inbox"); }
             break;
         case 'inventory-app': openInventoryModal(); break;
@@ -349,7 +350,6 @@ function handlePhoneAppClick(event) {
     }
 }
 
-// MODIFIED: This function now inserts messages BEFORE the spacer element.
 function displayPhoneMessage(message, speaker) {
     if (typeof message === 'undefined' || message === null) { message = "..."; }
     
@@ -370,9 +370,9 @@ function displayPhoneMessage(message, speaker) {
     avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
     const avatarImg = document.createElement('img');
     
-    if (speaker === 'customer' && currentCustomer && currentCustomer.archetypeKey) {
-        avatarImg.src = customerAvatars[currentCustomer.archetypeKey] || 'https://randomuser.me/api/portraits/lego/1.jpg';
-        avatarImg.alt = currentCustomer.name || 'Customer';
+    if (speaker === 'customer' && currentCustomerInstance && currentCustomerInstance.archetypeKey) {
+        avatarImg.src = customerAvatars[currentCustomerInstance.archetypeKey] || 'https://randomuser.me/api/portraits/lego/1.jpg';
+        avatarImg.alt = currentCustomerInstance.name || 'Customer';
     } else if (speaker === 'rikk') {
         avatarImg.src = rikkAvatarUrl;
         avatarImg.alt = 'Rikk';
@@ -395,7 +395,7 @@ function displayPhoneMessage(message, speaker) {
     if (speaker === 'customer' || speaker === 'rikk') {
         const speakerNameElement = document.createElement('span');
         speakerNameElement.classList.add('speaker-name');
-        speakerNameElement.textContent = (speaker === 'customer') ? (currentCustomer.name || '[Customer]') : 'Rikk';
+        speakerNameElement.textContent = (speaker === 'customer') ? (currentCustomerInstance.name || '[Customer]') : 'Rikk';
         bubble.appendChild(speakerNameElement);
     }
 
@@ -403,15 +403,12 @@ function displayPhoneMessage(message, speaker) {
     contextDiv.appendChild(bubble);
     messageContainer.appendChild(contextDiv);
 
-    // NEW LOGIC: Insert the new message BEFORE the spacer element.
     if (chatContainer && chatSpacerElement) {
         chatContainer.insertBefore(messageContainer, chatSpacerElement);
     } else {
-        // Fallback in case spacer isn't found
         chatContainer.appendChild(messageContainer);
     }
 
-    // Always scroll to the bottom to reveal the new message
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -419,6 +416,7 @@ function displaySystemMessage(message) { displayPhoneMessage(message, 'narration
 
 function displayChoices(choices) {
     choicesArea.innerHTML = '';
+    if (!choices) return;
     choices.forEach(choice => {
         const button = document.createElement('button');
         button.classList.add('choice-button');
@@ -451,97 +449,161 @@ function updateInventoryDisplay() {
 }
 
 function openInventoryModal() { updateInventoryDisplay(); inventoryModal.classList.add('active'); setPhoneUIState('offscreen'); }
-function closeInventoryModal() { inventoryModal.classList.remove('active'); setPhoneUIState(currentCustomer ? 'chatting' : 'home'); }
+function closeInventoryModal() { inventoryModal.classList.remove('active'); setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home'); }
 
 
 // =================================================================================
-// V. INTERACTION & CHOICE LOGIC
+// V. INTERACTION & CHOICE LOGIC (COMPLETELY REWRITTEN)
 // =================================================================================
 
 function handleChoice(outcome) {
     clearChoices();
-    let narrationText = "", selectedCustomerReaction = "", heatChange = 0, credChange = 0, cashChange = 0, dealSuccess = false;
-    
-    if (!currentCustomer || !currentCustomer.archetypeKey || !customerArchetypes[currentCustomer.archetypeKey]) {
-        displaySystemMessage("System Error: Customer data corrupt."); setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME); return;
-    }
-    const archetype = customerArchetypes[currentCustomer.archetypeKey];
-    const getReaction = (fn, mood, fallback) => (fn ? (Array.isArray(fn(mood)) ? getRandomElement(fn(mood)) : (fn(mood) || fallback)) : fallback);
 
+    if (!currentCustomerInstance) {
+        console.error("handleChoice called with no active customer instance.");
+        endCustomerInteraction();
+        return;
+    }
+
+    let narrationText = "";
+    let dealSuccess = false;
+
+    // --- Step 1: Handle Immediate Actions (like inventory changes) ---
     switch (outcome.type) {
         case "buy_from_customer":
             if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
-                cash -= outcome.price; inventory.push({...outcome.item}); dealSuccess = true;
-                heatChange = outcome.item.itemTypeObj.heat + (archetype.heatImpact || 0);
-                credChange = archetype.credImpactBuy || 0;
+                cash -= outcome.price;
+                inventory.push({ ...outcome.item });
+                dealSuccess = true;
                 narrationText = `Rikk copped "${outcome.item.name}".`;
-                selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkBuysSuccess, currentCustomer.mood, "Pleasure doin' business!");
                 playSound(cashSound);
-            } else { narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`; playSound(deniedSound); }
+            } else {
+                narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`;
+                playSound(deniedSound);
+            }
             break;
         case "sell_to_customer":
             const itemIndex = inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality);
             if (itemIndex !== -1) {
-                const itemSold = inventory.splice(itemIndex, 1)[0]; cash += outcome.price; dealSuccess = true;
-                heatChange = itemSold.itemTypeObj.heat + (archetype.heatImpact || 0);
-                credChange = archetype.credImpactSell || 0;
+                const itemSold = inventory.splice(itemIndex, 1)[0];
+                cash += outcome.price;
+                dealSuccess = true;
                 narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
-                selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkSellsSuccess, currentCustomer.mood, "Good lookin' out!");
                 playSound(cashSound);
-            } else { narrationText = "Couldn't find that item."; playSound(deniedSound); }
+            } else {
+                narrationText = "Couldn't find that item.";
+                playSound(deniedSound);
+            }
             break;
         case "negotiate_sell":
             setTimeout(() => {
                 if (Math.random() < 0.55 + (playerSkills.negotiator * 0.12)) {
-                    displayPhoneMessage(`Negotiation successful!`, 'narration');
+                    displaySystemMessage(`Negotiation successful!`);
                     handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
                 } else {
-                    displayPhoneMessage(`They ain't having it. "My first offer stands," they say.`, "narration");
+                    displaySystemMessage(`They ain't having it. "My first offer stands," they say.`);
                     const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
                     displayChoices(choices);
                 }
             }, 1000);
-            return;
+            return; // Exit handleChoice, as it will be called again by the negotiation result.
         case "decline_offer_to_buy":
             narrationText = "Rikk passes on the offer.";
-            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkDeclinesToBuy, currentCustomer.mood, "Aight, your loss.");
-            playSound(deniedSound); credChange = -1;
+            playSound(deniedSound);
             break;
         case "decline_offer_to_sell":
             narrationText = "Rikk tells them to kick rocks.";
-            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkDeclinesToSell, currentCustomer.mood, "Cheap ass...");
             playSound(deniedSound);
             break;
         case "acknowledge_empty_stash":
             narrationText = "Rikk's stash is dry. Customer ain't happy.";
-            selectedCustomerReaction = `${currentCustomer.name}: Damn, Rikk. Hit me up when you re-up.`;
-            credChange = -1; playSound(deniedSound);
+            playSound(deniedSound);
             break;
-        case "acknowledge_error": narrationText = "System error acknowledged."; break;
+        case "acknowledge_error":
+            narrationText = "System error acknowledged.";
+            break;
     }
 
-    heat = Math.max(0, heat + heatChange); streetCred += credChange; cash += cashChange;
-    if (archetype.postDealEffect) {
-        const postDealEffects = archetype.postDealEffect(dealSuccess, currentCustomer.data, cash);
-        if (postDealEffects) {
-            heat = Math.max(0, heat + (postDealEffects.heatChange || 0));
-            streetCred += postDealEffects.credChange || 0;
-            cash += postDealEffects.cashChange || 0;
-            if (postDealEffects.message) {
-                displaySystemMessage(postDealEffects.message);
-            }
-        }
+    if (outcome.type !== "negotiate_sell") {
+        fiendsLeft--;
     }
-    if (outcome.type !== "negotiate_sell") { fiendsLeft--; }
+
+    // --- Step 2: Get Outcome Dialogue and Execute Payloads ---
+    const outcomeResult = customerManager.getOutcomeDialogue(currentCustomerInstance, outcome.type);
+    if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
+    if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
     
-    updateHUD(); updateInventoryDisplay();
+    // --- Step 3: Update UI and End Turn ---
+    updateHUD();
+    updateInventoryDisplay();
+
     setTimeout(() => {
         if (narrationText) displayPhoneMessage(narrationText, 'narration');
-        if (selectedCustomerReaction) displayPhoneMessage(`${currentCustomer.name}: ${selectedCustomerReaction}`, 'customer');
+        if (outcomeResult.line) displayPhoneMessage(outcomeResult.line, 'customer');
         setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
     }, CUSTOMER_WAIT_TIME / 2);
+
     if (heat >= MAX_HEAT) { endGame("heat"); return; }
     if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) { endGame("bankrupt"); return; }
+}
+
+/**
+ * NEW: The Payload Executor. This function interprets and applies effects from payloads.
+ * @param {object} payload - The payload object from the customer template.
+ * @param {boolean} dealSuccess - Whether the primary transaction was successful.
+ */
+function processPayload(payload, dealSuccess) {
+    if (!payload || !payload.effects || payload.type !== "EFFECT") return;
+
+    payload.effects.forEach(effect => {
+        // If the effect has a condition, check it first.
+        if (effect.condition) {
+            if (effect.condition.stat === 'dealSuccess' && dealSuccess !== effect.condition.value) {
+                return; // Skip effect if deal success doesn't match
+            }
+        }
+
+        switch (effect.type) {
+            case 'modifyStat':
+                if (effect.target === 'player') {
+                    // Using a switch for safety instead of window[var]
+                    switch(effect.stat) {
+                        case 'cash': cash += effect.value; break;
+                        case 'heat': heat += effect.value; break;
+                        case 'streetCred': streetCred += effect.value; break;
+                    }
+                } else if (effect.target === 'customer') {
+                    currentCustomerInstance[effect.stat] = (currentCustomerInstance[effect.stat] || 0) + effect.value;
+                }
+                break;
+
+            case 'triggerEvent':
+                if (Math.random() < effect.chance) {
+                    if (effect.eventName === 'snitchReport') {
+                        heat += effect.heatValue;
+                        streetCred += effect.credValue;
+                        displaySystemMessage(`🚨 RAT ALERT! 🚨 Someone was seen yapping to the 5-0! (+${effect.heatValue} Heat, ${effect.credValue} Cred)`);
+                    }
+                    if (effect.eventName === 'highRollerTip') {
+                        const tip = Math.floor(cash * effect.tipPercentage);
+                        cash += tip;
+                        streetCred += effect.credValue;
+                        displaySystemMessage(`${currentCustomerInstance.name} was pleased and tipped you $${tip}! (+${effect.credValue} Cred)`);
+                    }
+                    if (effect.eventName === 'publicIncident') {
+                        let conditionMet = true;
+                        if (effect.condition && effect.condition.stat === 'mood') {
+                           if (currentCustomerInstance.mood === effect.condition.value) conditionMet = false;
+                        }
+                        if (conditionMet) {
+                            heat += effect.heatValue;
+                            displaySystemMessage(`${currentCustomerInstance.name} stumbles away looking rough... (+${effect.heatValue} Heat)`);
+                        }
+                    }
+                }
+                break;
+        }
+    });
 }
 
 
@@ -572,11 +634,9 @@ function updateEventTicker() {
     }
 }
 
-// MODIFIED: clearChat now creates and adds the dynamic spacer element.
 function clearChat() { 
     if(chatContainer) {
         chatContainer.innerHTML = ''; 
-        // Create the spacer that will push content to the bottom
         chatSpacerElement = document.createElement('div');
         chatSpacerElement.className = 'chat-spacer';
         chatContainer.appendChild(chatSpacerElement);
