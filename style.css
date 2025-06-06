@@ -52,7 +52,13 @@ h1, #start-screen-title { font-family: var(--font-display); font-size: 2.2rem; c
 .phone-container { position: relative; width: 100%; max-width: var(--phone-max-width); height: var(--phone-max-height); background: #111; border-radius: var(--phone-border-radius); display: flex; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 0 4px rgba(50,50,50,0.8); border: 2px solid #000; transition: transform var(--transition-phone-slide), opacity var(--transition-duration-medium) var(--transition-easing); z-index: 50; }
 .phone-container.is-offscreen { transform: translateY(120%); opacity: 0; }
 .phone-container.chatting-game, .phone-container.home-screen-active, .phone-container.app-menu-game { transform: translateY(0); opacity: 1; }
-.phone-screen-area { width: calc(100% - 12px); height: calc(100% - 12px); background: #000; position: relative; overflow: hidden; border-radius: var(--phone-screen-inset-radius); margin: 6px; }
+.phone-screen-area { width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--phone-screen-inset-radius);
+  margin: 6px; }
 .wallpaper { position: absolute; inset: 0; background: linear-gradient(135deg, #6e45e2 0%, #89d4cf 100%); opacity: 0.2; z-index: 1; }
 /* Phone Hardware */
 .volume-btn, .power-btn { position: absolute; background: #333; }
@@ -82,17 +88,171 @@ h1, #start-screen-title { font-family: var(--font-display); font-size: 2.2rem; c
 @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .notification-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 4px; }
 .notification-content { font-size: 0.8rem; opacity: 0.9; }
-/* Game Chat UI */
+
+
+/* === NEW CHAT UI: Mock Chat Interaction Styles - Corrected for Rikk's Game === */
+
+/* Overall mockchat container (Rikk's #game-chat-view) */
+#game-chat-view.mockchat {
+  background: #FCF7FF; /* Mockchat's screen background for overall chat view */
+  background-image: linear-gradient(#FCF7FF, #e4eaf0); /* Mockchat's screen background for overall chat view */
+  display: flex; /* Flex container for header, chat area, footer */
+  flex-direction: column;
+}
+
+/* The actual chat message display area (Rikk's #chat-container-game.phone-chat-body) */
+#chat-container-game.phone-chat-body {
+  flex-grow: 1; /* Allow it to grow and fill available space */
+  display: flex;
+  flex-direction: column; /* Messages stack from top to bottom */
+  padding: 1em;
+  overflow-y: auto;
+}
+
+/* NEW: The spacer element that pushes content to the bottom */
+.chat-spacer {
+    flex-grow: 1; /* This is the magic property. It expands to fill all available space. */
+    min-height: 10px; /* Give it a minimal height to prevent it from collapsing completely */
+    transition: all 0.3s ease-in-out; /* Smooth transition when it shrinks */
+}
+
+/* @keyframes for the pop-in animation */
+@keyframes mockchat-reply-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(1em) scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Base styles for all chat bubbles (Rikk's .chat-bubble) */
+.chat-bubble {
+  width: fit-content;
+  max-width: 90%; /* Give a little more room */
+  position: relative;
+  padding: 0.75em 1em; /* Padding inside the bubble */
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.08); /* From mockchat .reply */
+  font-size: 13px; /* Match Rikk's font size */
+  line-height: 1.5; /* Match Rikk's line height */
+  word-wrap: break-word; /* Ensure long words break */
+  font-family: 'Lato', sans-serif;
+
+  /* Animation properties */
+  opacity: 0; /* Start hidden for animation */
+  animation: mockchat-reply-pop cubic-bezier(0.18, 0.89, 0.32, 1.28) 0.4s forwards;
+}
+
+/* Styles for Rikk's (sent) messages */
+.chat-bubble.rikk {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: 12px 12px 4px 12px; /* TL TR BR BL */
+  transform-origin: 100% 100%; /* Animate from bottom-right */
+}
+
+/* Styles for customer (received) messages */
+.chat-bubble.customer {
+  background: white;
+  color: #283747;
+  border-radius: 12px 12px 12px 4px; /* TL TR BR BL */
+  transform-origin: 0% 100%; /* Animate from bottom-left */
+}
+
+/* Narration messages */
+.chat-bubble.narration {
+  background: none;
+  color: var(--color-grey-mid);
+  text-align: center;
+  font-style: italic;
+  font-size: 0.8rem;
+  padding: var(--spacing-sm) 0;
+  margin: var(--spacing-sm) auto; /* Center narration bubbles */
+  box-shadow: none;
+  border-top: 1px dashed var(--color-grey-dark);
+  border-bottom: 1px dashed var(--color-grey-dark);
+  border-radius: 0;
+  max-width: 95%; /* Allow narration to be wider */
+}
+
+/* Container for avatar and bubble(s) */
+.chat__conversation-board__message-container {
+  display: flex;
+  flex-direction: row; /* Default: avatar left, bubble right */
+  align-items: flex-end; /* Align avatars and bubbles to bottom of their container */
+  margin-bottom: 0.5em; /* Spacing between distinct message groups */
+  width: 100%;
+}
+
+.chat__conversation-board__message-container.reversed {
+  flex-direction: row-reverse; /* Rikk's messages: avatar right, bubble left */
+}
+
+/* Avatar element styling */
+.chat__conversation-board__message__person {
+  margin: 0 0.5em 0 0;
+  flex-shrink: 0;
+}
+
+.chat__conversation-board__message-container.reversed .chat__conversation-board__message__person {
+  margin: 0 0 0 0.5em;
+}
+
+.chat__conversation-board__message__person__avatar {
+  height: 32px;
+  width: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  user-select: none;
+  position: relative;
+}
+
+.chat__conversation-board__message__person__avatar img {
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+}
+
+/* Context wrapping the bubble */
+.chat__conversation-board__message__context {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100% - 40px); /* Account for avatar width + margin */
+}
+
+.chat__conversation-board__message-container.reversed .chat__conversation-board__message__context {
+    align-items: flex-end; /* Make bubbles align to the right inside the context for Rikk */
+}
+.chat__conversation-board__message-container:not(.reversed) .chat__conversation-board__message__context {
+    align-items: flex-start; /* Make bubbles align to the left inside the context for customer */
+}
+
+/* Speaker name inside the bubble */
+.chat-bubble .speaker-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+    display: block;
+    opacity: 0.8;
+}
+
+/* Rikk's existing phone-footer-choices */
+.phone-footer-choices {
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    background-color: var(--color-surface);
+    border-top: 1px solid #3A3A3C;
+    flex-shrink: 0;
+}
+
+/* Remaining Rikk-specific styles */
 .phone-header { background-color: #2A2A2E; padding: var(--spacing-sm) var(--spacing-md); border-bottom: 1px solid #3A3A3C; text-align: center; flex-shrink: 0; position: relative; z-index: 60; display: flex; align-items: center; justify-content: center; }
 #phone-title-game, #phone-title-game-apps { margin: 0; font-weight: bold; flex-grow: 1; }
 .phone-back-button { position: absolute; left: 15px; background: none; border: none; color: var(--color-on-surface); font-size: 1rem; cursor: pointer; }
-.phone-chat-body { flex-grow: 1; padding: var(--spacing-md); overflow-y: auto; display: flex; flex-direction: column-reverse; background-color: #121212; z-index: 55; }
-.chat-bubble { max-width: 80%; padding: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-xs); border-radius: var(--chat-bubble-border-radius); line-height: 1.45; word-wrap: break-word; }
-.chat-bubble .speaker-name { font-weight: bold; margin-bottom: 4px; font-size: 0.75rem; display: block; opacity: 0.8; }
-.chat-bubble.customer { background-color: var(--color-bubble-customer); align-self: flex-start; border-bottom-left-radius: 6px; }
-.chat-bubble.rikk { background-color: var(--color-bubble-rikk-main); color: var(--color-bubble-rikk-text); align-self: flex-end; border-bottom-right-radius: 6px; }
-.chat-bubble.narration { background: none; color: var(--color-bubble-narration-text); align-self: center; text-align: center; font-style: italic; font-size: 0.8rem; padding: var(--spacing-sm) 0; margin: var(--spacing-sm) 0; box-shadow: none; border-top: 1px dashed var(--color-grey-dark); border-bottom: 1px dashed var(--color-grey-dark); }
-.phone-footer-choices { padding: var(--spacing-sm) var(--spacing-md); display: flex; flex-wrap: wrap; gap: var(--spacing-sm); background-color: #2A2A2E; border-top: 1px solid #3A3A3C; flex-shrink: 0; }
 .choice-button { padding: var(--spacing-xs) var(--spacing-md); border: 1px solid var(--color-primary); border-radius: 20px; font-weight: 500; font-size: 0.8rem; cursor: pointer; transition: all var(--transition-duration-short); background-color: transparent; color: var(--color-primary); }
 .choice-button:hover { background-color: var(--color-primary); color: var(--color-on-primary); }
 .choice-button:disabled { background-color: var(--color-disabled-bg) !important; color: var(--color-disabled-text) !important; border-color: var(--color-disabled-border) !important; cursor: not-allowed; }

@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- NEW: Add Lato font for chat - needed by the new mockChat styles -->
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato'>
 </head>
 
 <body>
@@ -98,11 +100,13 @@
                             </div>
                         </div>
 
-                        <div id="game-chat-view" class="phone-content-view hidden">
+                        <!-- MODIFIED: Added mockchat class to game-chat-view -->
+                        <div id="game-chat-view" class="phone-content-view hidden mockchat">
                              <header class="phone-header">
                                 <button class="phone-back-button hidden" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
                                 <h3 id="phone-title-game">Street Talk</h3>
                             </header>
+                            <!-- #chat-container-game will now serve as the .app equivalent for mockchat -->
                             <div id="chat-container-game" class="phone-chat-body" role="log" aria-live="polite"></div>
                             <footer id="choices-area-game" class="phone-footer-choices" role="toolbar"></footer>
                         </div>
@@ -175,6 +179,7 @@
     <audio id="door-knock-sound" src="assets/audio/door-knock.mp3" preload="auto"></audio>
     <audio id="cash-sound" src="assets/audio/cash-register.mp3" preload="auto"></audio>
     <audio id="denied-sound" src="assets/audio/denied.mp3" preload="auto"></audio>
+    <!-- Corrected ID to match script.js reference -->
     <audio id="chat-bubble-sound" src="assets/audio/chat-pop.mp3" preload="auto"></audio>
     
     <!-- SCRIPT LOADING ORDER - ALL ARE NOW MODULES TO ENSURE CORRECT DEPENDENCY LOADING -->

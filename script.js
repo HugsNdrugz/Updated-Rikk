@@ -40,11 +40,25 @@ let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 let customerManager;
 
+// --- UI State ---
+let chatSpacerElement = null; // NEW: To hold reference to the dynamic spacer div
+
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
 const SAVE_KEY = 'myNiggaRikkSaveDataV9'; // Incremented for module architecture
 const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
 const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
+
+// --- Avatars (For chat UI) ---
+const customerAvatars = {
+    "DESPERATE_FIEND": "https://randomuser.me/api/portraits/men/32.jpg",
+    "HIGH_ROLLER": "https://randomuser.me/api/portraits/men/45.jpg",
+    "REGULAR_JOE": "https://randomuser.me/api/portraits/women/67.jpg",
+    "INFORMANT": "https://randomuser.me/api/portraits/men/78.jpg",
+    "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg"
+};
+const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg"; // Placeholder Rikk avatar
+const systemAvatarUrl = "assets/icons/info-icon.svg"; // A generic icon for system messages (ensure path is correct)
 
 // --- Helper function ---
 function getRandomElement(arr) {
@@ -154,7 +168,7 @@ function initGame() {
     inventoryModal = document.getElementById('inventory-modal'); closeModalBtn = document.querySelector('#inventory-dialog .close-modal-btn'); inventoryList = document.getElementById('inventory-list'); modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
     finalDaysDisplay = document.getElementById('final-days-display'); finalCashDisplay = document.getElementById('final-cash-display'); finalVerdictText = document.getElementById('final-verdict-text');
     doorKnockSound = document.getElementById('door-knock-sound'); cashSound = document.getElementById('cash-sound'); deniedSound = document.getElementById('denied-sound'); chatBubbleSound = document.getElementById('chat-bubble-sound');
-
+    
     // Instantiate Managers with imported data
     customerManager = new CustomerManager(customerArchetypes, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     
@@ -335,19 +349,69 @@ function handlePhoneAppClick(event) {
     }
 }
 
+// MODIFIED: This function now inserts messages BEFORE the spacer element.
 function displayPhoneMessage(message, speaker) {
     if (typeof message === 'undefined' || message === null) { message = "..."; }
-    playSound(chatBubbleSound);
+    
+    if (speaker !== 'narration') {
+        playSound(chatBubbleSound);
+    }
+
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('chat__conversation-board__message-container');
+
+    if (speaker === 'rikk') {
+        messageContainer.classList.add('reversed');
+    }
+
+    const personDiv = document.createElement('div');
+    personDiv.classList.add('chat__conversation-board__message__person');
+    const avatarDiv = document.createElement('div');
+    avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
+    const avatarImg = document.createElement('img');
+    
+    if (speaker === 'customer' && currentCustomer && currentCustomer.archetypeKey) {
+        avatarImg.src = customerAvatars[currentCustomer.archetypeKey] || 'https://randomuser.me/api/portraits/lego/1.jpg';
+        avatarImg.alt = currentCustomer.name || 'Customer';
+    } else if (speaker === 'rikk') {
+        avatarImg.src = rikkAvatarUrl;
+        avatarImg.alt = 'Rikk';
+    } else { 
+        avatarImg.src = systemAvatarUrl;
+        avatarImg.alt = 'System';
+    }
+    avatarDiv.appendChild(avatarImg);
+    personDiv.appendChild(avatarDiv);
+
+    if (speaker !== 'narration') {
+        messageContainer.appendChild(personDiv);
+    }
+
+    const contextDiv = document.createElement('div');
+    contextDiv.classList.add('chat__conversation-board__message__context');
     const bubble = document.createElement('div');
     bubble.classList.add('chat-bubble', speaker);
+
     if (speaker === 'customer' || speaker === 'rikk') {
         const speakerNameElement = document.createElement('span');
         speakerNameElement.classList.add('speaker-name');
         speakerNameElement.textContent = (speaker === 'customer') ? (currentCustomer.name || '[Customer]') : 'Rikk';
         bubble.appendChild(speakerNameElement);
     }
+
     bubble.appendChild(document.createTextNode(message));
-    chatContainer.appendChild(bubble);
+    contextDiv.appendChild(bubble);
+    messageContainer.appendChild(contextDiv);
+
+    // NEW LOGIC: Insert the new message BEFORE the spacer element.
+    if (chatContainer && chatSpacerElement) {
+        chatContainer.insertBefore(messageContainer, chatSpacerElement);
+    } else {
+        // Fallback in case spacer isn't found
+        chatContainer.appendChild(messageContainer);
+    }
+
+    // Always scroll to the bottom to reveal the new message
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -508,7 +572,16 @@ function updateEventTicker() {
     }
 }
 
-function clearChat() { if(chatContainer) chatContainer.innerHTML = ''; }
+// MODIFIED: clearChat now creates and adds the dynamic spacer element.
+function clearChat() { 
+    if(chatContainer) {
+        chatContainer.innerHTML = ''; 
+        // Create the spacer that will push content to the bottom
+        chatSpacerElement = document.createElement('div');
+        chatSpacerElement.className = 'chat-spacer';
+        chatContainer.appendChild(chatSpacerElement);
+    }
+}
 function clearChoices() { if(choicesArea) choicesArea.innerHTML = ''; }
 function playSound(audioElement) { if (audioElement?.play) { audioElement.currentTime = 0; audioElement.play().catch(e => console.log(`Audio play failed: ${e.name}`)); } }
 
