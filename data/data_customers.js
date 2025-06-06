@@ -333,4 +333,181 @@ const customerArchetypes = {
             }
         }
     },
+    STIMULANT_USER: {
+        key: "STIMULANT_USER",
+        baseName: "Motor-Mouth Marty",
+        greeting: (customer, item) => {
+            const itemName = item ? item.name.split("'")[1] || item.name.split(" ")[1] || "that rocket fuel" : 'something to SUPERCHARGE my EVERYTHING';
+            const greetings = [
+                `Rikk! My man! My legend! You will NOT believe the idea I just had! **We're talking revolutionary, Rikk, REVOLUTIONARY!** It involves pigeons, a thousand tiny jetpacks, and a synchronized aerial ballet that will solve rush hour traffic! PERMANENTLY! Oh, right, yeah, you got any of that **${itemName}**? My brain's going a million miles a minute, and I need to keep up with it! **How much for the zoom-zoom juice? And have you ever wondered if squirrels are just tiny, furry spies? Because I have. Extensively.**`,
+                `Whoa, Rikk, TIMING! I was just explaining to this lamppost here how the entire global economy is secretly controlled by llamas! **It's all in the wool, Rikk, the WOOL!** They're playing the long game! Anyway, you got that **${itemName}**? I need to, uh, *process* some very important data. Very, very fast. **Price? Don't care, just NEED IT! You ever try to teach a fish to play poker? It's harder than it looks, man, way harder!**`,
+                customer.hasMetRikkBefore ? `Marty! No, wait, Rikk! It's me, ${customer.name}! Or am I Marty? Doesn't matter! **Got any of that ${itemName}? I'm onto something HUGE! Bigger than breadboxes! Bigger than... than... BIG THINGS!** My thoughts are racing like caffeinated cheetahs, Rikk! **We should invent a new color! Something... LOUDER!** How much for the go-go powder?` : `You Rikk? Heard you're the wizard of WHIZZ! The sultan of SPEED! The... uh... guy with the good stuff! Name's ${customer.name}, and I'm on a MISSION! **A mission fueled by ideas and, hopefully, soon, by that sweet, sweet ${itemName}!** So, what's the word, bird? **And why DO birds suddenly appear? Is it a government conspiracy? Let's discuss!**`
+            ];
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        },
+        buyPreference: (item) => item.itemTypeObj.subType === "STIMULANT" || item.itemTypeObj.subType === "METHAMPHETAMINE",
+        sellPreference: (item) => (item.itemTypeObj.type === "STOLEN_GOOD" && item.qualityIndex === 0) || item.id === "half_baked_invention_idea" || item.id === "blueprint_for_squirrel_armor", // Placeholder items
+        priceToleranceFactor: 0.7, // Low to moderate
+        negotiationResists: true, // Too scattered/paranoid
+        heatImpact: 2, // Can be erratic
+        credImpactSell: -1, // Selling weird stuff
+        credImpactBuy: 1, // Reliable buyer of their preferred stuff
+        initialMood: "manic", // "manic" or "agitated"
+        preferredDrugSubTypes: ["STIMULANT", "METHAMPHETAMINE", "NOOTROPIC"],
+        dialogueVariations: {
+            lowCashRikk: (mood) => { // Mood doesn't really change their core reaction much, they're always ON
+                const lines = [
+                    `**NO MONEY?! Rikk, are you KIDDING ME?!** My entire plan to build a self-folding laundry empire depended on this transaction! **This is a CATASTROPHE!** Now the socks will remain unfolded! **Think of the CHAOS!**`,
+                    `Broke?! **But... but... my hyper-intelligent hamster, Sir Reginald Fluffington III, he predicted this deal would fund our expedition to find the Lost City of Atlantis!** He even packed his tiny scuba gear! **This is setting back interspecies archaeology by DECADES, Rikk!**`,
+                    `**You're out of cash? My brain just screeched to a halt!** Well, not really, it's still going pretty fast, but this is a MAJOR roadblock, Rikk! **A real spanner in the works of my genius!** I was about to patent breathable coffee! **BREATHABLE COFFEE, RIKK!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkDeclinesToBuy: (mood) => {
+                const lines = [
+                    `**YOU DON'T WANT IT?!** But this blueprint for squirrel-sized battle armor is revolutionary! **Think of the acorn defense capabilities!** You're missing out, Rikk! **This is the future of rodent warfare! Your loss! COMPLETELY YOUR LOSS!**`,
+                    `Not interested in my half-finished perpetual motion machine? **It only needs a few more... uh... things! And a LOT more duct tape!** This is visionary stuff, Rikk! **You'll regret this when I'm accepting my Nobel Prize! FROM THE MOON!**`,
+                    `**You're passing on THIS?! This... this THING?!** It's a... it's a paradigm shift in... something! **I haven't figured out what yet, but it's BIG!** You lack vision, Rikk! **VISION!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkDeclinesToSell: (mood) => {
+                const lines = [
+                    `**NO DEAL?! But I can feel my ideas slowing down, Rikk!** It's like watching a Ferrari run out of gas in slow motion! **Tragic! Utterly tragic!** Don't you understand the URGENCY?! **I'm on the verge of discovering why cats purr! THE WORLD NEEDS TO KNOW!**`,
+                    `You're cutting me off?! **Rikk, I'm like a rocket ship, and you're withholding the fuel!** My trajectory was set for GENIUS! **Now I'm just... orbiting mediocrity! This is NOT GOOD!**`,
+                    `Can't sell?! **But I was about to write a seven-act opera about the philosophical implications of cheese!** This is a major setback for the arts, Rikk! **A MAJOR SETBACK!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkBuysSuccess: (mood) => {
+                const lines = [
+                    `YES! **Cash money! Fuel for the fire!** Now I can finally buy that industrial-sized vat of glitter I need for my pigeon communication system! **It's all about visual signaling, Rikk! THEY'LL SEE IT FROM SPACE!** Thanks, you're a lifesaver! **Or at least, an idea-saver!**`,
+                    `BRILLIANT! This is perfect! **This will fund my research into why donuts have holes! Is it a metaphor? Are they portals? I NEED ANSWERS, RIKK!** You're the best! **The absolute BEST! Like, top-tier human!**`,
+                    `SOLD! **Excellent transaction, my friend!** With this, I can acquire the necessary components for my plan to teach squirrels interpretive dance! **It'll be bigger than Broadway! BIGGER!** Gotta go, ideas are COOKING! **Smell ya later, innovator!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkSellsSuccess: (mood) => {
+                const lines = [
+                    `YES! **THE GOOD STUFF! My brain is already thanking you!** Ideas are POPPING like corn in a microwave, Rikk! **Gotta go, gotta invent, gotta... DO ALL THE THINGS!** You're a national treasure! **Or at least a neighborhood one!**`,
+                    `FANTASTIC! **This is the nectar of the gods of innovation!** I can feel the breakthroughs coming! **Prepare for a paradigm shift, Rikk! Or at least a very enthusiastic PowerPoint presentation!** Later!`,
+                    `ACQUIRED! **The precious!** Now my thoughts can achieve MAXIMUM VELOCITY! **Thanks, Rikk! You're not just a dealer, you're a muse! A very helpful, slightly shady muse!** TO THE LABORATORY! (Which is my kitchen table).`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            itemNotGoodEnough: (mood) => {
+                const lines = [
+                    `This? Rikk, this is... this is like putting regular gas in a rocket ship! **I need the high-octane stuff! The brain-blasters!** This ain't gonna cut it for my plan to teach dolphins astrophysics! **They have standards, you know!**`,
+                    `Nah, Rikk, this won't do. **My ideas are thoroughbreds, and this is pony fuel!** I'm talking warp speed, Rikk, WARP SPEED! **This is... this is dial-up modem speed! In my brain! The horror!**`,
+                    `Not quite right, my friend. **I need something that ZINGS! Something that ZAPS! Something that makes my neurons do the cha-cha!** This is more of a slow waltz. **Next!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkPriceTooHigh: (mood) => {
+                const lines = [
+                    `WHOA! **That price, Rikk! That's... that's astronomical!** Are the numbers themselves on stimulants?! **My budget is screaming! It's a very loud, very agitated scream!** Can we... recalibrate those digits? **For the sake of innovation!**`,
+                    `Ouch, Rikk! **That stings the old wallet-erino!** I'm trying to fund groundbreaking discoveries here, not buy a small island! **Though a small island would be nice... Focus, Marty, FOCUS!** How about a price that doesn't make my bank account cry?`,
+                    `**Yikes! That's a bit steep, even for a visionary like myself!** My ideas are priceless, Rikk, but my cash is definitely not! **Let's haggle like two very energetic... uh... hagglers!**`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            // General banter
+            generalBanter: [
+                "You ever think about how, like, pigeons are just government drones, Rikk? But they're, like, *organic* drones? Makes you think. **Oh, right, the 'Tina's Turbo Tabs', how much for those speed demons?**",
+                "So I was thinking, we could replace all the city buses with, like, giant catapults! **Think of the efficiency! Less traffic, more... airborne commuters.** Anyway, got any of that 'White Pony'?",
+                "(If deal fails) **This is a disaster! A travesty!** My whole plan to reorganize the city's stray cat population by alphabetical order depended on this! **Now what am I gonna do? They'll be so confused! THIS IS YOUR FAULT, RIKK!**",
+                "Rikk, my man, you ever stare at a lightbulb for, like, an hour? **The secrets it holds! The STORIES!** Oh, yeah, almost forgot, need to re-up on the brain-boosters. **Whatcha got that screams 'EUREKA!'?**",
+                "I've got it! **A new system for dog walking! We attach tiny parachutes to them and launch them from rooftops!** They'll love it! It's efficient! It's... probably illegal. **Damn. Anyway, how about those 'Zoomer Boomers'?**",
+                "Okay, hear me out: **squirrels with tiny top hats and monocles.** Why? WHY NOT, RIKK? It's called FASHION! **Also, I need some 'Fast Forward Flakes'. My brain's buffering.**"
+            ]
+        }
+    },
+    PSYCHEDELIC_EXPLORER: {
+        key: "PSYCHEDELIC_EXPLORER",
+        baseName: "Cosmic Connie",
+        greeting: (customer, item) => {
+            const itemName = item ? item.name.split("'")[1] || item.name.split(" ")[1] || "those cosmic keys" : 'a little something to unlock the doors of perception';
+            const greetings = [
+                `Greetings, fellow traveler! Rikk, is it? Or are you just, like, a *reflection* of Rikk? Whoa. Heavy. I was just pondering the interconnectedness of all things, you know? Like, what if this sidewalk is actually, like, the *eyebrow* of a giant? Anyway, you got any of **${itemName}**? My soul is trying to dial into the cosmic modem.`,
+                `Rikk, my dude! I had this *epiphany*! What if, like, colors are just, like, opinions, man? And we all see them differently? *Mind blown, right?* So, about that **${itemName}**... I'm trying to paint a sound, and I think that's the missing ingredient. You feel me? The universe is singing, Rikk, but I think it's off-key.`,
+                customer.hasMetRikkBefore ? `Connie! No, wait, that's me. You're Rikk! Or are we all Rikk? *Lost in the cosmic sauce again, man.* Got any of that **${itemName}**? The patterns in my ceiling are telling me it's time for a spiritual tune-up. They speak in, like, *very insistent paisley*, you know?` : `Hey... are you Rikk? The name vibes with my aura. I'm ${customer.name}, or maybe I'm just a collection of stardust experiencing itself. *Pretty wild, huh?* I'm on a quest for some **${itemName}**. My spirit guide, a talking badger named Bartholomew, said you'd have the good stuff. He's usually right about these things. *Especially after three cups of herbal tea.*`
+            ];
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        },
+        buyPreference: (item) => item.itemTypeObj.subType === "PSYCHEDELIC" || item.itemTypeObj.subType === "PSYCHEDELIC_MILD",
+        sellPreference: (item) => item.id === "perfectly_normal_rock_portal_key" || item.id === "sentient_dust_bunny_wisdom" || (item.itemTypeObj.type === "STOLEN_GOOD" && item.qualityIndex === 0 && Math.random() < 0.3), // Lower chance for generic stolen goods
+        priceToleranceFactor: 1.1, // Slightly variable/oblivious
+        negotiationResists: true, // Too detached
+        heatImpact: 1,
+        credImpactSell: 1, // Selling weird but intriguing items
+        credImpactBuy: 2, // Good customer for their niche
+        initialMood: "dreamy",
+        preferredDrugSubTypes: ["PSYCHEDELIC", "PSYCHEDELIC_MILD", "DISSOCIATIVE"],
+        dialogueVariations: {
+            lowCashRikk: (mood) => {
+                const lines = [
+                    `Oh, bummer, man. The money spirits aren't with you today. *It's like, the financial chi is all blocked up.* Maybe try, like, meditating on abundance? Or checking under the couch cushions. The universe provides, Rikk, eventually.`,
+                    `No green vibrations, huh? That's cool, that's cool. *Everything is transient, especially, like, paper rectangles we assign value to.* This just means the cosmic transaction isn't aligned right now. Maybe later, the cash flow will... flow.`,
+                    `*Aw, man, your wallet's feeling light?* That's okay. The real currency is, like, kindness, you know? And maybe good vibes. But yeah, also money for the good stuff. *Catch you on the flip side of the fiscal spectrum, Rikk.*`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkDeclinesToBuy: (mood) => {
+                const lines = [
+                    `No worries, this *Sentient Dust Bunny* probably wasn't meant for your vibrational frequency anyway. It told me it's looking for a home with more... *existential angst*. You're probably too well-adjusted, Rikk.`,
+                    `It's cool, man. This *Perfectly Normal Rock* that also happens to be a *Portal Key to the Hamster Dimension* isn't for everyone. *It chooses the holder, you know?* Maybe it senses you're more of a... *cat person*. No judgment.`,
+                    `*All good, Rikk.* This clump of moss that whispers secrets of forgotten civilizations needs a special kind of caretaker. *Someone who speaks 'lichen', you know?* It's a niche market.`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkDeclinesToSell: (mood) => {
+                const lines = [
+                    `It's cool, Rikk. The universe will provide the 'Lucy's Sky Diamonds' when the time is right... or maybe that pigeon outside has some. *It looked like it had shifty eyes. And really colorful feathers.*`,
+                    `No worries, my dude. *The path to enlightenment is, like, totally winding.* If the 'Magic Mushies' aren't flowing today, maybe it's a sign I should try to, like, *photosynthesize my own high*. Worth a shot, right?`,
+                    `*That's alright, Rikk.* The cosmic flow is just redirecting my journey. Perhaps I'm meant to find clarity in, like, a really good cup of tea. Or by staring at my own hands for an hour. *They're like... maps, man! Maps of... hands!*`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkBuysSuccess: (mood) => {
+                const lines = [
+                    `Radical, Rikk! This *Cosmic Pebble* will be, like, so stoked to join your collection of earthly treasures! *It says it's happy to be appreciated for its inner truth, not just its pebble-ness.*`,
+                    `Far out, man! This *Whispering Pinecone* is gonna love its new home. *It has so many stories to tell, mostly about squirrels, but some are pretty profound.* Thanks for, like, being its new guardian.`,
+                    `*Righteous!* This *Slightly-Used Aura* I found will really benefit from your... *grounded energy*, Rikk. May it bring you visions of, like, really cool screensavers.`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkSellsSuccess: (mood) => {
+                const lines = [
+                    `Far out, man! These 'Magic Mushrooms' are gonna take me on a journey to the very fabric of reality... or at least to the corner store for snacks. *It's all connected, you know?* Thanks, Rikk!`,
+                    `*Cosmic!* This 'Astral LSD' is just what my third eye was craving. Time to go explore the space between thoughts. *Wish me luck, or, like, don't. Time is an illusion anyway.* Peace!`,
+                    `Beautiful, Rikk. These 'Blotters of Enlightenment' feel... *correct*. My spirit animal, which is currently a mildly confused sloth, thanks you. *He says you have good vibes. For a carbon-based biped.*`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            itemNotGoodEnough: (mood) => {
+                const lines = [
+                    `Hmm, this 'Afghan Gold' feels a bit too... *square*, you know? My third eye is looking for something more... *spherical*. Or maybe, like, *fractal-shaped*. Yeah, that's the ticket.`,
+                    `Nah, Rikk, this 'Green Crack' is giving me, like, *jagged vibes*. I'm looking for something more... *flowy*. Like a gentle stream of consciousness, not a caffeinated waterfall, you feel me?`,
+                    `This particular batch of 'Wonder Pills' doesn't quite resonate with my current chakra alignment. *It's a bit too... beige.* I need something that sings in the key of *purple*, my friend.`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            rikkPriceTooHigh: (mood) => {
+                const lines = [
+                    `Whoa, heavy price, man. Does it come with, like, a map to the Astral Plane for that much? *Or maybe a user manual for the universe?* My spirit guide says my wallet is feeling a bit... *deflated* right now.`,
+                    `Oof, Rikk, that's a lot of Earth credits. *Are these, like, artisanally mined from the moon by enlightened gnomes or something?* My pockets are feeling a bit too... *Newtonian* for that price.`,
+                    `*That's a cosmic number, my friend!* For that much, I'd expect these 'Reality Ripples' to also, like, do my dishes and tell me the meaning of life. *Can we find a more... harmonious price point?*`
+                ];
+                return lines[Math.floor(Math.random() * lines.length)];
+            },
+            generalBanter: [
+                "Rikk, my dude, I just realized that, like, shoes are just foot-prisons, you know? We should all let our feet be free! Anyway, got any 'Psychedelic Sunshine'?",
+                "I was talking to a squirrel earlier, and it told me the secrets of the universe... but then I forgot them. Think some 'Special K-Os Cereal' will help me remember? *Or maybe it was a pigeon... they all look so wise.*",
+                "What if, like, trees are just Earth's antennas, Rikk? And they're, like, picking up signals from other planets? *Makes you think, huh?* Oh, yeah, need some 'Cosmic Comets'.",
+                "I think my cat is a reincarnated philosopher. *He just stares at walls with such... understanding.* It's profound. Anyway, you got those 'Reality-Bending Blisscuits'?",
+                "Sometimes I wonder if we're all just, like, characters in a giant cosmic play, Rikk. And the script is written in, like, stardust. *Heavy, right?* Speaking of stars, any 'Galaxy Gliders' in stock?",
+                "This reality, man... it's like, *so* realistic. Almost *too* realistic, you know? Makes me crave some 'Dream Weaver Deluxe'. You holding?"
+            ]
+        }
+    },
 };
