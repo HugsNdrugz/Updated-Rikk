@@ -2,7 +2,7 @@
 // My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, UNABRIDGED BUILD
 // =================================================================================
 // This script is the definitive controller for the application. It manages the game
-// loop, UI state, player actions, data persistence, and all integrations.
+// loop, UI state, player actions, data persistence, and all integrations.u
 // This file is complete with no omissions or truncations.
 // =================================================================================
 
