@@ -7,6 +7,22 @@
 // and uses the data to drive interactions, including dialogue and game effects.
 // =================================================================================
 
+// Configuration object to manage "magic numbers" for easy tweaking.
+const CONFIG = {
+    MAX_CUSTOMERS_IN_POOL: 20,
+    BASE_CUSTOMER_SELLS_CHANCE: 0.5,
+    INVENTORY_FULL_THRESHOLD: 10,
+    RETURNING_CUSTOMER_CHANCE: 0.35,
+    HAGGLE_PRICE_DIFFERENCE_THRESHOLD: 5,
+    MIN_ITEM_PRICE: 5,
+    // Base cash ranges for new customers
+    NEW_CUSTOMER_CASH_RANGE: 100,
+    NEW_CUSTOMER_CASH_BASE: 30,
+    // Base cash ranges for returning customers
+    RETURNING_CUSTOMER_CASH_RANGE: 90,
+    RETURNING_CUSTOMER_CASH_BASE: 25,
+};
+
 export class CustomerManager {
     /**
      * Initializes the CustomerManager with the new template data and other game data.
@@ -25,7 +41,6 @@ export class CustomerManager {
         // Internal state for managing the pool of unique customer instances.
         this.customersPool = [];
         this.nextCustomerId = 1;
-        this.MAX_CUSTOMERS_IN_POOL = 20; // Internal configuration
     }
 
     /**
@@ -37,14 +52,12 @@ export class CustomerManager {
         const { inventory, cash, playerSkills, activeWorldEvents } = gameState;
         const customerInstance = this._selectOrGenerateCustomerFromPool();
 
-        // Retrieve the base template for this customer.
         const template = this.customerTemplates[customerInstance.archetypeKey];
         if (!template) {
             console.error(`CustomerManager: Invalid archetypeKey provided: ${customerInstance.archetypeKey}`);
             return this._createErrorInteraction(customerInstance);
         }
-        
-        // Get the initial dialogue using the new interpreter method.
+
         const greetingResult = this._getDialogue(customerInstance, 'greeting');
         let dialogue = [
             { speaker: "customer", text: greetingResult.line },
@@ -54,10 +67,10 @@ export class CustomerManager {
         let choices = [];
         let itemContext = null;
 
-        // Determine interaction type (buy vs. sell)
-        let customerWillOfferItemToRikk = Math.random() < 0.5;
+        // Determine interaction type (buy vs. sell) with clear, configurable logic.
+        let customerWillOfferItemToRikk = Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE;
         if (inventory.length === 0) customerWillOfferItemToRikk = true;
-        if (inventory.length >= 10) customerWillOfferItemToRikk = false;
+        if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD) customerWillOfferItemToRikk = false;
         if (template.sellsOnly) {
             customerWillOfferItemToRikk = true;
         }
@@ -66,7 +79,7 @@ export class CustomerManager {
             // --- Scenario A: Customer is SELLING an item TO Rikk ---
             itemContext = this._generateRandomItem(template);
             customerInstance.currentItemName = itemContext.name;
-            
+
             const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance });
             const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
             dialogue.push({ speaker: "customer", text: offerText });
@@ -78,7 +91,8 @@ export class CustomerManager {
             } else {
                 choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
             }
-            choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy'", payload: declineResult.payload } });
+            // CRITICAL FIX: Removed trailing single quote from the outcome type.
+            choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy", payload: declineResult.payload, followUpDialogue: declineResult.line } });
 
         } else if (inventory.length > 0) {
             // --- Scenario B: Customer is BUYING an item FROM Rikk ---
@@ -86,7 +100,6 @@ export class CustomerManager {
             customerInstance.currentItemName = itemContext.name;
 
             const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerInstance });
-            const template = this.customerTemplates[customerInstance.archetypeKey];
             let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
             customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
 
@@ -101,17 +114,22 @@ export class CustomerManager {
                 choices.push({ text: `Serve 'em ($${customerOfferPrice}) (Short!)`, outcome: { type: "sell_to_customer" }, disabled: true });
             }
 
-            if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + 5) {
+            if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + CONFIG.HAGGLE_PRICE_DIFFERENCE_THRESHOLD) {
                 const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
                 choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
             }
-            choices.push({ text: "Nah, kick rocks.", outcome: { type: "rikkDeclinesToSell", payload: declineResult.payload } });
+            choices.push({ text: "Nah, kick rocks.", outcome: { type: "rikkDeclinesToSell", payload: declineResult.payload, followUpDialogue: declineResult.line } });
 
         } else {
             // --- Scenario C: Rikk has no inventory to sell ---
-            const emptyStashResult = this._getDialogue(customerInstance, 'acknowledge_empty_stash');
-            dialogue.push({ speaker: "rikk", text: "Stash is drier than a popcorn fart, G. Nothin' to move right now." });
-            choices.push({ text: "Aight, my bad. Later.", outcome: { type: "acknowledge_empty_stash", payload: emptyStashResult ? emptyStashResult.payload : null } });
+            // LOGIC FIX: Correctly use the retrieved dialogue for both Rikk and the customer.
+            const rikkLine = "Stash is drier than a popcorn fart, G. Nothin' to move right now.";
+            const customerResponse = this._getDialogue(customerInstance, 'acknowledge_empty_stash');
+            
+            dialogue.push({ speaker: "rikk", text: rikkLine });
+            dialogue.push({ speaker: "customer", text: customerResponse.line });
+
+            choices.push({ text: "Later.", outcome: { type: "end_interaction", payload: customerResponse.payload } });
         }
 
         return {
@@ -125,6 +143,12 @@ export class CustomerManager {
         };
     }
     
+    /**
+     * Public method to retrieve a specific dialogue line for outcomes processed outside the main interaction loop.
+     * @param {object} customerInstance - The specific customer instance.
+     * @param {string} contextKey - The key for the dialogue context (e.g., 'negotiation_success').
+     * @returns {object} An object containing the processed line and any payload.
+     */
     getOutcomeDialogue(customerInstance, contextKey) {
         return this._getDialogue(customerInstance, contextKey);
     }
@@ -176,44 +200,61 @@ export class CustomerManager {
     }
     
     _selectOrGenerateCustomerFromPool() {
-        if (this.customersPool.length > 0 && Math.random() < 0.35) {
+        if (this.customersPool.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
             const returningCustomer = this._getRandomElement(this.customersPool);
-            returningCustomer.hasMetRikkBefore = true;
             const template = this.customerTemplates[returningCustomer.archetypeKey];
+
+            // Refresh the state of the returning customer for this new interaction
+            returningCustomer.hasMetRikkBefore = true;
             if (template) {
                 returningCustomer.mood = template.baseStats.mood || 'chill';
-                returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * 90)) + 25;
+                returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
             }
             return returningCustomer;
         }
 
+        // Generate a new customer
         const archetypeKeys = Object.keys(this.customerTemplates);
         const selectedArchetypeKey = this._getRandomElement(archetypeKeys);
         const template = this.customerTemplates[selectedArchetypeKey];
         
+        // REFACTOR: Simplified and more robust ID/Name generation.
+        const customerId = this.nextCustomerId;
+        this.nextCustomerId++;
+
         const newCustomerInstance = {
-            id: `customer_${this.nextCustomerId++}`,
-            name: `${template.baseName} #${this.nextCustomerId - 1}`,
+            id: `customer_${customerId}`,
+            name: `${template.baseName} #${customerId}`,
             archetypeKey: selectedArchetypeKey,
+            // Use JSON stringify/parse for a deep copy of the stats object, preventing mutation of the original template.
+            // This is safe for JSON-compatible data (no functions, undefined, Symbols).
             ...JSON.parse(JSON.stringify(template.baseStats)), 
-            cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * 100)) + 30,
+            cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
             hasMetRikkBefore: false
         };
 
-        if (this.customersPool.length < this.MAX_CUSTOMERS_IN_POOL) { this.customersPool.push(newCustomerInstance); }
-        else { this.customersPool[Math.floor(Math.random() * this.MAX_CUSTOMERS_IN_POOL)] = newCustomerInstance; }
+        // Add to pool, replacing an old customer if the pool is full.
+        if (this.customersPool.length < CONFIG.MAX_CUSTOMERS_IN_POOL) {
+            this.customersPool.push(newCustomerInstance);
+        } else {
+            const randomIndex = Math.floor(Math.random() * CONFIG.MAX_CUSTOMERS_IN_POOL);
+            this.customersPool[randomIndex] = newCustomerInstance;
+        }
         return newCustomerInstance;
     }
 
     _generateRandomItem(template = null) {
         if (!this.itemTypes || this.itemTypes.length === 0) {
-            return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1 };
+            return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
         }
+        
         let availableItemTypes = [...this.itemTypes];
         if (template && template.itemPool && template.itemPool.length > 0) {
              availableItemTypes = this.itemTypes.filter(it => template.itemPool.includes(it.id));
         }
-        if (availableItemTypes.length === 0) availableItemTypes = [...this.itemTypes];
+        if (availableItemTypes.length === 0) {
+            availableItemTypes = [...this.itemTypes]; // Fallback to all items if template pool is invalid
+        }
 
         const selectedType = this._getRandomElement(availableItemTypes);
         const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ["Standard"];
@@ -222,13 +263,17 @@ export class CustomerManager {
         const basePurchaseValue = selectedType.baseValue + Math.floor(Math.random() * (selectedType.range * 2)) - selectedType.range;
         
         const item = {
-          id: selectedType.id, name: selectedType.name, itemTypeObj: selectedType, quality, qualityIndex,
+          id: selectedType.id,
+          name: selectedType.name,
+          itemTypeObj: selectedType,
+          quality,
+          qualityIndex,
           description: selectedType.description,
         };
         
         const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-        item.purchasePrice = Math.max(5, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
-        item.estimatedResaleValue = Math.max(item.purchasePrice + 5, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
+        item.purchasePrice = Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
+        item.estimatedResaleValue = Math.max(item.purchasePrice + CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
         return item;
     }
 
@@ -238,25 +283,35 @@ export class CustomerManager {
         if (customerInstance && customerInstance.archetypeKey) {
             customerTemplate = this.customerTemplates[customerInstance.archetypeKey];
         }
+
         let baseValue = purchaseContext ? item.purchasePrice : item.estimatedResaleValue;
         if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') { return baseValue; }
+        
         let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
         let effectiveValue = baseValue * qualityModifier;
+
         if (playerSkills) {
-            if (!purchaseContext && playerSkills.appraiser > 0) { effectiveValue *= (1 + playerSkills.appraiser * 0.05); }
-            if (purchaseContext && playerSkills.appraiser > 0) { effectiveValue *= (1 - playerSkills.appraiser * 0.03); }
+            if (!purchaseContext && playerSkills.appraiser > 0) { // Selling to customer
+                effectiveValue *= (1 + playerSkills.appraiser * 0.05);
+            }
+            if (purchaseContext && playerSkills.appraiser > 0) { // Buying from customer
+                effectiveValue *= (1 - playerSkills.appraiser * 0.03);
+            }
         }
         
         if (activeWorldEvents) {
             activeWorldEvents.forEach(eventState => {
                 const effects = eventState.effects; 
-                if (effects && effects.allPriceModifier) { effectiveValue *= effects.allPriceModifier; }
-                if (effects && item.itemTypeObj.type === "DRUG" && effects.drugPriceModifier) { effectiveValue *= effects.drugPriceModifier; }
+                if (!effects) return;
+                if (effects.allPriceModifier) { effectiveValue *= effects.allPriceModifier; }
+                if (effects.drugPriceModifier && item.itemTypeObj.type === "DRUG") { effectiveValue *= effects.drugPriceModifier; }
             });
         }
 
-        if (customerTemplate && !purchaseContext) { effectiveValue *= customerTemplate.priceToleranceFactor; }
-        return Math.max(5, Math.round(effectiveValue));
+        if (customerTemplate && !purchaseContext) { // When selling to a customer, their tolerance matters
+            effectiveValue *= (customerTemplate.priceToleranceFactor || 1.0);
+        }
+        return Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(effectiveValue));
     }
     
     _getRandomElement(arr) {
@@ -266,16 +321,22 @@ export class CustomerManager {
     
     _createErrorInteraction(customerInstance) {
         return {
-            instance: customerInstance, name: customerInstance.name || "Error Customer",
+            instance: customerInstance,
+            name: customerInstance.name || "Error Customer",
             dialogue: [{ speaker: "narration", text: "Error: Customer data is corrupted." }],
             choices: [{ text: "OK", outcome: { type: "acknowledge_error" } }],
-            itemContext: null, archetypeKey: "ERROR_ARCHETYPE", mood: "error"
+            itemContext: null,
+            archetypeKey: "ERROR_ARCHETYPE",
+            mood: "error"
         };
     }
+
+    // --- Save/Load and State Management ---
 
     reset() {
         this.customersPool = [];
         this.nextCustomerId = 1;
+        console.log("CustomerManager has been reset.");
     }
 
     getSaveState() {
@@ -286,9 +347,9 @@ export class CustomerManager {
     }
 
     loadSaveState(state) {
-        if (state) {
-            this.customersPool = state.customersPool || [];
-            this.nextCustomerId = state.nextCustomerId || 1;
+        if (state && state.customersPool && state.nextCustomerId) {
+            this.customersPool = state.customersPool;
+            this.nextCustomerId = state.nextCustomerId;
         } else {
             this.reset();
         }

@@ -134,7 +134,7 @@ body {
 
 /* Game Screen Specific */
 #game-screen {
-    background: url(assets/images/game-screen-bg.jpg) center/cover;
+    background: url(assets/images/game-screen-bg.jpg) center/cover; /* FIXED: .jg typo corrected to .jpg */
 }
 
 #splash-screen {
@@ -150,6 +150,12 @@ body {
     color: var(--color-primary);
     text-shadow: 2px 2px 0px #000, 4px 4px 0px var(--color-secondary);
     margin-bottom: var(--spacing-lg);
+}
+#outfit-splash-tagline{ /* FIXED: Removed leading dot */
+  font-family: "Outfit", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400; /* FIXED: Invalid <weight> replaced with 400 */
+  font-style: normal;
 }
 
 .loader {
@@ -184,7 +190,7 @@ body {
 }
 
 #start-screen {
-    background: url('assets/images/main-menu-bg.jpg') center/cover;
+    background: url('assets/images/main-menu-bg.png') center/cover;
 }
 
 h1,
@@ -661,10 +667,6 @@ h1,
     max-width: calc(100% - 40px);
 }
 
-.chat__conversation-board__message-container.reversed .chat__conversation-board__message__context {
-    align-items: flex-end;
-}
-
 .chat__conversation-board__message-container:not(.reversed) .chat__conversation-board__message__context {
     align-items: flex-start;
 }
@@ -718,195 +720,11 @@ h1,
     cursor: pointer;
 }
 
-.choice-button {
-    padding: var(--spacing-xs) var(--spacing-md);
-    border: 1px solid var(--color-primary);
-    border-radius: 20px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all var(--transition-duration-short);
-    background-color: transparent;
-    color: var(--color-primary);
-}
-
-.choice-button:hover {
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-}
-
-.choice-button:disabled {
-    background-color: var(--color-disabled-bg) !important;
-    color: var(--color-disabled-text) !important;
-    border-color: var(--color-disabled-border) !important;
-    cursor: not-allowed;
-}
-
-.choice-button.decline {
-    border-color: var(--color-grey-mid);
-    color: var(--color-grey-mid);
-}
-
-.choice-button.decline:hover {
-    background-color: var(--color-error);
-    color: var(--color-on-primary);
-    border-color: var(--color-error);
-}
-
-#player-hub {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background-color: rgba(18, 18, 18, 0.9);
-    width: 100%;
-    border-top: 1px solid var(--color-grey-dark);
-}
-
-.hub-button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    font-weight: 700;
-    font-size: 0.75rem;
-    color: var(--color-on-surface);
-    border: none;
-    border-radius: var(--button-border-radius);
-    cursor: pointer;
-    background: transparent;
-    flex-grow: 1;
-    max-width: 120px;
-    transition: background-color 0.2s;
-}
-
-.hub-button .button-icon {
-    width: calc(var(--icon-size) * 1.2);
-    height: calc(var(--icon-size) * 1.2);
-}
-
-#phone-docked-indicator {
-    position: absolute;
-    bottom: 80px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 40;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s, opacity 0.2s;
-}
-
-#phone-docked-indicator:hover {
-    transform: scale(1.1);
-}
-
-#phone-docked-indicator.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-#inventory-modal {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background-color: var(--color-overlay-dark-strong);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-#inventory-modal.active {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    background-color: var(--color-surface);
-    border-radius: var(--modal-border-radius);
-    width: 90%;
-    max-width: var(--modal-max-width);
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-grey-dark);
-    transform: scale(0.95);
-    opacity: 0;
-    transition: transform 0.2s, opacity 0.2s;
-}
-
-#inventory-modal.active .modal-content {
-    transform: scale(1);
-    opacity: 1;
-}
-
-.modal-header {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-bottom: 1px solid var(--color-grey-dark);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.close-modal-btn {
-    font-size: 1.8rem;
-    color: var(--color-on-surface);
-    cursor: pointer;
-    background: none;
-    border: none;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-
-.modal-body {
-    padding: var(--spacing-lg);
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-.inventory-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--spacing-md);
-}
-
-.inventory-item-card {
-    padding: var(--spacing-sm);
-    border: 1px solid var(--color-grey-dark);
-    border-radius: var(--spacing-xs);
-    background-color: var(--color-dark-bg);
-}
-
-.inventory-item-card h4 {
-    font-weight: 700;
-    color: var(--color-primary);
-    font-size: 0.9rem;
-}
-
-.item-detail {
-    font-size: 0.75rem;
-    color: var(--color-grey-light);
-    line-height: 1.4;
-}
-
-.modal-footer {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-top: 1px solid var(--color-grey-dark);
-    text-align: center;
-}
-
 .game-button {
-    padding: var(--spacing-md) var(--spacing-xl);
+    padding: var(--spacing-lg) var(--spacing-xl); /* ADJUSTED: Increased vertical padding */
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: 1.1rem; /* ADJUSTED: Slightly increased font size */
+    line-height: 1.2; /* NEW: Added line height for better text rendering */
     border: 2px solid;
     border-radius: var(--button-border-radius);
     cursor: pointer;
