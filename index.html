@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato'>
     <!-- NEW: Slot Game i -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -33,118 +34,126 @@
         
         <!-- Start Screen (Main Menu) -->
         <section id="start-screen" class="screen overlay-screen" aria-labelledby="start-screen-title">
-    <div id="main-menu-content">
-                <h1 id="start-screen-title">My Nigga Rikk</h1>
-        <div id="primary-actions">
-                    <button id="new-game-btn" class="game-button primary-action">Hit the Streets!</button>
-                    <button id="continue-game-btn" class="game-button secondary-action hidden">Continue Hustle</button>
-                </div>
-        <nav id="submenu-navigation">
-            <button id="settings-menu-btn" class="game-button submenu-button">Settings</button>
-            <button id="load-menu-btn" class="game-button submenu-button">Load Game</button>
-            <button id="credits-menu-btn" class="game-button submenu-button">Credits</button>
-            <!-- Optional: <button id="how-to-play-menu-btn" class="game-button submenu-button">How to Play</button> -->
-        </nav>
-        <!-- Placeholder for Sub-menu panels/content that will be revealed by JS -->
-        <div id="settings-menu-panel" class="submenu-panel hidden">
-            <h2>Style Settings</h2>
-            <div class="settings-group" data-setting-group="colors">
-                <h3>Colors</h3>
-                <div class="setting-row">
-                    <label for="color-dark-bg">Dark Background</label>
-                    <input type="color" id="color-dark-bg" data-variable="--color-dark-bg">
-                </div>
-                <div class="setting-row">
-                    <label for="color-light-bg">Light Background</label>
-                    <input type="color" id="color-light-bg" data-variable="--color-light-bg">
-                </div>
-                <div class="setting-row">
-                    <label for="color-primary">Primary</label>
-                    <input type="color" id="color-primary" data-variable="--color-primary">
-                </div>
-                <div class="setting-row">
-                    <label for="color-accent">Accent</label>
-                    <input type="color" id="color-accent" data-variable="--color-accent">
-                </div>
-                <div class="setting-row">
-                    <label for="color-text-base">Base Text</label>
-                    <input type="color" id="color-text-base" data-variable="--color-text-base">
-                </div>
+            <div id="main-menu-content">
+             
+                
+                <!-- This container is now empty as buttons are positioned absolutely -->
+                <div id="primary-actions"></div>
+                <!-- This container is now mostly empty -->
+                <nav id="submenu-navigation">
+                    <!-- The "Load Game" button is still here for JS to find, but hidden. The "Continue" button is its visual representation now. -->
+                    <button id="load-menu-btn" class="game-button submenu-button hidden">Load Game</button>
+                    <!-- Credits button is now hidden -->
+                    <button id="credits-menu-btn" class="game-button submenu-button hidden">Credits</button>
+                </nav>
             </div>
-            <div class="settings-group" data-setting-group="typography">
-                <h3>Typography</h3>
-                <div class="setting-row">
-                    <label for="font-body">Body Font</label>
-                    <select id="font-body" data-variable="--font-body">
-                        <option value="'Roboto', sans-serif">Roboto</option>
-                        <option value="'Open Sans', sans-serif">Open Sans</option>
-                        <option value="'Lato', sans-serif">Lato</option>
-                        <option value="'Montserrat', sans-serif">Montserrat</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <label for="font-heading">Heading Font</label>
-                    <select id="font-heading" data-variable="--font-heading">
-                        <option value="'Roboto Slab', serif">Roboto Slab</option>
-                        <option value="'Playfair Display', serif">Playfair Display</option>
-                        <option value="'Merriweather', serif">Merriweather</option>
-                    </select>
-                </div>
-                 <div class="setting-row">
-                    <label for="font-ui">UI Font</label>
-                    <select id="font-ui" data-variable="--font-ui">
-                        <option value="'Inter', sans-serif">Inter</option>
-                        <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
-                    </select>
-                </div>
+
+            <!-- REVISED MAIN MENU CONTROLS -->
+            <button id="settings-menu-btn" aria-label="Settings"><i class="fas fa-cog"></i></button>
+
+            <div class="start-screen-controls">
+                <button id="new-game-btn" aria-label="Start New Game"><i class="fas fa-play"></i></button>
+                <button id="continue-game-btn" class="hidden" aria-label="Continue Game"><i class="fas fa-plus"></i></button>
             </div>
-            <button id="reset-style-settings">Reset to Defaults</button>
-            <button id="preview-style-settings">Preview</button>
-            <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
-        </div>
-        <div id="load-menu-panel" class="submenu-panel hidden">
-    <h2>Load Game</h2>
-    <p>Saved game slots will appear here.</p>
-    <!-- Load game functionality will be detailed if necessary -->
-    <button class="submenu-back-btn" data-targetpanel="load-menu-panel">Back</button>
-</div>
-        <div id="credits-menu-panel" class="submenu-panel hidden">
-    <h2>Credits</h2>
-    <p>Game developed by: Your Name/Studio</p>
-    <p>Assets from: Asset Store Links/Credits</p>
-    <!-- More detailed credits can be added later -->
-    <button class="submenu-back-btn" data-targetpanel="credits-menu-panel">Back</button>
-</div>
-        <!-- <div id="how-to-play-menu-panel" class="submenu-panel hidden"></div> -->
+
+            <!-- Sub-menu panels remain the same but are triggered by new buttons -->
+            <div id="settings-menu-panel" class="submenu-panel hidden">
+                <h2>Style Settings</h2>
+                <div class="settings-group" data-setting-group="colors">
+                    <h3>Colors</h3>
+                    <div class="setting-row">
+                        <label for="color-dark-bg">Dark Background</label>
+                        <input type="color" id="color-dark-bg" data-variable="--color-dark-bg">
+                    </div>
+                    <div class="setting-row">
+                        <label for="color-light-bg">Light Background</label>
+                        <input type="color" id="color-light-bg" data-variable="--color-light-bg">
+                    </div>
+                    <div class="setting-row">
+                        <label for="color-primary">Primary</label>
+                        <input type="color" id="color-primary" data-variable="--color-primary">
+                    </div>
+                    <div class="setting-row">
+                        <label for="color-accent">Accent</label>
+                        <input type="color" id="color-accent" data-variable="--color-accent">
+                    </div>
+                    <div class="setting-row">
+                        <label for="color-text-base">Base Text</label>
+                        <input type="color" id="color-text-base" data-variable="--color-text-base">
+                    </div>
+                </div>
+                <div class="settings-group" data-setting-group="typography">
+                    <h3>Typography</h3>
+                    <div class="setting-row">
+                        <label for="font-body">Body Font</label>
+                        <select id="font-body" data-variable="--font-body">
+                            <option value="'Roboto', sans-serif">Roboto</option>
+                            <option value="'Open Sans', sans-serif">Open Sans</option>
+                            <option value="'Lato', sans-serif">Lato</option>
+                            <option value="'Montserrat', sans-serif">Montserrat</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label for="font-heading">Heading Font</label>
+                        <select id="font-heading" data-variable="--font-heading">
+                            <option value="'Roboto Slab', serif">Roboto Slab</option>
+                            <option value="'Playfair Display', serif">Playfair Display</option>
+                            <option value="'Merriweather', serif">Merriweather</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label for="font-ui">UI Font</label>
+                        <select id="font-ui" data-variable="--font-ui">
+                            <option value="'Inter', sans-serif">Inter</option>
+                            <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="reset-style-settings">Reset to Defaults</button>
+                <button id="preview-style-settings">Preview</button>
+                <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
+            </div>
+            <div id="load-menu-panel" class="submenu-panel hidden">
+                <h2>Load Game</h2>
+                <p>Saved game slots will appear here.</p>
+                <button class="submenu-back-btn" data-targetpanel="load-menu-panel">Back</button>
+            </div>
+            <!-- Credits panel is now hidden -->
+            <div id="credits-menu-panel" class="submenu-panel hidden">
+                <h2>Credits</h2>
+                <p>Game developed by: Your Name/Studio</p>
+                <p>Assets from: Asset Store Links/Credits</p>
+                <button class="submenu-back-btn" data-targetpanel="credits-menu-panel">Back</button>
             </div>
         </section>
         
         <!-- Game Screen -->
         <main id="game-screen" class="screen" role="main" aria-label="Main Game Area">
-            <header id="top-hud" class="hud">
-                <div class="hud-item stat-cash">
-                    <span class="hud-icon" aria-hidden="true">💰</span>
-                    <span class="hud-label">Stash:</span> $<span id="cash-display" class="hud-value">0</span>
+            <!-- UPDATED: New Sleek Header -->
+            <header class="game-header">
+                <div class="status-bar">
+                    <div class="status-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c2.17-.46 3.5-1.66 3.5-3.68 0-2.01-1.34-3.66-4.2-4.37z"></path></svg>
+                        <span>$<span id="cash-display">0</span></span>
+                    </div>
+                    <div class="status-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
+                        <span id="day-display">10</span>
+                    </div>
+                    <div class="status-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M10.53 11.45c.53-1.42 1.22-2.77 2.06-4.04l.13-.2c.4-.62.33-1.44-.19-1.96s-1.34-.6-1.96-.19c-.02.02-.04.04-.06.06C6.42 10.36 5.11 15.42 5.39 19.5c.05.75.67 1.34 1.42 1.34.69 0 1.27-.51 1.39-1.18 1.01-5.52 3.33-7.17 2.33-8.17zM13 3c-1.83 2.1-3.13 4.67-3.9 7.42-.71 2.52-1.28 5.23-1.1 7.58.01.12.03.24.03.36.88 0 1.63-.59 1.87-1.42.59-2.08 1.4-3.93 2.4-5.63 1.17-1.95 2.59-3.48 4.2-4.64.4-.29.58-.81.42-1.29-.16-.48-.63-.78-1.12-.71-.14.02-.28.06-.4.14z"></path></svg>
+                        <span id="heat-display">0</span>
+                    </div>
+                    <div class="status-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"></path></svg>
+                        <span id="cred-display">0</span>
+                    </div>
                 </div>
-                <div class="hud-item stat-fiends">
-                    <span class="hud-icon" aria-hidden="true">🗓️</span>
-                    <span class="hud-label">Fiends Left:</span> <span id="day-display" class="hud-value">10</span>
-                </div>
-                <div class="hud-item stat-heat">
-                    <span class="hud-icon" aria-hidden="true">🔥</span>
-                    <span class="hud-label">Heat:</span> <span id="heat-display" class="hud-value">0</span>
-                </div>
-                <div class="hud-item stat-cred">
-                    <span class="hud-icon" aria-hidden="true">🏆</span>
-                    <span class="hud-label">Cred:</span> <span id="cred-display" class="hud-value">0</span>
-                </div>
+
+                <div id="event-ticker" class="rival-banner">Word on the street: All quiet... for now.</div>
             </header>
             
-            <div id="event-ticker-container">
-                <p id="event-ticker">Word on the street: All quiet... for now.</p>
-            </div>
-            
-            <div id="game-scene">
+            <div id="game-scene" class="main-content">
                 <div id="knock-effect" class="hidden" aria-live="assertive">KNOCK! KNOCK!</div>
                 
                 <!-- Rikk's Phone -->
@@ -271,16 +280,17 @@
                 </div>
             </div>
             
-            <nav id="player-hub" class="player-controls" role="navigation" aria-label="Player Actions">
-                <button id="open-inventory-btn" class="hub-button inventory-toggle">
-                    <img src="assets/icons/backpack-icon.svg" alt="" class="button-icon" aria-hidden="true" />
-                    <span>Stash (<span id="inventory-count-display">0</span>)</span>
+            <!-- UPDATED: New Sleek Footer -->
+            <footer class="bottom-nav">
+                <button id="open-inventory-btn" class="nav-button">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M20.9 5.54l-3.44-3.44A1.5 1.5 0 0016.41 1H7.59a1.5 1.5 0 00-1.06.44L3.1 5.54A1.5 1.5 0 003 6.59V21a2 2 0 002 2h14a2 2 0 002-2V6.59a1.5 1.5 0 00-.1-.96zM12 3.5l2.5 2.5H9.5L12 3.5zM19 21H5V7h14v14z"></path><path d="M12.5 12.75a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm-1 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"></path></svg>
+                    Stash <span class="capacity">(<span id="inventory-count-display">0</span>/10)</span>
                 </button>
-                <button id="next-customer-btn" class="hub-button main-action next-turn" disabled>
-                    <img src="assets/icons/next-icon.svg" alt="" class="button-icon" aria-hidden="true" />
-                    <span>Next Fiend</span>
+                <button id="next-customer-btn" class="nav-button nav-button--primary" disabled>
+                    Next Fiend
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"></path></svg>
                 </button>
-            </nav>
+            </footer>
         </main>
         
         <!-- End Screen -->
@@ -299,7 +309,7 @@
         
         <!-- Inventory Modal -->
         <div id="inventory-modal" class="modal-overlay" aria-hidden="true">
-            <div id="inventory-dialog" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="inventory-modal-title">
+            <div id="inventory-dialog" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inventory-modal-title">
                 <header class="modal-header">
                     <h2 id="inventory-modal-title">Your Stash</h2>
                     <button class="close-modal-btn" aria-label="Close Stash"><span aria-hidden="true">×</span></button>

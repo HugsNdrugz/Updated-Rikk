@@ -46,6 +46,15 @@
     --color-hub-action-hover: #018786;
     --color-hub-inventory-main: var(--color-primary);
     --color-hub-inventory-hover: #7f39fb;
+
+    /* NEW UI-SPECIFIC VARS */
+    --primary-accent: #e040fb; 
+    --alert-color: #f44336;
+    --ui-bg: rgba(25, 25, 25, 0.6);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+
     /* Fonts */
     --font-body: 'Roboto', 'Open Sans', sans-serif;
     --font-display: 'Press Start 2P', 'Comic Neue', cursive;
@@ -134,7 +143,8 @@ body {
 
 /* Game Screen Specific */
 #game-screen {
-    background: url(assets/images/game-screen-bg.jpg) center/cover; /* FIXED: .jg typo corrected to .jpg */
+    background: url(assets/images/game-screen-bg.jpg) center/cover;
+    position: static; /* Override absolute positioning to work in flex container */
 }
 
 #splash-screen {
@@ -200,42 +210,6 @@ h1,
     color: var(--color-primary);
     margin-bottom: var(--spacing-lg);
     text-shadow: 2px 2px 0 var(--color-dark-bg), 3px 3px 0 var(--color-secondary);
-}
-
-/* HUD & Ticker */
-#top-hud {
-    width: 100%;
-    background-color: rgba(18, 18, 18, 0.8);
-    padding: var(--spacing-sm) var(--spacing-lg);
-    display: flex;
-    justify-content: space-around;
-    font-weight: 700;
-    border-bottom: 1px solid var(--color-grey-dark);
-    font-size: 0.85rem;
-}
-
-.hud-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-}
-
-.hud-label {
-    color: var(--color-grey-light);
-}
-
-.hud-value {
-    color: var(--color-accent-gold);
-}
-
-#event-ticker-container {
-    background-color: rgba(18, 18, 18, 0.9);
-    color: var(--color-secondary);
-    padding: var(--spacing-xs) var(--spacing-lg);
-    font-size: 0.8rem;
-    text-align: center;
-    font-weight: 700;
-    border-bottom: 1px solid var(--color-grey-dark);
 }
 
 /* Game Scene */
@@ -385,7 +359,8 @@ h1,
     transform: translate(-50%, -50%);
 }
 
-.status-bar {
+/* Phone's internal status bar */
+.phone-screen-area .status-bar {
     display: flex;
     justify-content: space-between;
     padding: 10px 20px;
@@ -906,28 +881,14 @@ h1,
 }
 
 /* === Phone Theme Settings View Specific Styles === */
-
-/*
-The #phone-theme-settings-view already has class .phone-content-view.
-.phone-content-view is display:flex, flex-direction: column.
-The header.phone-header is its first child.
-The #phone-theme-controls-container (which also has .settings-controls-container) is the second child.
-*/
-
 .phone-content-view > .settings-controls-container {
-    flex-grow: 1; /* Make this container take up remaining vertical space */
-    overflow-y: auto; /* Allow scrolling within this container */
-
-    /* Override or reset properties from the general .settings-controls-container
-       that might not be suitable for full-screen phone app view */
-    max-height: none; /* Remove max-height, as flex-grow handles height */
-    margin-top: 0;    /* Header provides top spacing, so remove margin-top */
-
-    /* Add padding suitable for phone screen content */
+    flex-grow: 1; 
+    overflow-y: auto; 
+    max-height: none; 
+    margin-top: 0;    
     padding: var(--spacing-md);
 }
 
-/* Ensure the placeholder paragraph inside is styled reasonably if it ever shows */
 #phone-theme-controls-container p {
     text-align: center;
     color: var(--color-grey-mid);
@@ -1036,105 +997,108 @@ The #phone-theme-controls-container (which also has .settings-controls-container
     background-color: rgba(0, 0, 0, 0.8);
 }
 
-/* === New Main Menu Styles === */
-
+/* === REVISED MAIN MENU STYLES === */
 #main-menu-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center content vertically */
+    justify-content: center;
     width: 100%;
-    height: 100%; /* Take full height of the overlay parent */
+    height: 100%;
     padding: var(--spacing-xl);
-    text-align: center; /* Ensure text within buttons etc. is centered if not already */
+    text-align: center;
 }
 
-#start-screen h1#start-screen-title { /* More specific selector if needed */
-    margin-bottom: var(--spacing-xl); /* Increased bottom margin for more space */
+#start-screen h1#start-screen-title {
+    margin-bottom: var(--spacing-xl);
 }
 
-#primary-actions {
-    display: flex;
-    flex-direction: column; /* Stack primary buttons vertically */
-    align-items: center;
-    margin-bottom: var(--spacing-lg); /* Space between primary actions and submenu navigation */
-}
-
-#primary-actions .game-button {
-    margin-bottom: var(--spacing-md); /* Space between primary action buttons */
-    min-width: 250px; /* Give primary buttons a decent minimum width */
-}
-
-#primary-actions .game-button:last-child {
-    margin-bottom: 0; /* No margin for the last button in primary actions */
-}
-
+/* Hide old button containers */
+#primary-actions,
 #submenu-navigation {
+    display: none;
+}
+
+/* === REVISED MAIN MENU CONTROLS (ICON BUTTONS) === */
+#settings-menu-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s ease, transform 0.3s ease;
+    padding: 10px;
+}
+
+#settings-menu-btn:hover {
+    color: #fff;
+    transform: rotate(45deg);
+}
+
+.start-screen-controls {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
     display: flex;
-    flex-direction: column; /* Stack submenu buttons vertically */
     align-items: center;
-    margin-top: var(--spacing-md); /* Space above submenu navigation */
+    gap: 20px;
+    z-index: 10;
 }
 
-.submenu-button {
-    /* Inherits .game-button styles, add/override specific styles here */
-    background-color: var(--color-surface); /* Different background from primary */
-    color: var(--color-on-surface);
-    border-color: var(--color-grey-dark);
-    font-size: 0.9rem; /* Slightly smaller font */
-    padding: var(--spacing-sm) var(--spacing-lg); /* Adjust padding */
-    min-width: 200px; /* Consistent width for submenu buttons */
-    margin-bottom: var(--spacing-sm); /* Space between submenu buttons */
+.start-screen-controls button {
+    background-color: rgba(30, 30, 30, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease-out;
 }
 
-.submenu-button:last-child {
-    margin-bottom: 0; /* No margin for the last submenu button */
+.start-screen-controls button:hover {
+    background-color: rgba(50, 50, 50, 0.7);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
 }
 
-.submenu-button:hover {
-    background-color: var(--color-grey-dark);
-    border-color: var(--color-grey-mid);
+#new-game-btn {
+    width: 64px;
+    height: 64px;
+    font-size: 1.6rem;
+}
+/* Ensure the play icon is centered */
+#new-game-btn .fa-play {
+    margin-left: 4px; 
 }
 
-/* Placeholder for active sub-menu panel styling - will be defined later */
+#continue-game-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+}
+
+/* === Sub-Menu Panel Styles (Unchanged) === */
 .submenu-panel {
-    /* Basic styling for when it's made visible - for now, it's controlled by .hidden */
-    /* Example (will be expanded in later steps): */
-    /* background-color: rgba(30, 30, 30, 0.95); */
-    /* padding: var(--spacing-lg); */
-    /* border-radius: var(--modal-border-radius); */
-    /* position: absolute; */
-    /* top: 50%; */
-    /* left: 50%; */
-    /* transform: translate(-50%, -50%); */
-    /* z-index: 100; */
-    /* width: 80%; */
-    /* max-width: 400px; */
-}
-
-/* === Sub-Menu Panel Styles === */
-
-.submenu-panel {
-    background-color: var(--color-surface); /* Using a defined variable */
-    padding: var(--spacing-xl); /* Generous padding */
-    border-radius: var(--modal-border-radius); /* Consistent border radius */
-    border: 1px solid var(--color-grey-dark); /* Subtle border */
-
-    position: absolute; /* Position it over other content */
+    background-color: var(--color-surface);
+    padding: var(--spacing-xl);
+    border-radius: var(--modal-border-radius);
+    border: 1px solid var(--color-grey-dark);
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-
-    width: 90%; /* Responsive width */
-    max-width: 450px; /* Max width for larger screens */
-
-    z-index: 1010; /* Ensure it's above other main menu items, but below potential global modals like inventory */
-
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5); /* Pop-out effect */
-    color: var(--color-on-surface); /* Ensure text is legible */
-
-    /* Add a transition for smooth appearance if .hidden is toggled via JS opacity/visibility later */
-    /* For now, .hidden class uses display: none !important */
+    width: 90%;
+    max-width: 450px;
+    z-index: 1010;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    color: var(--color-on-surface);
 }
 
 .submenu-panel h2 {
@@ -1142,7 +1106,7 @@ The #phone-theme-controls-container (which also has .settings-controls-container
     color: var(--color-primary);
     text-align: center;
     margin-bottom: var(--spacing-lg);
-    font-size: 1.8rem; /* Slightly smaller than main title */
+    font-size: 1.8rem;
 }
 
 .submenu-panel p {
@@ -1152,12 +1116,8 @@ The #phone-theme-controls-container (which also has .settings-controls-container
 }
 
 .submenu-back-btn {
-    /* Re-use game-button styles for consistency, but can be overridden */
-    /* display: block; /* Make it block to take full width or control width */
-    /* margin: var(--spacing-lg) auto 0; /* Center it with margin auto */
-    /* Specific styling if needed, e.g., if not using .game-button */
     padding: var(--spacing-sm) var(--spacing-lg);
-    font-family: var(--font-body); /* Using body font for less emphasis than display font */
+    font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: bold;
     background-color: var(--color-grey-dark);
@@ -1166,9 +1126,9 @@ The #phone-theme-controls-container (which also has .settings-controls-container
     border-radius: var(--button-border-radius);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
-    display: block; /* Take up its own line */
-    margin: var(--spacing-xl) auto 0; /* Auto horizontal margins for centering */
-    min-width: 150px; /* Minimum width */
+    display: block;
+    margin: var(--spacing-xl) auto 0;
+    min-width: 150px;
     text-align: center;
 }
 
@@ -1177,7 +1137,119 @@ The #phone-theme-controls-container (which also has .settings-controls-container
     border-color: var(--color-grey-light);
 }
 
-/* Ensure hidden class is effective */
-.hidden {
-    display: none !important;
+/* ======================================================================== */
+/* === NEW SLEEK UI STYLES === */
+/* ======================================================================== */
+
+.game-header {
+    padding: 10px 10px 0;
+    font-family: 'Inter', sans-serif;
+    flex-shrink: 0;
+}
+
+.game-header .status-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+    margin: 10px 5px;
+    background: var(--ui-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 18px;
+    border: 1px solid var(--border-light);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-item svg {
+    opacity: 0.8;
+}
+
+.rival-banner {
+    background-color: var(--alert-color);
+    color: white;
+    text-align: center;
+    padding: 6px;
+    margin: 12px 5px 0;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 10px rgba(244, 67, 54, 0.4);
+}
+
+.main-content {
+    flex-grow: 1; /* This makes the game-scene area fill available space */
+}
+
+.bottom-nav {
+    display: flex;
+    gap: 12px;
+    padding: 15px;
+    padding-bottom: 25px; /* Extra padding for home bar area on phones */
+    font-family: 'Inter', sans-serif;
+    flex-shrink: 0;
+}
+
+.nav-button {
+    flex: 1;
+    padding: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 18px;
+    background: var(--ui-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease-out;
+}
+
+.nav-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.nav-button:active {
+    transform: translateY(-1px);
+    background: rgba(40, 40, 40, 0.7);
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    background: rgba(40, 40, 40, 0.5);
+}
+
+.nav-button .capacity {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.nav-button--primary {
+    background: var(--primary-accent);
+    border: none;
+    box-shadow: 0 4px 20px -5px var(--primary-accent);
+}
+
+.nav-button--primary:hover:not(:disabled) {
+    background: #f55cff;
+    box-shadow: 0 6px 25px -5px var(--primary-accent);
 }
