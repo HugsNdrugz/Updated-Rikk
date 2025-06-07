@@ -203,15 +203,6 @@ body {
     background: url('assets/images/main-menu-bg.png') center/cover;
 }
 
-h1,
-#start-screen-title {
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    color: var(--color-primary);
-    margin-bottom: var(--spacing-lg);
-    text-shadow: 2px 2px 0 var(--color-dark-bg), 3px 3px 0 var(--color-secondary);
-}
-
 /* Game Scene */
 #game-scene {
     flex-grow: 1;
@@ -696,10 +687,10 @@ h1,
 }
 
 .game-button {
-    padding: var(--spacing-lg) var(--spacing-xl); /* ADJUSTED: Increased vertical padding */
+    padding: var(--spacing-lg) var(--spacing-xl);
     font-family: var(--font-display);
-    font-size: 1.1rem; /* ADJUSTED: Slightly increased font size */
-    line-height: 1.2; /* NEW: Added line height for better text rendering */
+    font-size: 1.1rem;
+    line-height: 1.2;
     border: 2px solid;
     border-radius: var(--button-border-radius);
     cursor: pointer;
@@ -730,27 +721,27 @@ h1,
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.8); /* Dark overlay */
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 1000; /* Ensure it's on top */
-    color: #fff; /* Default text color for these overlays */
+    z-index: 1000;
+    color: #fff;
 }
 
 .settings-loading .loading-spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: #fff; /* Spinner color */
+    border-top-color: #fff;
     width: 40px;
     height: 40px;
-    animation: spin 1s ease-infinite; /* Use existing spin animation */
+    animation: spin 1s ease-infinite;
     margin-bottom: 15px;
 }
 
 .settings-error {
-    color: var(--color-error, #ff6b6b); /* Use CSS variable for error color, fallback if not defined */
+    color: var(--color-error, #ff6b6b);
 }
 
 .settings-error .error-message {
@@ -760,8 +751,8 @@ h1,
 
 .settings-error .retry-button {
     padding: 8px 16px;
-    background-color: var(--color-primary, #007bff); /* Example primary color */
-    color: var(--color-on-primary, #ffffff); /* Text on primary */
+    background-color: var(--color-primary, #007bff);
+    color: var(--color-on-primary, #ffffff);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -772,28 +763,28 @@ h1,
 }
 
 .preview-mode {
-    position: relative; /* Needed for the ::after pseudo-element positioning */
+    position: relative;
 }
 
 .preview-mode::after {
     content: 'Preview Mode';
     position: absolute;
-    top: 10px; /* Adjusted for better visibility */
-    right: 10px; /* Adjusted for better visibility */
+    top: 10px;
+    right: 10px;
     padding: 4px 8px;
-    background: var(--color-accent-gold, #ffd700); /* Using a variable, fallback to gold */
-    color: var(--color-on-primary, #000000); /* Text color on accent-gold, fallback to black */
+    background: var(--color-accent-gold, #ffd700);
+    color: var(--color-on-primary, #000000);
     font-size: 0.8em;
-    border-radius: 3px; /* Slightly rounded corners */
-    z-index: 999; /* Ensure it's visible but below overlays */
+    border-radius: 3px;
+    z-index: 999;
 }
 
 /* === Style Settings Panel Controls === */
 
 .settings-controls-container {
-    overflow-y: auto; /* Allow vertical scrolling for many options */
-    max-height: 65vh; /* Ensure it doesn't get too tall, adjust as needed */
-    padding: var(--spacing-xs) var(--spacing-sm); /* Padding around the controls area */
+    overflow-y: auto;
+    max-height: 65vh;
+    padding: var(--spacing-xs) var(--spacing-sm);
     margin-top: var(--spacing-md);
 }
 
@@ -801,14 +792,14 @@ h1,
     margin-bottom: var(--spacing-lg);
     border: 1px solid var(--color-grey-dark);
     padding: var(--spacing-md);
-    border-radius: var(--button-border-radius); /* Consistent radius */
+    border-radius: var(--button-border-radius);
 }
 
 .settings-group legend {
     font-weight: bold;
     color: var(--color-primary);
     padding: 0 var(--spacing-sm);
-    margin-bottom: var(--spacing-md); /* More space after legend */
+    margin-bottom: var(--spacing-md);
     font-size: 1.1rem;
 }
 
@@ -817,25 +808,24 @@ h1,
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--spacing-md);
-    gap: var(--spacing-sm); /* Gap between label and control */
+    gap: var(--spacing-sm);
 }
 
 .setting-control:last-child {
-    margin-bottom: var(--spacing-xs); /* Reduce margin for last control in a group */
+    margin-bottom: var(--spacing-xs);
 }
 
 .setting-control label {
-    margin-right: var(--spacing-sm); /* Ensure some space if gap not supported */
+    margin-right: var(--spacing-sm);
     font-size: 0.9rem;
     color: var(--color-grey-light);
-    flex-shrink: 0; /* Prevent label from shrinking too much */
+    flex-shrink: 0;
 }
 
-/* General input styling */
 .settings-controls-container input[type="color"],
 .settings-controls-container select,
 .settings-controls-container input[type="range"],
-.settings-controls-container input[type="number"] { /* If number inputs are used */
+.settings-controls-container input[type="number"] {
     background-color: var(--color-dark-bg);
     border: 1px solid var(--color-grey-mid);
     color: var(--color-on-surface);
@@ -845,34 +835,32 @@ h1,
     font-size: 0.9rem;
 }
 
-/* Specific input styling */
 .settings-controls-container input[type="color"] {
-    min-width: 60px; /* Increased min-width */
+    min-width: 60px;
     height: 30px;
-    padding: 2px; /* Small padding for the color swatch */
+    padding: 2px;
 }
 
 .settings-controls-container select {
-    min-width: 160px; /* Increased min-width */
+    min-width: 160px;
     height: 30px;
     padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 .settings-controls-container input[type="range"] {
-    flex-grow: 1; /* Allow range slider to take available space */
-    height: 20px; /* Easier to grab */
-    accent-color: var(--color-primary); /* Modern way to style range tracks/thumbs */
+    flex-grow: 1;
+    height: 20px;
+    accent-color: var(--color-primary);
 }
 
 .setting-control .value-display {
     margin-left: var(--spacing-sm);
     font-size: 0.85rem;
     color: var(--color-grey-dim);
-    min-width: 30px; /* Ensure space for the value like "10px" */
+    min-width: 30px;
     text-align: right;
 }
 
-/* Styling for focused inputs for better accessibility */
 .settings-controls-container input:focus,
 .settings-controls-container select:focus {
     outline: 2px solid var(--color-secondary);
@@ -1009,18 +997,8 @@ h1,
     text-align: center;
 }
 
-#start-screen h1#start-screen-title {
-    margin-bottom: var(--spacing-xl);
-}
-
-/* Hide old button containers */
-#primary-actions,
-#submenu-navigation {
-    display: none;
-}
-
-/* === REVISED MAIN MENU CONTROLS (ICON BUTTONS) === */
-#settings-menu-btn {
+/* Settings Cog Button */
+#start-screen #settings-menu-btn {
     position: absolute;
     top: 20px;
     right: 20px;
@@ -1034,55 +1012,60 @@ h1,
     padding: 10px;
 }
 
-#settings-menu-btn:hover {
+#start-screen #settings-menu-btn:hover {
     color: #fff;
     transform: rotate(45deg);
 }
 
-.start-screen-controls {
-    position: absolute;
-    bottom: 40px;
-    left: 40px;
+/* === SPLIT BUTTON MAIN MENU STYLES (DEBUGGED) === */
+.split-button-container {
     display: flex;
-    align-items: center;
-    gap: 20px;
-    z-index: 10;
+    align-items: bottom;
+    gap: 12px;
+    font-family: 'Inter', sans-serif, system-ui;
 }
 
-.start-screen-controls button {
-    background-color: rgba(30, 30, 30, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
+.split-button-container .btn {
+    text-decoration: none;
+    border: none;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: all 0.2s ease-out;
+    display: flex;
+    justify-content: border-bottom;
+    align-items: center;
+    font-weight: 700;
+    user-select: none;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    
+    /* DEBUGGED: Using colors from the example */
+    background-color: #7622C8;
+    color: #FFFFFF;
 }
 
-.start-screen-controls button:hover {
-    background-color: rgba(50, 50, 50, 0.7);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: scale(1.1);
+.split-button-container .btn-main {
+    padding:  30px 9px; /* Adjusted padding for the new text */
+    font-size: 1.56rem;
+    font-family: var(--font-display);
+    border-radius: 50px;
 }
 
-#new-game-btn {
+.split-button-container .btn-icon {
     width: 64px;
     height: 64px;
-    font-size: 1.6rem;
-}
-/* Ensure the play icon is centered */
-#new-game-btn .fa-play {
-    margin-left: 4px; 
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-size: 1.5rem;
 }
 
-#continue-game-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 1.2rem;
+/* DEBUGGED: Using hover color from the example */
+.split-button-container:hover .btn {
+    background-color: #4368FA;
+    color: #FFFFFF;
 }
+
+.split-button-container .btn:active {
+    transform: scale(0.97);
+}
+
 
 /* === Sub-Menu Panel Styles (Unchanged) === */
 .submenu-panel {
