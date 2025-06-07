@@ -201,6 +201,7 @@ body {
 
 #start-screen {
     background: url('assets/images/main-menu-bg.png') center/cover;
+    position: relative; /* Explicitly set for positioning context */
 }
 
 /* Game Scene */
@@ -803,7 +804,7 @@ body {
     font-size: 1.1rem;
 }
 
-.setting-control {
+.setting-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -811,11 +812,11 @@ body {
     gap: var(--spacing-sm);
 }
 
-.setting-control:last-child {
+.setting-row:last-child {
     margin-bottom: var(--spacing-xs);
 }
 
-.setting-control label {
+.setting-row label {
     margin-right: var(--spacing-sm);
     font-size: 0.9rem;
     color: var(--color-grey-light);
@@ -853,7 +854,7 @@ body {
     accent-color: var(--color-primary);
 }
 
-.setting-control .value-display {
+.setting-row .value-display {
     margin-left: var(--spacing-sm);
     font-size: 0.85rem;
     color: var(--color-grey-dim);
@@ -1020,9 +1021,12 @@ body {
 /* === SPLIT BUTTON MAIN MENU STYLES (DEBUGGED) === */
 .split-button-container {
     display: flex;
-    align-items: bottom;
-    gap: 12px;
+    align-items: center; /* For aligning items within the container if they have different heights */
+    gap: 8px;
     font-family: 'Inter', sans-serif, system-ui;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
 }
 
 .split-button-container .btn {
@@ -1037,29 +1041,29 @@ body {
     transition: background-color 0.3s ease, transform 0.1s ease;
     
     /* DEBUGGED: Using colors from the example */
-    background-color: #7622C8;
-    color: #FFFFFF;
+    background-color: var(--color-primary);
+    color: var(--color-light-text);
 }
 
 .split-button-container .btn-main {
-    padding:  30px 9px; /* Adjusted padding for the new text */
-    font-size: 1.56rem;
+    padding:  20px 6px; /* Adjusted padding for the new text */
+    font-size: 1.2rem;
     font-family: var(--font-display);
     border-radius: 50px;
 }
 
 .split-button-container .btn-icon {
-    width: 64px;
-    height: 64px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     flex-shrink: 0;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 
 /* DEBUGGED: Using hover color from the example */
 .split-button-container:hover .btn {
-    background-color: #4368FA;
-    color: #FFFFFF;
+    background-color: var(--color-secondary);
+    color: var(--color-light-text);
 }
 
 .split-button-container .btn:active {
@@ -1118,6 +1122,73 @@ body {
 .submenu-back-btn:hover {
     background-color: var(--color-grey-mid);
     border-color: var(--color-grey-light);
+}
+
+/* === Inventory Modal Styles === */
+#inventory-modal.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-overlay-dark-medium, rgba(0, 0, 0, 0.65)); /* Using existing variable or a fallback */
+    display: none; /* Initially hidden */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Ensure it's above most content */
+}
+
+#inventory-modal.modal-overlay.active {
+    display: flex; /* Show when active */
+}
+
+#inventory-dialog.modal-content {
+    background-color: var(--color-surface);
+    padding: var(--spacing-xl);
+    border-radius: var(--modal-border-radius);
+    border: 1px solid var(--color-grey-dark);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    color: var(--color-on-surface);
+    width: 90%;
+    max-width: var(--modal-max-width, 420px); /* Use existing variable or a default */
+    position: relative; /* For potential absolute positioning of children like a close button */
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#inventory-dialog .modal-header {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-bottom: 1px solid var(--color-grey-dark);
+    display: flex; /* To align title and close button */
+    justify-content: space-between;
+    align-items: center;
+}
+
+#inventory-dialog .modal-header h2 {
+    margin: 0; /* Remove default h2 margin */
+    font-size: 1.5rem; /* Example size */
+    color: var(--color-primary);
+}
+
+#inventory-dialog .modal-body {
+    padding: var(--spacing-md) var(--spacing-xl);
+    overflow-y: auto; /* Make body scrollable if content exceeds max-height */
+    flex-grow: 1;
+}
+
+#inventory-dialog .modal-footer {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-top: 1px solid var(--color-grey-dark);
+    text-align: right; /* Example alignment */
+}
+
+#inventory-dialog .close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-on-surface);
+    cursor: pointer;
 }
 
 /* ======================================================================== */

@@ -149,8 +149,7 @@ const debugLogger = {
 // III. CORE GAME INITIALIZATION & FLOW
 // =================================================================================
 
-function initGame() {
-    // Assign all DOM elements
+function assignDOMReferences() {
     splashScreen = document.getElementById('splash-screen');
     gameViewport = document.getElementById('game-viewport');
     startScreen = document.getElementById('start-screen');
@@ -173,7 +172,7 @@ function initGame() {
     gameChatView = document.getElementById('game-chat-view');
     contactsAppView = document.getElementById('contacts-app-view');
     slotGameView = document.getElementById('slot-game-view');
-    phoneThemeSettingsView = document.getElementById('phone-theme-settings-view'); // NEW: Assign phone theme settings view
+    phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
     chatContainer = document.getElementById('chat-container-game');
     choicesArea = document.getElementById('choices-area-game');
     phoneTitleGame = document.getElementById('phone-title-game');
@@ -205,25 +204,18 @@ function initGame() {
     cashSound = document.getElementById('cash-sound');
     deniedSound = document.getElementById('denied-sound');
     chatBubbleSound = document.getElementById('chat-bubble-sound');
-    
-    // Initialize Managers
+}
+
+function initializeManagers() {
     customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     contactsAppManager = new ContactsAppManager(contactsAppView, customerTemplates);
     slotGameManager = new SlotGameManager(slotGameView, () => cash, (newCash) => {
         cash = newCash;
         updateHUD();
     });
+}
 
-    // Initial Screen Flow
-    splashScreen.classList.add('active');
-    setTimeout(() => {
-        splashScreen.classList.remove('active');
-        splashScreen.style.display = 'none';
-        startScreen.classList.add('active');
-        checkForSavedGame();
-    }, SPLASH_SCREEN_DURATION);
-
-    // Attach Event Listeners
+function setupEventListeners() {
     newGameBtn.addEventListener('click', handleStartNewGameClick);
     continueGameBtn.addEventListener('click', handleContinueGameClick);
     restartGameBtn.addEventListener('click', handleRestartGameClick);
@@ -233,13 +225,12 @@ function initGame() {
     inventoryModal.addEventListener('click', (e) => {
         if (e.target === inventoryModal) closeInventoryModal();
     });
-    
+
     rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
     phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
     phoneDockedIndicator.addEventListener('click', () => setPhoneUIState('home'));
     dockPhoneBtn.addEventListener('click', () => setPhoneUIState('docked'));
-    
-    // Event listeners for new main menu submenu buttons
+
     if (settingsMenuBtn) {
         settingsMenuBtn.addEventListener('click', () => openSubmenuPanel(settingsMenuPanel));
     }
@@ -258,12 +249,30 @@ function initGame() {
             }
         });
     });
+}
+
+function initializeUIAndSettings() {
+    // Initial Screen Flow
+    splashScreen.classList.add('active');
+    setTimeout(() => {
+        splashScreen.classList.remove('active');
+        splashScreen.style.display = 'none';
+        startScreen.classList.add('active');
+        checkForSavedGame();
+    }, SPLASH_SCREEN_DURATION);
 
     initStyleSettingsControls(); // Initializes controls for both main menu and phone app
     loadStyleSettings(); // Loads and applies styles to all relevant controls
 
     // Initialize Sub-modules
     initPhoneAmbientUI(rikkPhoneUI);
+}
+
+function initGame() {
+    assignDOMReferences();
+    initializeManagers();
+    initializeUIAndSettings();
+    setupEventListeners();
 }
 
 function initializeNewGameState() {
@@ -320,16 +329,15 @@ function endGame(reason) {
     clearSavedGameState();
 }
 
-function nextFiend() {
-    if (!gameActive || fiendsLeft <= 0) {
-        endGame("completed");
-        return;
-    }
+function handleTurnProgressionAndEvents() {
     updateDayOfWeek();
     advanceWorldEvents();
     triggerWorldEvent();
     heat = Math.max(0, heat - (1 + playerSkills.lowProfile));
     updateHUD();
+}
+
+function setupUIForNewInteraction() {
     clearChat();
     clearChoices();
     nextCustomerBtn.disabled = true;
@@ -338,16 +346,47 @@ function nextFiend() {
     knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`;
     knockEffect.classList.remove('hidden');
     knockEffect.style.animation = 'none';
-    void knockEffect.offsetWidth;
+    void knockEffect.offsetWidth; // Trigger reflow
     knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
+}
 
-    setTimeout(() => {
-        knockEffect.classList.add('hidden');
-        const gameState = { inventory, cash, playerSkills, activeWorldEvents };
-        const interaction = customerManager.generateInteraction(gameState);
-        currentCustomerInstance = interaction.instance;
-        startCustomerInteraction(interaction);
-    }, KNOCK_ANIMATION_DURATION);
+function generateAndStartCustomerInteraction() {
+    knockEffect.classList.add('hidden');
+    const gameState = { inventory, cash, playerSkills, activeWorldEvents };
+    const interaction = customerManager.generateInteraction(gameState);
+    currentCustomerInstance = interaction.instance;
+    startCustomerInteraction(interaction);
+}
+
+function nextFiend() {
+    if (!gameActive || fiendsLeft <= 0) {
+        endGame("completed");
+        return;
+    }
+
+    try {
+        handleTurnProgressionAndEvents();
+        setupUIForNewInteraction(); // Shows knock effect
+
+        setTimeout(() => {
+            try {
+                generateAndStartCustomerInteraction();
+            } catch (e) {
+                console.error("[SCRIPT ERROR in generateAndStartCustomerInteraction]", e);
+                if (typeof nextCustomerBtn !== 'undefined') nextCustomerBtn.disabled = true;
+                if (typeof phoneShowNotification === 'function') phoneShowNotification("Oops! A glitch in the matrix. Try restarting if issues persist.", "System Error");
+            }
+        }, KNOCK_ANIMATION_DURATION);
+
+    } catch (e) {
+        console.error("[SCRIPT ERROR in nextFiend main block]", e);
+        if (typeof debugLogger !== 'undefined' && debugLogger.error) {
+            debugLogger.error('nextFiend', 'Critical error in turn progression', e);
+        }
+        if (typeof nextCustomerBtn !== 'undefined') nextCustomerBtn.disabled = true;
+        if (typeof phoneShowNotification === 'function') phoneShowNotification("An error occurred. Things might be unstable.", "System Error");
+    }
+
     saveGameState();
 }
 
@@ -468,81 +507,98 @@ function saveStyleSettings() {
     }
 }
 
-function loadStyleSettings() {
-    let loadedSettings = null;
-    let settingsSource = "defaults"; // For logging
+// --- Style Settings Refactored Helper Functions ---
 
-    if (localStorageAvailable) {
-        try {
-            const settingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
-            if (settingsString) {
-                loadedSettings = JSON.parse(settingsString);
-
-                // Basic Validation
-                if (typeof loadedSettings !== 'object' || loadedSettings === null) {
-                    console.warn('Loaded settings are not a valid object. Falling back to defaults.');
-                    loadedSettings = null; // Force fallback
-                    localStorage.removeItem(STYLE_SETTINGS_KEY); // Remove corrupted data
-                } else {
-                    // Type validation against defaultStyleSettings
-                    for (const key in loadedSettings) {
-                        if (defaultStyleSettings.hasOwnProperty(key)) {
-                            if (typeof loadedSettings[key] !== typeof defaultStyleSettings[key]) {
-                                console.warn(`Type mismatch for setting "${key}". Expected ${typeof defaultStyleSettings[key]} but got ${typeof loadedSettings[key]}. Using default for this key.`);
-                                loadedSettings[key] = defaultStyleSettings[key]; // Revert only this key to default
-                            }
-                        } else {
-                            // Optional: delete loadedSettings[key]; // Remove unexpected keys
-                        }
-                    }
-                    console.log("Successfully loaded and validated settings from localStorage.");
-                    settingsSource = "localStorage";
-                }
+function getSettingsFromLocalStorage() {
+    if (!localStorageAvailable) {
+        console.warn('localStorage is not available. Cannot load settings.');
+        return null;
+    }
+    try {
+        const settingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
+        if (settingsString) {
+            const parsedSettings = JSON.parse(settingsString);
+            if (typeof parsedSettings === 'object' && parsedSettings !== null) {
+                return parsedSettings;
             } else {
-                console.log("No settings found in localStorage. Will use defaults.");
+                console.warn('Loaded settings are not a valid object. Removing corrupted data.');
+                localStorage.removeItem(STYLE_SETTINGS_KEY);
+                return null;
             }
-        } catch (error) {
-            console.error('Error loading or parsing settings from localStorage:', error);
-            loadedSettings = null; // Ensure fallback on error
-            if (localStorageAvailable) localStorage.removeItem(STYLE_SETTINGS_KEY); // Attempt to clear corrupted data
         }
-    } else {
-        console.warn('localStorage is not available. Using default settings for this session.');
+        return null; // No settings found
+    } catch (error) {
+        console.error('Error parsing settings from localStorage:', error);
+        localStorage.removeItem(STYLE_SETTINGS_KEY); // Attempt to clear corrupted data
+        return null;
+    }
+}
+
+function validateAndMergeSettings(loadedSettings, defaultSettings) {
+    if (!loadedSettings) {
+        return { ...defaultSettings }; // Return a deep copy of defaults
     }
 
-    // Use validated loadedSettings or fall back to a fresh copy of defaultStyleSettings
-    const currentStyleSettings = loadedSettings ? { ...defaultStyleSettings, ...loadedSettings } : { ...defaultStyleSettings };
+    const validatedSettings = { ...loadedSettings }; // Start with loaded settings
 
-    if (!loadedSettings) { // This means we are using defaults fully or partially due to missing/corrupt localStorage
-        console.log("Applying default styles as primary source or fallback.");
+    for (const key in defaultSettings) {
+        if (defaultSettings.hasOwnProperty(key)) {
+            // If key is missing in loaded or type is different, revert to default for that key
+            if (!validatedSettings.hasOwnProperty(key) || typeof validatedSettings[key] !== typeof defaultSettings[key]) {
+                if (validatedSettings.hasOwnProperty(key)) { // Log if type was mismatched
+                    console.warn(`Type mismatch for setting "${key}". Expected ${typeof defaultSettings[key]} but got ${typeof validatedSettings[key]}. Using default for this key.`);
+                }
+                validatedSettings[key] = defaultSettings[key];
+            }
+        }
     }
+    // Optional: remove keys from validatedSettings that are not in defaultSettings
+    // for (const key in validatedSettings) {
+    //     if (!defaultSettings.hasOwnProperty(key)) {
+    //         delete validatedSettings[key];
+    //     }
+    // }
+    return { ...defaultSettings, ...validatedSettings }; // Ensure all defaults are present, overriding with validated loaded values
+}
 
-    // Apply currentStyleSettings to DOM elements and CSS properties
+function applySettingsToDOM(settingsToApply) {
     const styleControls = document.querySelectorAll('[data-variable]');
     styleControls.forEach(control => {
         const cssVariable = control.dataset.variable;
-        if (currentStyleSettings.hasOwnProperty(cssVariable)) {
-            const value = currentStyleSettings[cssVariable];
-            control.value = value;
-            applyStyleSetting(cssVariable, value); // Visually apply (handles 'px' for ranges)
+        if (settingsToApply.hasOwnProperty(cssVariable)) {
+            const value = settingsToApply[cssVariable];
+            control.value = value; // Set input control value
+            applyStyleSetting(cssVariable, value); // Apply to CSS (handles 'px' conversion)
 
             if (control.type === 'range') {
                 const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                if (valueDisplaySpan) valueDisplaySpan.textContent = value; // value is numeric string for ranges from defaults/storage
+                if (valueDisplaySpan) valueDisplaySpan.textContent = value;
             }
         } else {
-             // A control exists for a variable not in currentStyleSettings (e.g. if defaultStyleSettings is incomplete)
-            console.warn(`Control found for ${cssVariable} but it's not in current style settings. Check defaultStyleSettings.`);
+            console.warn(`Control found for ${cssVariable} but it's not in settings to apply. Check settings object.`);
         }
     });
+}
 
-    // If settings were loaded from defaults because localStorage was empty/unavailable/corrupt,
-    // and localStorage is actually available, save these defaults to localStorage.
-    if (settingsSource === "defaults" && localStorageAvailable) {
-        console.log("Saving initial default styles to localStorage because no valid saved settings were found.");
-        saveStyleSettings();
+function loadStyleSettings() {
+    const loadedSettings = getSettingsFromLocalStorage();
+    const currentStyleSettings = validateAndMergeSettings(loadedSettings, defaultStyleSettings);
+
+    applySettingsToDOM(currentStyleSettings);
+
+    // If no valid settings were loaded from localStorage (meaning defaults were used entirely or partially due to corruption)
+    // and localStorage is available, save the current (potentially merged/default) settings.
+    if (loadedSettings === null && localStorageAvailable) {
+        console.log("Saving initial/default styles to localStorage as no valid saved settings were found or localStorage was empty.");
+        saveStyleSettings(); // saveStyleSettings reads from DOM inputs, which are now set by applySettingsToDOM
+    } else if (loadedSettings !== null) {
+        console.log("Successfully loaded and applied settings from localStorage.");
+    } else {
+        console.log("Applied default settings (localStorage not available or no settings to load).");
     }
 }
+
+// --- End of Style Settings Refactored Helper Functions ---
 
 function initStyleSettingsControls() {
     // Modify to query all controls with data-variable, enabling it for both main menu and phone app
@@ -907,119 +963,131 @@ function closeInventoryModal() {
 // =================================================================================
 
 function handleChoice(outcome) {
-    clearChoices();
-
     if (!currentCustomerInstance) {
         console.error("handleChoice called with no active customer instance.");
-        endCustomerInteraction();
+        // Potentially call endCustomerInteraction() or a reset function here
         return;
     }
 
-    let narrationText = "";
-    let dealSuccess = false;
-    let dialogueContextKey = '';
+    try {
+        clearChoices(); // Moved here to ensure choices are cleared even if error occurs later
 
-    switch (outcome.type) {
-        case "buy_from_customer":
-            if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
-                cash -= outcome.price;
-                inventory.push({ ...outcome.item });
-                dealSuccess = true;
-                narrationText = `Rikk copped "${outcome.item.name}".`;
-                playSound(cashSound);
-                dialogueContextKey = 'rikkBuysSuccess';
-            } else {
-                narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`;
+        let narrationText = "";
+        let dealSuccess = false;
+        let dialogueContextKey = '';
+
+        switch (outcome.type) {
+            case "buy_from_customer":
+                if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
+                    cash -= outcome.price;
+                    inventory.push({ ...outcome.item });
+                    dealSuccess = true;
+                    narrationText = `Rikk copped "${outcome.item.name}".`;
+                    playSound(cashSound);
+                    dialogueContextKey = 'rikkBuysSuccess';
+                } else {
+                    narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`;
+                    playSound(deniedSound);
+                    dialogueContextKey = 'lowCashRikk';
+                }
+                break;
+            case "sell_to_customer":
+                const itemIndex = inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality);
+                if (itemIndex !== -1) {
+                    const itemSold = inventory.splice(itemIndex, 1)[0];
+                    cash += outcome.price;
+                    dealSuccess = true;
+                    narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
+                    playSound(cashSound);
+                    dialogueContextKey = 'rikkSellsSuccess';
+                } else {
+                    narrationText = "Couldn't find that item.";
+                    playSound(deniedSound);
+                }
+                break;
+            case "negotiate_sell":
+                setTimeout(() => {
+                    if (Math.random() < 0.55 + (playerSkills.negotiator * 0.12)) {
+                        const negoSuccessResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
+                        queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
+                             handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
+                        });
+                    } else {
+                        const negoFailResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
+                        queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
+                            const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
+                            displayChoices(choices);
+                        });
+                    }
+                }, 1000);
+                return; // Return early as this choice path has its own async flow
+            case "decline_offer_to_buy":
+                narrationText = "Rikk passes on the offer.";
                 playSound(deniedSound);
-                dialogueContextKey = 'lowCashRikk';
-            }
-            break;
-        case "sell_to_customer":
-            const itemIndex = inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality);
-            if (itemIndex !== -1) {
-                const itemSold = inventory.splice(itemIndex, 1)[0];
-                cash += outcome.price;
-                dealSuccess = true;
-                narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
-                playSound(cashSound);
-                dialogueContextKey = 'rikkSellsSuccess';
-            } else {
-                narrationText = "Couldn't find that item.";
+                dialogueContextKey = 'rikkDeclinesToBuy';
+                break;
+            case "decline_offer_to_sell":
+                narrationText = "Rikk tells them to kick rocks.";
                 playSound(deniedSound);
-            }
-            break;
-        case "negotiate_sell":
-            setTimeout(() => {
-                if (Math.random() < 0.55 + (playerSkills.negotiator * 0.12)) {
-                    const negoSuccessResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
-                    queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
-                         handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
+                dialogueContextKey = 'rikkDeclinesToSell';
+                break;
+            case "acknowledge_empty_stash":
+                narrationText = "Rikk's stash is dry. Customer ain't happy.";
+                playSound(deniedSound);
+                dialogueContextKey = 'acknowledge_empty_stash';
+                break;
+            case "acknowledge_error":
+                narrationText = "System error acknowledged.";
+                break;
+        }
+
+        if (outcome.type !== "negotiate_sell") {
+            fiendsLeft--;
+        }
+
+        const outcomeResult = dialogueContextKey ? customerManager.getOutcomeDialogue(currentCustomerInstance, dialogueContextKey) : { line: '', payload: null };
+        if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
+        if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
+
+        updateHUD();
+        updateInventoryDisplay();
+
+        if (narrationText.trim() !== "") {
+            queueNextMessage(narrationText, 'narration', () => {
+                if (outcomeResult.line && outcomeResult.line.trim() !== "") {
+                    queueNextMessage(outcomeResult.line, 'customer', () => {
+                        setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
                     });
                 } else {
-                    const negoFailResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
-                    queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
-                        const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
-                        displayChoices(choices);
-                    });
-                }
-            }, 1000);
-            return;
-        case "decline_offer_to_buy":
-            narrationText = "Rikk passes on the offer.";
-            playSound(deniedSound);
-            dialogueContextKey = 'rikkDeclinesToBuy';
-            break;
-        case "decline_offer_to_sell":
-            narrationText = "Rikk tells them to kick rocks.";
-            playSound(deniedSound);
-            dialogueContextKey = 'rikkDeclinesToSell';
-            break;
-        case "acknowledge_empty_stash":
-            narrationText = "Rikk's stash is dry. Customer ain't happy.";
-            playSound(deniedSound);
-            dialogueContextKey = 'acknowledge_empty_stash';
-            break;
-        case "acknowledge_error":
-            narrationText = "System error acknowledged.";
-            break;
-    }
-
-    if (outcome.type !== "negotiate_sell") {
-        fiendsLeft--;
-    }
-
-    const outcomeResult = dialogueContextKey ? customerManager.getOutcomeDialogue(currentCustomerInstance, dialogueContextKey) : { line: '', payload: null };
-    if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
-    if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
-    
-    updateHUD();
-    updateInventoryDisplay();
-
-    if (narrationText.trim() !== "") {
-        queueNextMessage(narrationText, 'narration', () => {
-            if (outcomeResult.line && outcomeResult.line.trim() !== "") {
-                queueNextMessage(outcomeResult.line, 'customer', () => {
                     setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-                });
-            } else {
+                }
+            });
+        } else if (outcomeResult.line && outcomeResult.line.trim() !== "") {
+            queueNextMessage(outcomeResult.line, 'customer', () => {
                 setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-            }
-        });
-    } else if (outcomeResult.line && outcomeResult.line.trim() !== "") {
-        queueNextMessage(outcomeResult.line, 'customer', () => {
+            });
+        } else {
             setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-        });
-    } else {
-        setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-    }
+        }
 
-    if (heat >= MAX_HEAT) {
-        endGame("heat");
-        return;
-    }
-    if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) {
-        endGame("bankrupt");
-        return;
+        if (heat >= MAX_HEAT) {
+            endGame("heat");
+            return;
+        }
+        if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) {
+            endGame("bankrupt");
+            return;
+        }
+
+    } catch (e) {
+        console.error("[SCRIPT ERROR in handleChoice]", e);
+        if (typeof debugLogger !== 'undefined' && debugLogger.error) {
+            debugLogger.error('handleChoice', 'Error processing player choice', e);
+        }
+        if (typeof phoneShowNotification === 'function') {
+            phoneShowNotification("Error processing that action. Please try again or proceed.", "System Error");
+        }
+        endCustomerInteraction(); // Attempt to reset for next turn
     }
 }
 
@@ -1038,6 +1106,55 @@ function processPayload(payload, dealSuccess) {
 
         switch (effect.type) {
             case 'modifyStat':
+                if (effect.statToModify && typeof effect.value === 'number') {
+                    switch (effect.statToModify) {
+                        case 'cash':
+                            cash += effect.value;
+                            // No explicit min for cash, can go negative (bankrupt condition)
+                            break;
+                        case 'heat':
+                            heat += effect.value;
+                            if (heat < 0) heat = 0;
+                            if (heat > MAX_HEAT) heat = MAX_HEAT; // MAX_HEAT is 100
+                            break;
+                        case 'streetCred':
+                            streetCred += effect.value;
+                            if (streetCred < 0) streetCred = 0; // Assuming street cred shouldn't be negative
+                            break;
+                        case 'playerSkills.negotiator':
+                            playerSkills.negotiator += effect.value;
+                            if (playerSkills.negotiator < 0) playerSkills.negotiator = 0;
+                            break;
+                        case 'playerSkills.appraiser':
+                            playerSkills.appraiser += effect.value;
+                            if (playerSkills.appraiser < 0) playerSkills.appraiser = 0;
+                            break;
+                        case 'playerSkills.lowProfile':
+                            playerSkills.lowProfile += effect.value;
+                            if (playerSkills.lowProfile < 0) playerSkills.lowProfile = 0;
+                            break;
+                        default:
+                            // Use debugLogger if available, otherwise console.warn
+                            if (typeof debugLogger !== 'undefined' && debugLogger.warn) {
+                                debugLogger.warn('PayloadSystem', `Unknown statToModify: ${effect.statToModify}`);
+                            } else {
+                                console.warn(`[PayloadSystem WARNING] Unknown statToModify: ${effect.statToModify}`);
+                            }
+                            break;
+                    }
+                    // Call updateHUD() once after all potential stat changes within this effect,
+                    // if any of the modified stats are cash, heat, or streetCred.
+                    if (['cash', 'heat', 'streetCred'].includes(effect.statToModify)) {
+                        updateHUD();
+                    }
+                } else {
+                     // Use debugLogger if available, otherwise console.warn
+                    if (typeof debugLogger !== 'undefined' && debugLogger.warn) {
+                        debugLogger.warn('PayloadSystem', 'Invalid modifyStat effect (missing statToModify or value is not a number):', effect);
+                    } else {
+                        console.warn('[PayloadSystem WARNING] Invalid modifyStat effect (missing statToModify or value is not a number):', effect);
+                    }
+                }
                 break;
             case 'triggerEvent':
                 if (Math.random() < effect.chance) {
@@ -1321,41 +1438,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // defaultStyleSettings, applyStyleSetting, saveStyleSettings are assumed to be available in this scope
     // as they are defined globally or within the script's top scope.
 
-    function handleResetToDefaults() {
+    function applyDefaultsToDOMAndPersist() {
         if (typeof defaultStyleSettings === 'undefined') {
             console.error('Error: defaultStyleSettings object is not defined.');
             if (typeof phoneShowNotification === 'function') {
                 phoneShowNotification("Error: Default settings not found.", "Settings Error");
             }
-            return;
+            return; // Moved check to the top of this function
         }
 
         console.log('Resetting styles to defaults...');
 
-        // First, update all relevant input controls to their default values
-        // and apply the visual style to the document.
         for (const variableName in defaultStyleSettings) {
             if (defaultStyleSettings.hasOwnProperty(variableName)) {
                 const defaultValue = defaultStyleSettings[variableName];
-
-                // Update input controls
                 const inputsToUpdate = document.querySelectorAll(`[data-variable="${variableName}"]`);
+
                 inputsToUpdate.forEach(input => {
                     input.value = defaultValue;
-                    // Special handling for range input display values
                     if (input.type === 'range') {
                         const valueDisplaySpan = document.querySelector(`.value-display[data-target="${input.id}"]`);
-                        if (valueDisplaySpan) {
-                             // Ensure defaultValue for ranges is the numeric part if 'px' is appended for CSS
-                            valueDisplaySpan.textContent = defaultValue;
-                        }
+                        if (valueDisplaySpan) valueDisplaySpan.textContent = defaultValue;
                     }
                 });
 
-                // Apply the style to the document element
                 let valueToApply = defaultValue;
-                // Check if the variable is for a range slider that needs 'px'
-                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`);
+                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`); // Assuming one control is enough to check type
                 if (controlForVar && controlForVar.type === 'range' &&
                     (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
                     valueToApply += 'px';
@@ -1364,10 +1472,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // After all inputs are set to their default values and styles are visually applied,
-        // call saveStyleSettings() once to persist this entire default state.
         if (typeof saveStyleSettings === 'function') {
-            saveStyleSettings(); // This function reads from all inputs and saves.
+            saveStyleSettings(); // saveStyleSettings reads from DOM inputs, which are now set to defaults
             console.log('Default styles applied and saved to localStorage.');
             if (typeof phoneShowNotification === 'function') {
                 phoneShowNotification("Styles have been reset to defaults.", "Settings");
@@ -1378,6 +1484,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 phoneShowNotification("Error saving reset settings.", "Settings Error");
             }
         }
+    }
+
+    function handleResetToDefaults() {
+        applyDefaultsToDOMAndPersist();
     }
 
     if (resetMainSettingsButton) {

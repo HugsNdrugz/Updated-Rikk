@@ -230,6 +230,7 @@ export class ContactsAppManager {
 
     renderNewCustomerStep1(data) {
         return `
+            <div id="new-customer-step1-validation-msg" class="validation-message" style="color: var(--color-error, #cf6679); margin-bottom: 10px;"></div>
             <h4>Basic Info</h4>
             <div class="form-group">
                 <label for="new-customer-name">Customer's Base Name</label>
@@ -244,18 +245,49 @@ export class ContactsAppManager {
                 <input type="text" id="new-customer-avatar" data-prop="avatarUrl" value="${data.avatarUrl}" placeholder="https://randomuser.me/api/portraits/men/99.jpg">
             </div>`;
     }
+
+    _displayValidationMessage(messageContainerId, message) {
+        // Ensure this runs in the context where 'this.dom.detailsPanelContent' is available,
+        // or query document if the ID is globally unique and rendered.
+        const container = this.dom.detailsPanelContent.querySelector(`#${messageContainerId}`);
+        if (container) {
+            container.innerHTML = message ? `<p style="margin:0;">${message}</p>` : ''; // Clear if message is empty, added p style
+        }
+    }
+
     validateNewCustomerStep1(data) {
-        if (!data.baseName.trim()) { alert('Base Name is required.'); return false; }
-        if (!data.key.trim()) { alert('Customer Key is required.'); return false; }
-        const formattedKey = data.key.trim().toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
-        if (formattedKey !== data.key.trim()) {
-            alert(`Key format was invalid. It has been corrected to: ${formattedKey}. Please review and continue.`);
-            this.newCustomerFlowState.data.key = formattedKey;
-            this.renderNewCustomerFlow();
+        this._displayValidationMessage('new-customer-step1-validation-msg', ''); // Clear previous messages
+
+        if (!data.baseName.trim()) {
+            this._displayValidationMessage('new-customer-step1-validation-msg', 'Base Name is required.');
             return false;
         }
+        if (!data.key.trim()) {
+            this._displayValidationMessage('new-customer-step1-validation-msg', 'Customer Key is required.');
+            return false;
+        }
+        const originalKey = data.key.trim();
+        const formattedKey = originalKey.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
+
         if (this.appState.customers[formattedKey]) {
-            alert(`Customer with key "${formattedKey}" already exists. Please choose a different key.`);
+            this._displayValidationMessage('new-customer-step1-validation-msg', `Customer with key "${formattedKey}" already exists. Please choose a different key.`);
+            return false;
+        }
+
+        if (formattedKey !== originalKey) {
+            this._displayValidationMessage('new-customer-step1-validation-msg', `Key format was invalid. It has been corrected to: <strong>${formattedKey}</strong>. Please review and continue.`);
+            this.newCustomerFlowState.data.key = formattedKey;
+            // Re-rendering the flow will show the corrected key in the input.
+            // The original code called this.renderNewCustomerFlow() which might be too broad.
+            // For now, the message informs the user, and the data is updated.
+            // If immediate input update is needed without full re-render, that's a separate step.
+            // The current flow implies that if validation returns false, the step is re-rendered by the calling function (handleNewCustomerFlowNext)
+            // if it checks the return value. Let's assume the main flow doesn't auto-re-render on false, so we might need it here.
+            // However, the original code only re-rendered on key correction.
+            // Let's stick to the plan: if validation fails (including for key correction), it returns false.
+            // The calling function `handleNewCustomerFlowNext` does *not* re-render if validation fails.
+            // So, if we want the input to update with the corrected key, we must re-render here.
+            this.renderNewCustomerFlow(); // Re-render to show corrected key
             return false;
         }
         return true;
