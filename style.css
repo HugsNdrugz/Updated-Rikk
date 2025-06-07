@@ -929,6 +929,127 @@ h1,
     display: none !important;
 }
 
+/* === Style Settings Panel Controls === */
+
+.settings-controls-container {
+    overflow-y: auto; /* Allow vertical scrolling for many options */
+    max-height: 65vh; /* Ensure it doesn't get too tall, adjust as needed */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Padding around the controls area */
+    margin-top: var(--spacing-md);
+}
+
+.settings-group {
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid var(--color-grey-dark);
+    padding: var(--spacing-md);
+    border-radius: var(--button-border-radius); /* Consistent radius */
+}
+
+.settings-group legend {
+    font-weight: bold;
+    color: var(--color-primary);
+    padding: 0 var(--spacing-sm);
+    margin-bottom: var(--spacing-md); /* More space after legend */
+    font-size: 1.1rem;
+}
+
+.setting-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-sm); /* Gap between label and control */
+}
+
+.setting-control:last-child {
+    margin-bottom: var(--spacing-xs); /* Reduce margin for last control in a group */
+}
+
+.setting-control label {
+    margin-right: var(--spacing-sm); /* Ensure some space if gap not supported */
+    font-size: 0.9rem;
+    color: var(--color-grey-light);
+    flex-shrink: 0; /* Prevent label from shrinking too much */
+}
+
+/* General input styling */
+.settings-controls-container input[type="color"],
+.settings-controls-container select,
+.settings-controls-container input[type="range"],
+.settings-controls-container input[type="number"] { /* If number inputs are used */
+    background-color: var(--color-dark-bg);
+    border: 1px solid var(--color-grey-mid);
+    color: var(--color-on-surface);
+    border-radius: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+/* Specific input styling */
+.settings-controls-container input[type="color"] {
+    min-width: 60px; /* Increased min-width */
+    height: 30px;
+    padding: 2px; /* Small padding for the color swatch */
+}
+
+.settings-controls-container select {
+    min-width: 160px; /* Increased min-width */
+    height: 30px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.settings-controls-container input[type="range"] {
+    flex-grow: 1; /* Allow range slider to take available space */
+    height: 20px; /* Easier to grab */
+    accent-color: var(--color-primary); /* Modern way to style range tracks/thumbs */
+}
+
+.setting-control .value-display {
+    margin-left: var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--color-grey-dim);
+    min-width: 30px; /* Ensure space for the value like "10px" */
+    text-align: right;
+}
+
+/* Styling for focused inputs for better accessibility */
+.settings-controls-container input:focus,
+.settings-controls-container select:focus {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 1px;
+    border-color: var(--color-secondary);
+}
+
+/* === Phone Theme Settings View Specific Styles === */
+
+/*
+The #phone-theme-settings-view already has class .phone-content-view.
+.phone-content-view is display:flex, flex-direction: column.
+The header.phone-header is its first child.
+The #phone-theme-controls-container (which also has .settings-controls-container) is the second child.
+*/
+
+.phone-content-view > .settings-controls-container {
+    flex-grow: 1; /* Make this container take up remaining vertical space */
+    overflow-y: auto; /* Allow scrolling within this container */
+
+    /* Override or reset properties from the general .settings-controls-container
+       that might not be suitable for full-screen phone app view */
+    max-height: none; /* Remove max-height, as flex-grow handles height */
+    margin-top: 0;    /* Header provides top spacing, so remove margin-top */
+
+    /* Add padding suitable for phone screen content */
+    padding: var(--spacing-md);
+}
+
+/* Ensure the placeholder paragraph inside is styled reasonably if it ever shows */
+#phone-theme-controls-container p {
+    text-align: center;
+    color: var(--color-grey-mid);
+    padding: var(--spacing-lg);
+}
+
 
 /* ======================================================================== */
 /* === STYLES FOR INTEGRATED CONTACTS APP (SCOPED & REFACTORED) === */
@@ -1105,4 +1226,74 @@ h1,
     /* z-index: 100; */
     /* width: 80%; */
     /* max-width: 400px; */
+}
+
+/* === Sub-Menu Panel Styles === */
+
+.submenu-panel {
+    background-color: var(--color-surface); /* Using a defined variable */
+    padding: var(--spacing-xl); /* Generous padding */
+    border-radius: var(--modal-border-radius); /* Consistent border radius */
+    border: 1px solid var(--color-grey-dark); /* Subtle border */
+
+    position: absolute; /* Position it over other content */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 90%; /* Responsive width */
+    max-width: 450px; /* Max width for larger screens */
+
+    z-index: 1010; /* Ensure it's above other main menu items, but below potential global modals like inventory */
+
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5); /* Pop-out effect */
+    color: var(--color-on-surface); /* Ensure text is legible */
+
+    /* Add a transition for smooth appearance if .hidden is toggled via JS opacity/visibility later */
+    /* For now, .hidden class uses display: none !important */
+}
+
+.submenu-panel h2 {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.8rem; /* Slightly smaller than main title */
+}
+
+.submenu-panel p {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    line-height: 1.6;
+}
+
+.submenu-back-btn {
+    /* Re-use game-button styles for consistency, but can be overridden */
+    /* display: block; /* Make it block to take full width or control width */
+    /* margin: var(--spacing-lg) auto 0; /* Center it with margin auto */
+    /* Specific styling if needed, e.g., if not using .game-button */
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-family: var(--font-body); /* Using body font for less emphasis than display font */
+    font-size: 0.9rem;
+    font-weight: bold;
+    background-color: var(--color-grey-dark);
+    color: var(--color-on-surface);
+    border: 1px solid var(--color-grey-mid);
+    border-radius: var(--button-border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    display: block; /* Take up its own line */
+    margin: var(--spacing-xl) auto 0; /* Auto horizontal margins for centering */
+    min-width: 150px; /* Minimum width */
+    text-align: center;
+}
+
+.submenu-back-btn:hover {
+    background-color: var(--color-grey-mid);
+    border-color: var(--color-grey-light);
+}
+
+/* Ensure hidden class is effective */
+.hidden {
+    display: none !important;
 }

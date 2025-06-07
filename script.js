@@ -31,6 +31,10 @@ let openInventoryBtn, inventoryCountDisplay, nextCustomerBtn;
 let inventoryModal, closeModalBtn, inventoryList, modalInventorySlotsDisplay;
 let finalDaysDisplay, finalCashDisplay, finalVerdictText;
 let doorKnockSound, cashSound, deniedSound, chatBubbleSound;
+let primaryActionsContainer, submenuNavigationContainer;
+let settingsMenuBtn, loadMenuBtn, creditsMenuBtn;
+let settingsMenuPanel, loadMenuPanel, creditsMenuPanel;
+let allSubmenuBackBtns;
 
 // --- Game State & Managers ---
 let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
@@ -47,8 +51,28 @@ let chatSpacerElement = null;
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
 const SAVE_KEY = 'myNiggaRikkSaveDataV10';
+const STYLE_SETTINGS_KEY = 'rikkGameStyleSettingsV1';
 const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
 const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
+
+const defaultStyleSettings = {
+    '--color-dark-bg': '#121212',
+    '--color-surface': '#1e1e1e',
+    '--color-primary': '#bb86fc',
+    '--color-secondary': '#03dac6',
+    '--color-on-surface': '#e0e0e0',
+    '--color-on-primary': '#000000',
+    '--color-accent-gold': '#f39c12',
+    '--color-error': '#cf6679',
+    '--color-success-green': '#2ecc71',
+    '--font-body': "'Roboto', 'Open Sans', sans-serif",
+    '--font-display': "'Press Start 2P', 'Comic Neue', cursive",
+    '--viewport-border-radius': '12',
+    '--phone-border-radius': '28',
+    '--modal-border-radius': '10',
+    '--button-border-radius': '8',
+    '--spacing-unit': '8'
+};
 
 // --- Avatars (For chat UI) ---
 const customerAvatars = {
@@ -142,6 +166,15 @@ function initGame() {
     finalDaysDisplay = document.getElementById('final-days-display');
     finalCashDisplay = document.getElementById('final-cash-display');
     finalVerdictText = document.getElementById('final-verdict-text');
+    primaryActionsContainer = document.getElementById('primary-actions');
+    submenuNavigationContainer = document.getElementById('submenu-navigation');
+    settingsMenuBtn = document.getElementById('settings-menu-btn');
+    loadMenuBtn = document.getElementById('load-menu-btn');
+    creditsMenuBtn = document.getElementById('credits-menu-btn');
+    settingsMenuPanel = document.getElementById('settings-menu-panel');
+    loadMenuPanel = document.getElementById('load-menu-panel');
+    creditsMenuPanel = document.getElementById('credits-menu-panel');
+    allSubmenuBackBtns = document.querySelectorAll('.submenu-back-btn');
     doorKnockSound = document.getElementById('door-knock-sound');
     cashSound = document.getElementById('cash-sound');
     deniedSound = document.getElementById('denied-sound');
@@ -180,6 +213,29 @@ function initGame() {
     phoneDockedIndicator.addEventListener('click', () => setPhoneUIState('home'));
     dockPhoneBtn.addEventListener('click', () => setPhoneUIState('docked'));
     
+    // Event listeners for new main menu submenu buttons
+    if (settingsMenuBtn) {
+        settingsMenuBtn.addEventListener('click', () => openSubmenuPanel(settingsMenuPanel));
+    }
+    if (loadMenuBtn) {
+        loadMenuBtn.addEventListener('click', () => openSubmenuPanel(loadMenuPanel));
+    }
+    if (creditsMenuBtn) {
+        creditsMenuBtn.addEventListener('click', () => openSubmenuPanel(creditsMenuPanel));
+    }
+
+    allSubmenuBackBtns.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const panelToClose = event.target.closest('.submenu-panel');
+            if (panelToClose) {
+                closeSubmenuPanel(panelToClose);
+            }
+        });
+    });
+
+    initStyleSettingsControls();
+    loadStyleSettings();
+
     // Initialize Sub-modules
     initPhoneAmbientUI(rikkPhoneUI);
 }
@@ -309,6 +365,183 @@ function endCustomerInteraction() {
 // =================================================================================
 // IV. UI MANAGEMENT & DISPLAY FUNCTIONS
 // =================================================================================
+
+function toggleMainMenuButtons(show) {
+    if (!primaryActionsContainer || !submenuNavigationContainer) return; // Guard clause
+    if (show) {
+        primaryActionsContainer.classList.remove('hidden');
+        submenuNavigationContainer.classList.remove('hidden');
+    } else {
+        primaryActionsContainer.classList.add('hidden');
+        submenuNavigationContainer.classList.add('hidden');
+    }
+}
+
+function openSubmenuPanel(panelElement) {
+    if (!panelElement) return; // Guard clause
+    toggleMainMenuButtons(false);
+    panelElement.classList.remove('hidden');
+}
+
+function closeSubmenuPanel(panelElement) {
+    if (!panelElement) return; // Guard clause
+    panelElement.classList.add('hidden');
+    toggleMainMenuButtons(true);
+}
+
+function applyStyleSetting(variableName, value) {
+    if (variableName && typeof value !== 'undefined') {
+        document.documentElement.style.setProperty(variableName, value);
+        saveStyleSettings(); // Call save after applying a style
+    }
+}
+
+function saveStyleSettings() {
+    const settingsToSave = {};
+    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+
+    styleControls.forEach(control => {
+        const cssVariable = control.dataset.variable;
+        settingsToSave[cssVariable] = control.value; // Store the raw control value
+    });
+
+    try {
+        localStorage.setItem(STYLE_SETTINGS_KEY, JSON.stringify(settingsToSave));
+    } catch (e) {
+        console.error("Failed to save style settings:", e);
+    }
+}
+
+function loadStyleSettings() {
+    let appliedSettings = {}; // To keep track of what's been set by localStorage
+
+    try {
+        const savedSettingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
+        if (savedSettingsString) {
+            const savedSettings = JSON.parse(savedSettingsString);
+            appliedSettings = { ...savedSettings }; // Copy saved settings
+
+            // Apply saved settings and update controls
+            const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+            styleControls.forEach(control => {
+                const cssVariable = control.dataset.variable;
+                if (savedSettings.hasOwnProperty(cssVariable)) {
+                    const savedValue = savedSettings[cssVariable];
+                    control.value = savedValue; // Update control to saved value
+
+                    let valueToApply = savedValue;
+                    let displayValue = savedValue;
+
+                    if (control.type === 'range') {
+                        if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
+                            valueToApply += 'px';
+                        }
+                        const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
+                        if (valueDisplaySpan) {
+                            valueDisplaySpan.textContent = displayValue;
+                        }
+                    }
+                    document.documentElement.style.setProperty(cssVariable, valueToApply);
+                }
+            });
+             console.log("Loaded style settings from localStorage.");
+        } else {
+            // No saved settings found, will proceed to apply all defaults.
+            console.log("No saved style settings found. Applying default styles.");
+        }
+    } catch (e) {
+        console.error("Failed to load style settings from localStorage, applying defaults:", e);
+        localStorage.removeItem(STYLE_SETTINGS_KEY); // Clear potentially corrupted settings
+        // appliedSettings will be empty, so all defaults will be applied below.
+    }
+
+    // Apply any defaults that weren't in localStorage (new settings or if localStorage was empty/corrupted)
+    // And also ensure controls are set to these defaults if nothing was loaded for them.
+    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+    let defaultsApplied = false;
+
+    Object.keys(defaultStyleSettings).forEach(cssVariable => {
+        const defaultValue = defaultStyleSettings[cssVariable];
+        let valueToApply = defaultValue; // This is the raw value for setProperty if not a range
+        let controlValue = defaultValue;  // This is the value for the control input
+
+        // Find the control associated with this default CSS variable
+        const control = document.querySelector(`#settings-menu-panel [data-variable="${cssVariable}"]`);
+
+        if (!appliedSettings.hasOwnProperty(cssVariable)) {
+            // This default was not in localStorage, so apply it
+            defaultsApplied = true;
+
+            if (control && control.type === 'range') {
+                if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
+                    valueToApply += 'px'; // Add 'px' for applying the style
+                }
+            }
+            document.documentElement.style.setProperty(cssVariable, valueToApply);
+
+            // If a control exists for this default, update its value
+            if (control) {
+                control.value = controlValue;
+            }
+        }
+
+        // Always ensure display spans for range inputs are updated,
+        // either to loaded value (already done above) or to default value now.
+        if (control && control.type === 'range') {
+            const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
+            if (valueDisplaySpan) {
+                // If it was loaded from appliedSettings, it's already set.
+                // Otherwise, set it to the default controlValue (which is numeric string).
+                if (!appliedSettings.hasOwnProperty(cssVariable)) {
+                     valueDisplaySpan.textContent = controlValue;
+                }
+            }
+        }
+    });
+
+    if (defaultsApplied && !localStorage.getItem(STYLE_SETTINGS_KEY)) {
+        // If we applied defaults because localStorage was empty or cleared due to error,
+        // save these newly applied defaults back to localStorage.
+        // This avoids re-applying defaults every time if user never saves.
+        // It calls the *global* saveStyleSettings which reads from controls.
+        // Since we just updated controls with defaults, this is correct.
+        console.log("Saving initial default styles to localStorage.");
+        saveStyleSettings();
+    }
+}
+
+function initStyleSettingsControls() {
+    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+
+    styleControls.forEach(control => {
+        const cssVariable = control.dataset.variable;
+        let eventType = 'input'; // For live updates on color pickers and range sliders
+        if (control.type === 'select-one') {
+            eventType = 'change'; // 'change' is better for select elements
+        }
+
+        control.addEventListener(eventType, (event) => {
+            let value = event.target.value;
+            if (control.type === 'range') {
+                // Append 'px' for dimension variables that need it (like radii, spacing unit)
+                // Check if the variable name implies it's a pixel dimension
+                if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
+                    value += 'px';
+                }
+                // Update the associated span.value-display for range inputs
+                const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
+                if (valueDisplay) {
+                    valueDisplay.textContent = event.target.value; // Show numeric value before 'px'
+                }
+            }
+            applyStyleSetting(cssVariable, value);
+        });
+
+        // For range inputs, also trigger an initial update of the value display span
+        // if they have a default value set later by loadStyleSettings.
+        // This will be handled more robustly in loadStyleSettings.
+    });
+}
 
 function handleStartNewGameClick() {
     initializeNewGameState();
