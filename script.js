@@ -8,7 +8,8 @@
 
 // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
-import { CustomerManager } from './classes/CustomerManager.js';
+import { CustomerManager } 
+from './classes/CustomerManager.js';
 import { ContactsAppManager } from './classes/ContactsAppManager.js';
 import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates } from './data/customer_templates.js';
@@ -35,6 +36,7 @@ let primaryActionsContainer, submenuNavigationContainer;
 let settingsMenuBtn, loadMenuBtn, creditsMenuBtn;
 let settingsMenuPanel, loadMenuPanel, creditsMenuPanel;
 let allSubmenuBackBtns;
+let phoneThemeSettingsView; // NEW: Declare phone theme settings view
 
 // --- Game State & Managers ---
 let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
@@ -148,6 +150,7 @@ function initGame() {
     gameChatView = document.getElementById('game-chat-view');
     contactsAppView = document.getElementById('contacts-app-view');
     slotGameView = document.getElementById('slot-game-view');
+    phoneThemeSettingsView = document.getElementById('phone-theme-settings-view'); // NEW: Assign phone theme settings view
     chatContainer = document.getElementById('chat-container-game');
     choicesArea = document.getElementById('choices-area-game');
     phoneTitleGame = document.getElementById('phone-title-game');
@@ -233,8 +236,8 @@ function initGame() {
         });
     });
 
-    initStyleSettingsControls();
-    loadStyleSettings();
+    initStyleSettingsControls(); // Initializes controls for both main menu and phone app
+    loadStyleSettings(); // Loads and applies styles to all relevant controls
 
     // Initialize Sub-modules
     initPhoneAmbientUI(rikkPhoneUI);
@@ -398,7 +401,8 @@ function applyStyleSetting(variableName, value) {
 
 function saveStyleSettings() {
     const settingsToSave = {};
-    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+    // Query all controls with data-variable, regardless of their parent panel
+    const styleControls = document.querySelectorAll('[data-variable]');
 
     styleControls.forEach(control => {
         const cssVariable = control.dataset.variable;
@@ -422,7 +426,8 @@ function loadStyleSettings() {
             appliedSettings = { ...savedSettings }; // Copy saved settings
 
             // Apply saved settings and update controls
-            const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+            // Query all controls with data-variable, regardless of their parent panel
+            const styleControls = document.querySelectorAll('[data-variable]');
             styleControls.forEach(control => {
                 const cssVariable = control.dataset.variable;
                 if (savedSettings.hasOwnProperty(cssVariable)) {
@@ -457,7 +462,8 @@ function loadStyleSettings() {
 
     // Apply any defaults that weren't in localStorage (new settings or if localStorage was empty/corrupted)
     // And also ensure controls are set to these defaults if nothing was loaded for them.
-    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+    // Query all controls with data-variable, regardless of their parent panel
+    const styleControls = document.querySelectorAll('[data-variable]');
     let defaultsApplied = false;
 
     Object.keys(defaultStyleSettings).forEach(cssVariable => {
@@ -466,7 +472,8 @@ function loadStyleSettings() {
         let controlValue = defaultValue;  // This is the value for the control input
 
         // Find the control associated with this default CSS variable
-        const control = document.querySelector(`#settings-menu-panel [data-variable="${cssVariable}"]`);
+        // Query all controls with data-variable, regardless of their parent panel
+        const control = document.querySelector(`[data-variable="${cssVariable}"]`);
 
         if (!appliedSettings.hasOwnProperty(cssVariable)) {
             // This default was not in localStorage, so apply it
@@ -511,7 +518,8 @@ function loadStyleSettings() {
 }
 
 function initStyleSettingsControls() {
-    const styleControls = document.querySelectorAll('#settings-menu-panel [data-variable]');
+    // Modify to query all controls with data-variable, enabling it for both main menu and phone app
+    const styleControls = document.querySelectorAll('[data-variable]');
 
     styleControls.forEach(control => {
         const cssVariable = control.dataset.variable;
@@ -519,6 +527,11 @@ function initStyleSettingsControls() {
         if (control.type === 'select-one') {
             eventType = 'change'; // 'change' is better for select elements
         }
+
+        // Remove existing listener to prevent duplicates if called multiple times (e.g., during app re-launch)
+        // This needs to be done carefully to avoid removing listeners that are only *meant* to be there once.
+        // For simplicity with this current design, we assume init is called once on DOMContentLoaded.
+        // If apps were truly dynamic, a more robust event delegation or cleanup pattern would be needed.
 
         control.addEventListener(eventType, (event) => {
             let value = event.target.value;
@@ -537,9 +550,14 @@ function initStyleSettingsControls() {
             applyStyleSetting(cssVariable, value);
         });
 
-        // For range inputs, also trigger an initial update of the value display span
-        // if they have a default value set later by loadStyleSettings.
-        // This will be handled more robustly in loadStyleSettings.
+        // Initial update of the value display span for range inputs (if they exist)
+        // This is handled by loadStyleSettings, but a fallback can be here if needed.
+        if (control.type === 'range') {
+            const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
+            if (valueDisplay) {
+                valueDisplay.textContent = control.value;
+            }
+        }
     });
 }
 
@@ -566,11 +584,14 @@ function handleRestartGameClick() {
 function setPhoneUIState(state) {
     if (!rikkPhoneUI) return;
     
+    // Hide all phone content views initially
     rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
     androidHomeScreen.classList.add('hidden'); 
     gameChatView.classList.add('hidden'); 
     contactsAppView.classList.add('hidden');
     slotGameView.classList.add('hidden');
+    phoneThemeSettingsView.classList.add('hidden'); // NEW: Hide phone theme settings view
+    
     phoneScreenArea.classList.remove('screen-off');
     phoneDockedIndicator.classList.add('hidden');
     phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
@@ -597,6 +618,13 @@ function setPhoneUIState(state) {
             rikkPhoneUI.classList.add('app-menu-game');
             slotGameView.classList.remove('hidden');
             slotGameManager.launch();
+            phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+            break;
+        case 'theme-settings': // NEW: Phone Theme Settings case
+            rikkPhoneUI.classList.add('app-menu-game');
+            phoneThemeSettingsView.classList.remove('hidden');
+            // Re-initialize controls if needed (though initStyleSettingsControls runs globally)
+            // loadStyleSettings() ensures controls are up-to-date
             phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
             break;
         case 'docked':
@@ -631,6 +659,9 @@ function handlePhoneAppClick(event) {
             break;
         case 'slot-game':
             setPhoneUIState('slots');
+            break;
+        case 'theme-settings': // NEW: Handle Theme Settings app click
+            setPhoneUIState('theme-settings');
             break;
         case 'back-to-home': 
             setPhoneUIState('home'); 
