@@ -47,100 +47,61 @@
         </nav>
         <!-- Placeholder for Sub-menu panels/content that will be revealed by JS -->
         <div id="settings-menu-panel" class="submenu-panel hidden">
-    <h2>Settings</h2>
-    <div class="settings-controls-container">
-
-        <fieldset class="settings-group">
-            <legend>Colors</legend>
-
-            <div class="setting-control">
-                <label for="setting-color-dark-bg">Main Background:</label>
-                <input type="color" id="setting-color-dark-bg" data-variable="--color-dark-bg">
+            <h2>Style Settings</h2>
+            <div class="settings-group" data-setting-group="colors">
+                <h3>Colors</h3>
+                <div class="setting-row">
+                    <label for="color-dark-bg">Dark Background</label>
+                    <input type="color" id="color-dark-bg" data-variable="--color-dark-bg">
+                </div>
+                <div class="setting-row">
+                    <label for="color-light-bg">Light Background</label>
+                    <input type="color" id="color-light-bg" data-variable="--color-light-bg">
+                </div>
+                <div class="setting-row">
+                    <label for="color-primary">Primary</label>
+                    <input type="color" id="color-primary" data-variable="--color-primary">
+                </div>
+                <div class="setting-row">
+                    <label for="color-accent">Accent</label>
+                    <input type="color" id="color-accent" data-variable="--color-accent">
+                </div>
+                <div class="setting-row">
+                    <label for="color-text-base">Base Text</label>
+                    <input type="color" id="color-text-base" data-variable="--color-text-base">
+                </div>
             </div>
-            <div class="setting-control">
-                <label for="setting-color-surface">Surface Color:</label>
-                <input type="color" id="setting-color-surface" data-variable="--color-surface">
+            <div class="settings-group" data-setting-group="typography">
+                <h3>Typography</h3>
+                <div class="setting-row">
+                    <label for="font-body">Body Font</label>
+                    <select id="font-body" data-variable="--font-body">
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Open Sans', sans-serif">Open Sans</option>
+                        <option value="'Lato', sans-serif">Lato</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label for="font-heading">Heading Font</label>
+                    <select id="font-heading" data-variable="--font-heading">
+                        <option value="'Roboto Slab', serif">Roboto Slab</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Merriweather', serif">Merriweather</option>
+                    </select>
+                </div>
+                 <div class="setting-row">
+                    <label for="font-ui">UI Font</label>
+                    <select id="font-ui" data-variable="--font-ui">
+                        <option value="'Inter', sans-serif">Inter</option>
+                        <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                    </select>
+                </div>
             </div>
-            <div class="setting-control">
-                <label for="setting-color-primary">Primary Accent:</label>
-                <input type="color" id="setting-color-primary" data-variable="--color-primary">
-            </div>
-            <div class="setting-control">
-                <label for="setting-color-secondary">Secondary Accent:</label>
-                <input type="color" id="setting-color-secondary" data-variable="--color-secondary">
-            </div>
-            <div class="setting-control">
-                <label for="setting-color-on-surface">Text on Surface:</label>
-                <input type="color" id="setting-color-on-surface" data-variable="--color-on-surface">
-            </div>
-            <div class="setting-control">
-                <label for="setting-color-on-primary">Text on Primary:</label>
-                <input type="color" id="setting-color-on-primary" data-variable="--color-on-primary">
-            </div>
-             <div class="setting-control">
-                <label for="setting-color-accent-gold">Gold Accent:</label>
-                <input type="color" id="setting-color-accent-gold" data-variable="--color-accent-gold">
-            </div>
-            <div class="setting-control">
-                <label for="setting-color-error">Error/Danger Color:</label>
-                <input type="color" id="setting-color-error" data-variable="--color-error">
-            </div>
-            <div class="setting-control">
-                <label for="setting-color-success-green">Success Color:</label>
-                <input type="color" id="setting-color-success-green" data-variable="--color-success-green">
-            </div>
-        </fieldset>
-
-        <fieldset class="settings-group">
-            <legend>Fonts</legend>
-            <div class="setting-control">
-                <label for="setting-font-body">Body Font:</label>
-                <select id="setting-font-body" data-variable="--font-body">
-                    <option value="'Roboto', 'Open Sans', sans-serif">Roboto (Default)</option>
-                    <option value="'Lato', sans-serif">Lato</option>
-                    <option value="'Arial', sans-serif">Arial</option>
-                    <option value="'Verdana', sans-serif">Verdana</option>
-                </select>
-            </div>
-            <div class="setting-control">
-                <label for="setting-font-display">Display Font:</label>
-                <select id="setting-font-display" data-variable="--font-display">
-                    <option value="'Press Start 2P', 'Comic Neue', cursive">Press Start 2P (Default)</option>
-                    <option value="'Black Ops One', sans-serif">Black Ops One</option>
-                    <option value="'Impact', fantasy">Impact</option>
-                    <option value="'Courier New', monospace">Courier New</option>
-                </select>
-            </div>
-        </fieldset>
-
-        <fieldset class="settings-group">
-            <legend>Layout & Dimensions</legend>
-            <div class="setting-control">
-                <label for="setting-viewport-border-radius">Viewport Radius (<span class="value-display" data-target="setting-viewport-border-radius">0</span>px):</label>
-                <input type="range" id="setting-viewport-border-radius" data-variable="--viewport-border-radius" min="0" max="30" step="1">
-            </div>
-            <div class="setting-control">
-                <label for="setting-phone-border-radius">Phone Radius (<span class="value-display" data-target="setting-phone-border-radius">0</span>px):</label>
-                <input type="range" id="setting-phone-border-radius" data-variable="--phone-border-radius" min="0" max="40" step="1">
-            </div>
-            <div class="setting-control">
-                <label for="setting-modal-border-radius">Modal Radius (<span class="value-display" data-target="setting-modal-border-radius">0</span>px):</label>
-                <input type="range" id="setting-modal-border-radius" data-variable="--modal-border-radius" min="0" max="20" step="1">
-            </div>
-            <div class="setting-control">
-                <label for="setting-button-border-radius">Button Radius (<span class="value-display" data-target="setting-button-border-radius">0</span>px):</label>
-                <input type="range" id="setting-button-border-radius" data-variable="--button-border-radius" min="0" max="20" step="1">
-            </div>
-            <div class="setting-control">
-                <label for="setting-spacing-unit">Base Spacing (<span class="value-display" data-target="setting-spacing-unit">0</span>px):</label>
-                <input type="range" id="setting-spacing-unit" data-variable="--spacing-unit" min="4" max="12" step="1">
-            </div>
-        </fieldset>
-
-    </div>
-    <!-- Specific settings controls will be added in later steps -->
-    <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
-</div>
+            <button id="reset-style-settings">Reset to Defaults</button>
+            <button id="preview-style-settings">Preview</button>
+            <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
+        </div>
         <div id="load-menu-panel" class="submenu-panel hidden">
     <h2>Load Game</h2>
     <p>Saved game slots will appear here.</p>
@@ -274,14 +235,22 @@
                             </div>
                         </div>
 
-                        <div id="phone-theme-settings-view" class="phone-content-view hidden">
-                            <header class="phone-header">
-                                <button class="phone-back-button" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
-                                <h3 id="phone-title-theme-settings">Theme Settings</h3>
-                            </header>
-                            <div class="settings-controls-container" id="phone-theme-controls-container">
-                                <p>Loading theme settings...</p>
+                        <div id="phone-theme-settings-view" class="phone-view hidden">
+                            <h2>Theme Settings</h2>
+                            <!-- Mirror main menu settings but with phone-specific styling -->
+                            <div class="settings-group" data-setting-group="colors-phone">
+                                <h3>Colors</h3>
+                                <div class="setting-row">
+                                    <label for="color-phone-bg">Phone Background</label>
+                                    <input type="color" id="color-phone-bg" data-variable="--color-phone-bg">
+                                </div>
+                                 <div class="setting-row">
+                                    <label for="color-phone-text">Phone Text</label>
+                                    <input type="color" id="color-phone-text" data-variable="--color-phone-text">
+                                </div>
                             </div>
+                             <button id="reset-phone-style-settings">Reset to Defaults</button>
+                             <button id="preview-phone-style-settings">Preview</button>
                         </div>
 
                         <div class="dock">
@@ -361,6 +330,16 @@
     <script src="./classes/SlotGameManager.js" type="module"></script>
     <script src="phone_ambient_ui.js" type="module"></script>
     <script src="script.js" type="module"></script>
+
+    <div class="settings-loading hidden">
+        <div class="loading-spinner"></div>
+        <p>Applying settings...</p>
+    </div>
+
+    <div class="settings-error hidden">
+        <p class="error-message">Error applying settings</p>
+        <button class="retry-button">Retry</button>
+    </div>
 </body>
 
 </html>

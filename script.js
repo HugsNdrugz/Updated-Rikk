@@ -50,6 +50,29 @@ let customerManager, contactsAppManager, slotGameManager;
 // --- UI State ---
 let chatSpacerElement = null;
 
+// --- Style Settings Preview Mode State ---
+let isPreviewModeActive = false; // Added for Preview Mode
+let originalSettingsBeforePreview = {}; // Added for Preview Mode
+const APP_CONTAINER_SELECTOR = '#game-viewport'; // Added for Preview Mode (using game-viewport)
+
+// --- localStorage Availability Check ---
+function isLocalStorageAvailable() {
+    let storage;
+    try {
+        storage = window.localStorage;
+        const x = '__storage_test__';
+        storage.setItem(x, x);
+        storage.removeItem(x);
+        return true;
+    } catch (e) {
+        return e instanceof DOMException && (
+            e.code === 22 || e.code === 1014 ||
+            e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+            (storage && storage.length !== 0);
+    }
+}
+const localStorageAvailable = isLocalStorageAvailable();
+
 // --- Game Configuration ---
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
 const SAVE_KEY = 'myNiggaRikkSaveDataV10';
@@ -392,127 +415,131 @@ function closeSubmenuPanel(panelElement) {
     toggleMainMenuButtons(true);
 }
 
+// Modified: applyStyleSetting now ONLY sets the CSS property. Saving is handled by initStyleSettingsControls.
 function applyStyleSetting(variableName, value) {
     if (variableName && typeof value !== 'undefined') {
-        document.documentElement.style.setProperty(variableName, value);
-        saveStyleSettings(); // Call save after applying a style
+        let cssValue = value; // Value from input, e.g. "12" or "#FFFFFF" or "'Roboto', sans-serif"
+
+        const control = document.querySelector(`[data-variable="${variableName}"]`);
+        if (control && control.type === 'range' &&
+            (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
+            // Ensure value is string for concatenation, input.value is usually string
+            cssValue = String(value) + 'px';
+        }
+        document.documentElement.style.setProperty(variableName, cssValue);
     }
 }
 
 function saveStyleSettings() {
-    const settingsToSave = {};
-    // Query all controls with data-variable, regardless of their parent panel
-    const styleControls = document.querySelectorAll('[data-variable]');
+    if (!localStorageAvailable) {
+        console.warn('localStorage is not available. Settings will not be saved.');
+        // Optionally, inform the user via UI that settings cannot be saved.
+        // showErrorState("Cannot save settings: Storage unavailable.", null); // Example if showErrorState is available
+        return;
+    }
 
-    styleControls.forEach(control => {
-        const cssVariable = control.dataset.variable;
-        settingsToSave[cssVariable] = control.value; // Store the raw control value
-    });
+    const actualSettingsLoadingElement = document.querySelector('.settings-loading');
+    const actualSettingsErrorElement = document.querySelector('.settings-error');
+    const actualSettingsErrorMessageElement = actualSettingsErrorElement ? actualSettingsErrorElement.querySelector('.error-message') : null;
+
+    if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.remove('hidden');
+    if (actualSettingsErrorElement) actualSettingsErrorElement.classList.add('hidden'); // Hide error if showing
 
     try {
+        const settingsToSave = {};
+        const styleControls = document.querySelectorAll('[data-variable]');
+        styleControls.forEach(control => {
+            const cssVariable = control.dataset.variable;
+            settingsToSave[cssVariable] = control.value; // Store the raw control value
+        });
         localStorage.setItem(STYLE_SETTINGS_KEY, JSON.stringify(settingsToSave));
-    } catch (e) {
-        console.error("Failed to save style settings:", e);
+
+        if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
+        console.log('Settings saved successfully (minimal).');
+        // Optional: if (typeof phoneShowNotification === 'function') phoneShowNotification("Settings Saved!", "System");
+
+    } catch (error) {
+        if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
+        if (actualSettingsErrorElement) {
+            if (actualSettingsErrorMessageElement) actualSettingsErrorMessageElement.textContent = `Failed to save settings: ${error.message}`;
+            actualSettingsErrorElement.classList.remove('hidden');
+        }
+        console.error('Failed to save settings (minimal):', error);
     }
 }
 
 function loadStyleSettings() {
-    let appliedSettings = {}; // To keep track of what's been set by localStorage
+    let loadedSettings = null;
+    let settingsSource = "defaults"; // For logging
 
-    try {
-        const savedSettingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
-        if (savedSettingsString) {
-            const savedSettings = JSON.parse(savedSettingsString);
-            appliedSettings = { ...savedSettings }; // Copy saved settings
+    if (localStorageAvailable) {
+        try {
+            const settingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
+            if (settingsString) {
+                loadedSettings = JSON.parse(settingsString);
 
-            // Apply saved settings and update controls
-            // Query all controls with data-variable, regardless of their parent panel
-            const styleControls = document.querySelectorAll('[data-variable]');
-            styleControls.forEach(control => {
-                const cssVariable = control.dataset.variable;
-                if (savedSettings.hasOwnProperty(cssVariable)) {
-                    const savedValue = savedSettings[cssVariable];
-                    control.value = savedValue; // Update control to saved value
-
-                    let valueToApply = savedValue;
-                    let displayValue = savedValue;
-
-                    if (control.type === 'range') {
-                        if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
-                            valueToApply += 'px';
-                        }
-                        const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                        if (valueDisplaySpan) {
-                            valueDisplaySpan.textContent = displayValue;
+                // Basic Validation
+                if (typeof loadedSettings !== 'object' || loadedSettings === null) {
+                    console.warn('Loaded settings are not a valid object. Falling back to defaults.');
+                    loadedSettings = null; // Force fallback
+                    localStorage.removeItem(STYLE_SETTINGS_KEY); // Remove corrupted data
+                } else {
+                    // Type validation against defaultStyleSettings
+                    for (const key in loadedSettings) {
+                        if (defaultStyleSettings.hasOwnProperty(key)) {
+                            if (typeof loadedSettings[key] !== typeof defaultStyleSettings[key]) {
+                                console.warn(`Type mismatch for setting "${key}". Expected ${typeof defaultStyleSettings[key]} but got ${typeof loadedSettings[key]}. Using default for this key.`);
+                                loadedSettings[key] = defaultStyleSettings[key]; // Revert only this key to default
+                            }
+                        } else {
+                            // Optional: delete loadedSettings[key]; // Remove unexpected keys
                         }
                     }
-                    document.documentElement.style.setProperty(cssVariable, valueToApply);
+                    console.log("Successfully loaded and validated settings from localStorage.");
+                    settingsSource = "localStorage";
                 }
-            });
-             console.log("Loaded style settings from localStorage.");
-        } else {
-            // No saved settings found, will proceed to apply all defaults.
-            console.log("No saved style settings found. Applying default styles.");
+            } else {
+                console.log("No settings found in localStorage. Will use defaults.");
+            }
+        } catch (error) {
+            console.error('Error loading or parsing settings from localStorage:', error);
+            loadedSettings = null; // Ensure fallback on error
+            if (localStorageAvailable) localStorage.removeItem(STYLE_SETTINGS_KEY); // Attempt to clear corrupted data
         }
-    } catch (e) {
-        console.error("Failed to load style settings from localStorage, applying defaults:", e);
-        localStorage.removeItem(STYLE_SETTINGS_KEY); // Clear potentially corrupted settings
-        // appliedSettings will be empty, so all defaults will be applied below.
+    } else {
+        console.warn('localStorage is not available. Using default settings for this session.');
     }
 
-    // Apply any defaults that weren't in localStorage (new settings or if localStorage was empty/corrupted)
-    // And also ensure controls are set to these defaults if nothing was loaded for them.
-    // Query all controls with data-variable, regardless of their parent panel
+    // Use validated loadedSettings or fall back to a fresh copy of defaultStyleSettings
+    const currentStyleSettings = loadedSettings ? { ...defaultStyleSettings, ...loadedSettings } : { ...defaultStyleSettings };
+
+    if (!loadedSettings) { // This means we are using defaults fully or partially due to missing/corrupt localStorage
+        console.log("Applying default styles as primary source or fallback.");
+    }
+
+    // Apply currentStyleSettings to DOM elements and CSS properties
     const styleControls = document.querySelectorAll('[data-variable]');
-    let defaultsApplied = false;
+    styleControls.forEach(control => {
+        const cssVariable = control.dataset.variable;
+        if (currentStyleSettings.hasOwnProperty(cssVariable)) {
+            const value = currentStyleSettings[cssVariable];
+            control.value = value;
+            applyStyleSetting(cssVariable, value); // Visually apply (handles 'px' for ranges)
 
-    Object.keys(defaultStyleSettings).forEach(cssVariable => {
-        const defaultValue = defaultStyleSettings[cssVariable];
-        let valueToApply = defaultValue; // This is the raw value for setProperty if not a range
-        let controlValue = defaultValue;  // This is the value for the control input
-
-        // Find the control associated with this default CSS variable
-        // Query all controls with data-variable, regardless of their parent panel
-        const control = document.querySelector(`[data-variable="${cssVariable}"]`);
-
-        if (!appliedSettings.hasOwnProperty(cssVariable)) {
-            // This default was not in localStorage, so apply it
-            defaultsApplied = true;
-
-            if (control && control.type === 'range') {
-                if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
-                    valueToApply += 'px'; // Add 'px' for applying the style
-                }
+            if (control.type === 'range') {
+                const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
+                if (valueDisplaySpan) valueDisplaySpan.textContent = value; // value is numeric string for ranges from defaults/storage
             }
-            document.documentElement.style.setProperty(cssVariable, valueToApply);
-
-            // If a control exists for this default, update its value
-            if (control) {
-                control.value = controlValue;
-            }
-        }
-
-        // Always ensure display spans for range inputs are updated,
-        // either to loaded value (already done above) or to default value now.
-        if (control && control.type === 'range') {
-            const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
-            if (valueDisplaySpan) {
-                // If it was loaded from appliedSettings, it's already set.
-                // Otherwise, set it to the default controlValue (which is numeric string).
-                if (!appliedSettings.hasOwnProperty(cssVariable)) {
-                     valueDisplaySpan.textContent = controlValue;
-                }
-            }
+        } else {
+             // A control exists for a variable not in currentStyleSettings (e.g. if defaultStyleSettings is incomplete)
+            console.warn(`Control found for ${cssVariable} but it's not in current style settings. Check defaultStyleSettings.`);
         }
     });
 
-    if (defaultsApplied && !localStorage.getItem(STYLE_SETTINGS_KEY)) {
-        // If we applied defaults because localStorage was empty or cleared due to error,
-        // save these newly applied defaults back to localStorage.
-        // This avoids re-applying defaults every time if user never saves.
-        // It calls the *global* saveStyleSettings which reads from controls.
-        // Since we just updated controls with defaults, this is correct.
-        console.log("Saving initial default styles to localStorage.");
+    // If settings were loaded from defaults because localStorage was empty/unavailable/corrupt,
+    // and localStorage is actually available, save these defaults to localStorage.
+    if (settingsSource === "defaults" && localStorageAvailable) {
+        console.log("Saving initial default styles to localStorage because no valid saved settings were found.");
         saveStyleSettings();
     }
 }
@@ -534,20 +561,23 @@ function initStyleSettingsControls() {
         // If apps were truly dynamic, a more robust event delegation or cleanup pattern would be needed.
 
         control.addEventListener(eventType, (event) => {
-            let value = event.target.value;
+            const rawValue = event.target.value; // e.g., "12", "#FFFFFF"
+            // const cssVariable = control.dataset.variable; // cssVariable is already defined in outer scope
+
             if (control.type === 'range') {
-                // Append 'px' for dimension variables that need it (like radii, spacing unit)
-                // Check if the variable name implies it's a pixel dimension
-                if (cssVariable.includes('radius') || cssVariable.includes('unit') || cssVariable.includes('spacing')) {
-                    value += 'px';
-                }
-                // Update the associated span.value-display for range inputs
                 const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
                 if (valueDisplay) {
-                    valueDisplay.textContent = event.target.value; // Show numeric value before 'px'
+                    valueDisplay.textContent = rawValue; // Show numeric value
                 }
             }
-            applyStyleSetting(cssVariable, value);
+
+            applyStyleSetting(cssVariable, rawValue); // Apply visually to CSS (handles 'px' conversion internally)
+
+            if (!isPreviewModeActive) { // isPreviewModeActive needs to be defined globally
+                saveStyleSettings();
+            } else {
+                console.log(`Preview change: ${cssVariable} = ${rawValue} (not saved)`);
+            }
         });
 
         // Initial update of the value display span for range inputs (if they exist)
@@ -1139,7 +1169,228 @@ function checkForSavedGame() {
 }
 
 // =================================================================================
+// --- Preview Mode Helper Functions ---
+
+function getCurrentSettingsFromInputs() {
+    const settings = {};
+    document.querySelectorAll('[data-variable]').forEach(input => {
+        settings[input.dataset.variable] = input.value; // Store raw input value
+    });
+    return settings;
+}
+
+function applySettingsToDOMAndInputs(settingsToApply) {
+    if (!settingsToApply) return;
+    for (const variableName in settingsToApply) {
+        if (settingsToApply.hasOwnProperty(variableName)) {
+            const value = settingsToApply[variableName]; // Raw value, e.g., "12"
+            const inputs = document.querySelectorAll(`[data-variable="${variableName}"]`);
+
+            inputs.forEach(input => {
+                input.value = value;
+                if (input.type === 'range') {
+                    const valueDisplaySpan = document.querySelector(`.value-display[data-target="${input.id}"]`);
+                    if (valueDisplaySpan) valueDisplaySpan.textContent = value;
+                }
+            });
+            applyStyleSetting(variableName, value); // Applies to CSS (new applyStyleSetting handles 'px')
+        }
+    }
+}
+
+function addCancelPreviewButton(panelId, referenceButtonId) {
+    const settingsPanel = document.getElementById(panelId);
+    const referenceButton = document.getElementById(referenceButtonId);
+    // Ensure no duplicate cancel button for the same panel
+    const existingCancelButtonId = `cancel-preview-${panelId.replace(/-/g, '')}`;
+    if (document.getElementById(existingCancelButtonId)) {
+        return;
+    }
+
+    if (settingsPanel && referenceButton) {
+        const cancelButton = document.createElement('button');
+        cancelButton.id = existingCancelButtonId;
+        cancelButton.className = 'cancel-preview-button game-button secondary-action';
+        cancelButton.textContent = 'Cancel Preview';
+        cancelButton.type = 'button';
+        cancelButton.addEventListener('click', cancelPreview); // cancelPreview function defined below
+
+        if(referenceButton.nextSibling) {
+            referenceButton.parentNode.insertBefore(cancelButton, referenceButton.nextSibling);
+        } else {
+            referenceButton.parentNode.appendChild(cancelButton);
+        }
+    }
+}
+
+function removeCancelPreviewButtons() {
+    document.querySelectorAll('.cancel-preview-button').forEach(btn => btn.remove());
+}
+
+function togglePreviewMode() {
+    isPreviewModeActive = !isPreviewModeActive;
+    const appContainer = document.querySelector(APP_CONTAINER_SELECTOR);
+
+    if (!appContainer && typeof phoneShowNotification === 'function') {
+        phoneShowNotification("Error: App container not found.", "Settings Error");
+        console.error("App container not found:", APP_CONTAINER_SELECTOR);
+        isPreviewModeActive = false; // Revert state
+        return;
+    }
+
+    const previewMainButton = document.getElementById('preview-style-settings');
+    const previewPhoneButton = document.getElementById('preview-phone-style-settings');
+
+    if (isPreviewModeActive) {
+        originalSettingsBeforePreview = getCurrentSettingsFromInputs();
+        if (appContainer) appContainer.classList.add('preview-mode');
+
+        if (previewMainButton) previewMainButton.textContent = 'Apply & Exit Preview';
+        addCancelPreviewButton('settings-menu-panel', 'preview-style-settings');
+
+        if (previewPhoneButton) previewPhoneButton.textContent = 'Apply & Exit Preview';
+        // Assuming phone settings view is separate, add cancel button there too
+        addCancelPreviewButton('phone-theme-settings-view', 'preview-phone-style-settings');
+
+        console.log('Preview Mode Activated.');
+        if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview Mode: Activated. Changes are not saved yet.", "Settings");
+    } else { // Exiting Preview Mode (Applying changes)
+        if (appContainer) appContainer.classList.remove('preview-mode');
+        if (typeof saveStyleSettings === 'function') saveStyleSettings(); // Saves current state of inputs
+
+        if (previewMainButton) previewMainButton.textContent = 'Preview';
+        if (previewPhoneButton) previewPhoneButton.textContent = 'Preview';
+        removeCancelPreviewButtons();
+        console.log('Preview Mode Deactivated. Changes Applied.');
+        if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview settings applied and saved.", "Settings");
+    }
+}
+
+function cancelPreview() {
+    if (!isPreviewModeActive) return;
+
+    applySettingsToDOMAndInputs(originalSettingsBeforePreview); // Revert inputs and CSS
+    // No saveStyleSettings() call needed, as we reverted to last known saved state.
+
+    isPreviewModeActive = false;
+    const appContainer = document.querySelector(APP_CONTAINER_SELECTOR);
+    if (appContainer) appContainer.classList.remove('preview-mode');
+
+    const previewMainButton = document.getElementById('preview-style-settings');
+    if (previewMainButton) previewMainButton.textContent = 'Preview';
+    const previewPhoneButton = document.getElementById('preview-phone-style-settings');
+    if (previewPhoneButton) previewPhoneButton.textContent = 'Preview';
+
+    removeCancelPreviewButtons();
+    console.log('Preview Mode Cancelled.');
+    if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview cancelled. Changes reverted.", "Settings");
+}
+
 // VII. SCRIPT ENTRY POINT
 // =================================================================================
 
-document.addEventListener('DOMContentLoaded', initGame);
+document.addEventListener('DOMContentLoaded', () => {
+    initGame(); // Initialize the game and its UI elements
+
+    // --- Preview Mode Button Event Listeners ---
+    const previewMainSettingsButton = document.getElementById('preview-style-settings');
+    const previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
+
+    if (previewMainSettingsButton) {
+        previewMainSettingsButton.addEventListener('click', togglePreviewMode);
+    } else {
+        console.warn("Preview button for main settings (preview-style-settings) not found.");
+    }
+
+    if (previewPhoneSettingsButton) {
+        previewPhoneSettingsButton.addEventListener('click', togglePreviewMode);
+    } else {
+        console.warn("Preview button for phone settings (preview-phone-style-settings) not found.");
+    }
+
+    // --- Initial hide for loading/error states ---
+    const elSettingsLoading = document.querySelector('.settings-loading');
+    const elSettingsError = document.querySelector('.settings-error');
+    if (elSettingsLoading) elSettingsLoading.classList.add('hidden');
+    if (elSettingsError) elSettingsError.classList.add('hidden');
+
+    // --- 'Reset to Defaults' Functionality ---
+    const resetMainSettingsButton = document.getElementById('reset-style-settings');
+    const resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
+
+    // defaultStyleSettings, applyStyleSetting, saveStyleSettings are assumed to be available in this scope
+    // as they are defined globally or within the script's top scope.
+
+    function handleResetToDefaults() {
+        if (typeof defaultStyleSettings === 'undefined') {
+            console.error('Error: defaultStyleSettings object is not defined.');
+            if (typeof phoneShowNotification === 'function') {
+                phoneShowNotification("Error: Default settings not found.", "Settings Error");
+            }
+            return;
+        }
+
+        console.log('Resetting styles to defaults...');
+
+        // First, update all relevant input controls to their default values
+        // and apply the visual style to the document.
+        for (const variableName in defaultStyleSettings) {
+            if (defaultStyleSettings.hasOwnProperty(variableName)) {
+                const defaultValue = defaultStyleSettings[variableName];
+
+                // Update input controls
+                const inputsToUpdate = document.querySelectorAll(`[data-variable="${variableName}"]`);
+                inputsToUpdate.forEach(input => {
+                    input.value = defaultValue;
+                    // Special handling for range input display values
+                    if (input.type === 'range') {
+                        const valueDisplaySpan = document.querySelector(`.value-display[data-target="${input.id}"]`);
+                        if (valueDisplaySpan) {
+                             // Ensure defaultValue for ranges is the numeric part if 'px' is appended for CSS
+                            valueDisplaySpan.textContent = defaultValue;
+                        }
+                    }
+                });
+
+                // Apply the style to the document element
+                let valueToApply = defaultValue;
+                // Check if the variable is for a range slider that needs 'px'
+                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`);
+                if (controlForVar && controlForVar.type === 'range' &&
+                    (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
+                    valueToApply += 'px';
+                }
+                document.documentElement.style.setProperty(variableName, valueToApply);
+            }
+        }
+
+        // After all inputs are set to their default values and styles are visually applied,
+        // call saveStyleSettings() once to persist this entire default state.
+        if (typeof saveStyleSettings === 'function') {
+            saveStyleSettings(); // This function reads from all inputs and saves.
+            console.log('Default styles applied and saved to localStorage.');
+            if (typeof phoneShowNotification === 'function') {
+                phoneShowNotification("Styles have been reset to defaults.", "Settings");
+            }
+        } else {
+            console.error('Error: saveStyleSettings function is not defined. Cannot persist reset settings.');
+            if (typeof phoneShowNotification === 'function') {
+                phoneShowNotification("Error saving reset settings.", "Settings Error");
+            }
+        }
+    }
+
+    if (resetMainSettingsButton) {
+        resetMainSettingsButton.addEventListener('click', handleResetToDefaults);
+    } else {
+        console.warn("Reset button for main settings (reset-style-settings) not found.");
+    }
+
+    if (resetPhoneSettingsButton) {
+        // Assuming both buttons trigger a global reset to the defined defaults.
+        // If phone settings had a separate default object or subset, this would need adjustment.
+        resetPhoneSettingsButton.addEventListener('click', handleResetToDefaults);
+    } else {
+        console.warn("Reset button for phone settings (reset-phone-style-settings) not found.");
+    }
+});

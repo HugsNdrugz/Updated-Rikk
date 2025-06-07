@@ -747,6 +747,72 @@ h1,
     display: none !important;
 }
 
+/* === Settings Overlay & Preview Styles === */
+
+.settings-loading, .settings-error {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8); /* Dark overlay */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Ensure it's on top */
+    color: #fff; /* Default text color for these overlays */
+}
+
+.settings-loading .loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff; /* Spinner color */
+    width: 40px;
+    height: 40px;
+    animation: spin 1s ease-infinite; /* Use existing spin animation */
+    margin-bottom: 15px;
+}
+
+.settings-error {
+    color: var(--color-error, #ff6b6b); /* Use CSS variable for error color, fallback if not defined */
+}
+
+.settings-error .error-message {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.settings-error .retry-button {
+    padding: 8px 16px;
+    background-color: var(--color-primary, #007bff); /* Example primary color */
+    color: var(--color-on-primary, #ffffff); /* Text on primary */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.settings-error .retry-button:hover {
+    opacity: 0.9;
+}
+
+.preview-mode {
+    position: relative; /* Needed for the ::after pseudo-element positioning */
+}
+
+.preview-mode::after {
+    content: 'Preview Mode';
+    position: absolute;
+    top: 10px; /* Adjusted for better visibility */
+    right: 10px; /* Adjusted for better visibility */
+    padding: 4px 8px;
+    background: var(--color-accent-gold, #ffd700); /* Using a variable, fallback to gold */
+    color: var(--color-on-primary, #000000); /* Text color on accent-gold, fallback to black */
+    font-size: 0.8em;
+    border-radius: 3px; /* Slightly rounded corners */
+    z-index: 999; /* Ensure it's visible but below overlays */
+}
+
 /* === Style Settings Panel Controls === */
 
 .settings-controls-container {
