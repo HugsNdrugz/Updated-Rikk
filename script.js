@@ -319,7 +319,7 @@ function setupEventListeners() {
         button.addEventListener('click', (event) => {
             const panelToClose = event.target.closest('.submenu-panel');
             if (panelToClose) {
-                closeSubmenuPanel(panelToClose);
+                uiManager.closeSubmenuPanel(panelToClose);
             }
         });
     });

@@ -409,11 +409,11 @@ export class ContactsAppManager {
         current[keys[keys.length - 1]] = value;
 
         // Dispatch event to notify main script of template changes
-        const event = new CustomEvent('customerTemplatesUpdated', {
+        const customChangeEvent = new CustomEvent('customerTemplatesUpdated', {
             detail: { updatedTemplates: this.appState.customers },
             bubbles: true, // Ensure the event bubbles up to where script.js can catch it
             composed: true // Allow event to cross shadow DOM boundaries if any (good practice)
         });
-        this.container.dispatchEvent(event);
+        this.container.dispatchEvent(customChangeEvent);
     }
 }
