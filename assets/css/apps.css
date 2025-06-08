@@ -4,7 +4,7 @@
 
 #contacts-app-view {
     background-color: var(--color-dark-bg);
-    color: var(--text-color); /* Assuming --text-color is defined in variables.css or is a general variable */
+    color: var(--text-primary); /* Assuming --text-color is defined in variables.css or is a general variable */
     display: flex;
     flex-direction: column;
     padding-top: 0; /* Was already there, kept for consistency */
@@ -19,14 +19,14 @@
     padding: 10px 15px; background-color: var(--color-surface);
     flex-shrink: 0; border-bottom: 1px solid var(--divider-color); /* Assuming --divider-color */
 }
-#contacts-app-view #app-title-contacts { font-size: 1.2em; font-weight: 700; color: var(--primary-color); } /* Assuming --primary-color */
+#contacts-app-view #app-title-contacts { font-size: 1.2em; font-weight: 700; color: var(--color-primary); } /* Assuming --primary-color */
 #contacts-app-view .header-icons-contacts { display: flex; gap: 10px; }
-#contacts-app-view .icon-btn { background: none; border: none; color: var(--subtle-text-color); font-size: 1.2em; cursor: pointer; } /* Assuming --subtle-text-color */
+#contacts-app-view .icon-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.2em; cursor: pointer; } /* Assuming --subtle-text-color */
 #contacts-app-view .main-app-content-contacts { flex-grow: 1; position: relative; overflow: hidden; }
-#contacts-app-view #contacts-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; background-color: var(--bg-color); padding: 0 10px 15px 10px; } /* Assuming --bg-color */
-#contacts-app-view .list-section-header { font-size: 0.8em; color: var(--subtle-text-color); margin-top: 15px; margin-bottom: 8px; padding-left: 5px; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+#contacts-app-view #contacts-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; background-color: var(--color-dark-bg); padding: 0 10px 15px 10px; } /* Assuming --bg-color */
+#contacts-app-view .list-section-header { font-size: 0.8em; color: var(--text-secondary); margin-top: 15px; margin-bottom: 8px; padding-left: 5px; display: flex; align-items: center; gap: 8px; font-weight: 500; }
 #contacts-app-view .star-icon { color: gold; font-size: 1.1em; }
-#contacts-app-view .customer-card { background-color: var(--surface-color); border-radius: 15px; padding: 8px 10px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.2s; user-select: none; position: relative; overflow: hidden; } /* Assuming --surface-color */
+#contacts-app-view .customer-card { background-color: var(--color-surface); border-radius: 15px; padding: 8px 10px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.2s; user-select: none; position: relative; overflow: hidden; } /* Assuming --surface-color */
 #contacts-app-view .customer-card:not(.no-divider):not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 60px; right: 15px; height: 1px; background-color: var(--divider-color); }
 #contacts-app-view .customer-card.active { background-color: var(--active-card-bg); } /* Assuming --active-card-bg */
 #contacts-app-view .customer-card.my-profile-card { margin-top: 8px; margin-bottom: 8px; }
@@ -34,21 +34,21 @@
 #contacts-app-view .customer-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 #contacts-app-view .avatar-initial { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 #contacts-app-view .customer-card-info { flex-grow: 1; }
-#contacts-app-view .customer-card-name { font-size: 0.9em; margin-bottom: 2px; font-weight: 500; color: var(--text-color); }
-#contacts-app-view .customer-card-key { font-size: 0.7em; color: var(--subtle-text-color); }
-#contacts-app-view .customer-card.active .customer-card-name { color: var(--text-color-dark); } /* Assuming --text-color-dark */
+#contacts-app-view .customer-card-name { font-size: 0.9em; margin-bottom: 2px; font-weight: 500; color: var(--text-primary); }
+#contacts-app-view .customer-card-key { font-size: 0.7em; color: var(--text-secondary); }
+#contacts-app-view .customer-card.active .customer-card-name { color: var(--color-on-primary); } /* Assuming --text-color-dark */
 #contacts-app-view .customer-card.active .customer-card-key { color: #555; }
 #contacts-app-view #details-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform: translateX(100%); transition: transform 0.3s ease-out; z-index: 10; display: flex; flex-direction: column; }
 #contacts-app-view #details-panel-contacts.active { transform: translateX(0); }
-#contacts-app-view .details-panel-header { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--divider-color); flex-shrink: 0; background-color: var(--surface-color); }
+#contacts-app-view .details-panel-header { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--divider-color); flex-shrink: 0; background-color: var(--color-surface); }
 #contacts-app-view .details-panel-header .icon-btn { margin-right: 10px; font-size: 1.5em;}
-#contacts-app-view #details-panel-title { flex-grow: 1; font-size: 1.1em; color: var(--primary-color); text-align: center; margin-right: 40px; }
+#contacts-app-view #details-panel-title { flex-grow: 1; font-size: 1.1em; color: var(--color-primary); text-align: center; margin-right: 40px; }
 #contacts-app-view #details-panel-content { flex-grow: 1; padding: 15px; overflow-y: auto; }
 #contacts-app-view .editor-pane, #contacts-app-view .new-customer-step-content { padding: 10px; }
-#contacts-app-view .editor-section { padding: 15px; margin-bottom:15px; background: var(--surface-color); border-radius: 10px; }
+#contacts-app-view .editor-section { padding: 15px; margin-bottom:15px; background: var(--color-surface); border-radius: 10px; }
 #contacts-app-view .form-group { margin-bottom: 15px; }
-#contacts-app-view .form-group label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--subtle-text-color); }
-#contacts-app-view .form-group input, #contacts-app-view .form-group textarea, #contacts-app-view .form-group select { width: 100%; padding: 10px; background: var(--color-dark-bg); border: 1px solid var(--divider-color); border-radius: 5px; color: var(--text-color); font-size: 0.9rem; }
+#contacts-app-view .form-group label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--text-secondary); }
+#contacts-app-view .form-group input, #contacts-app-view .form-group textarea, #contacts-app-view .form-group select { width: 100%; padding: 10px; background: var(--color-dark-bg); border: 1px solid var(--divider-color); border-radius: 5px; color: var(--text-primary); font-size: 0.9rem; }
 #contacts-app-view .checkbox-group { display: flex; flex-direction: column; gap: 5px; }
 #contacts-app-view .checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 8px; background-color: var(--color-dark-bg); border-radius: 5px;}
 #contacts-app-view pre { background: #000; padding: 10px; border-radius: 5px; font-size: 0.7rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;}

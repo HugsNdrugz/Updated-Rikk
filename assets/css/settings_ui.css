@@ -141,7 +141,7 @@
 .setting-row .value-display {
     margin-left: var(--spacing-sm);
     font-size: 0.85rem;
-    color: var(--color-grey-dim);
+    color: var(--text-secondary);
     min-width: 30px;
     text-align: right;
 }

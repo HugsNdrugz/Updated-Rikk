@@ -56,7 +56,7 @@
 
     /* DEBUGGED: Using colors from the example */
     background-color: var(--color-primary);
-    color: var(--color-light-text);
+    color: var(--text-primary);
 }
 
 .split-button-container .btn-main {
@@ -77,7 +77,7 @@
 /* DEBUGGED: Using hover color from the example */
 .split-button-container:hover .btn {
     background-color: var(--color-secondary);
-    color: var(--color-light-text);
+    color: var(--text-primary);
 }
 
 .split-button-container .btn:active {
@@ -141,7 +141,7 @@
 /* === MAIN MENU LIGHT EFFECT === */
 
 #start-screen .light-container {
-    position: bottom-right-radius; /* This seems like a typo, should likely be 'absolute' or 'fixed' depending on desired effect */
+    position: absolute; /* This seems like a typo, should likely be 'absolute' or 'fixed' depending on desired effect */
     inset: 0; /* top, right, bottom, left = 0 */
     width: 100%;
     height: 100%;
@@ -160,8 +160,8 @@
 
 #start-screen .light {
     position: absolute;
-    top: 10;
-    left: -10;
+    top: 10px;
+    left: -10px;
     width: 150%;
     height: 150%;
     opacity: 0;

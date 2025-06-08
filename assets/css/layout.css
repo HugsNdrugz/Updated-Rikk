@@ -38,24 +38,17 @@
 
 /* Game Screen Specific */
 #game-screen {
-    background: url(assets/images/game-screen-bg.jpg) center/cover;
+    background: url(../images/game-screen-bg.jpg) center/cover;
     position: static; /* Override absolute positioning to work in flex container */
 }
 
 #splash-screen {
-    background: url(assets/images/splash-screen-bg.jpg) center/cover;
+    background: url(../images/splash-screen-bg.jpg) center/cover;
     justify-content: center;
     align-items: center;
     z-index: 2000;
 }
 
-.splash-title {
-    font-family: var(--font-display);
-    font-size: 2.5rem;
-    color: var(--color-primary);
-    text-shadow: 2px 2px 0px #000, 4px 4px 0px var(--color-secondary);
-    margin-bottom: var(--spacing-lg);
-}
 .outfit-splash-tagline{ /* FIXED: Removed leading dot */
   font-family: "Outfit", sans-serif;
   font-optical-sizing: auto;
@@ -95,7 +88,7 @@
 }
 
 #start-screen {
-    background: url('assets/images/main-menu-bg.png') center/cover;
+    background: url('../images/main-menu-bg.png') center/cover;
     position: relative; /* Explicitly set for positioning context */
 }
 

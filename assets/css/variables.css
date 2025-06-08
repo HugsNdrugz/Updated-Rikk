@@ -7,12 +7,10 @@
     --color-error: #cf6679;
     --color-on-surface: #e0e0e0;
     --color-on-primary: #000000;
-    --color-light-text: #f0f0f1;
     --color-mid-dark: #2c3e50;
     --color-grey-dark: #333333;
     --color-grey-mid: #757575;
     --color-grey-light: #bdbdbd;
-    --color-grey-dim: #9e9e9e;
     --color-accent-gold: #f39c12;
     --color-accent-orange: #e67e22;
     --color-link-blue: #3498db;
@@ -47,6 +45,8 @@
     --border-light: rgba(255, 255, 255, 0.2);
     --text-primary: #f0f0f0;
     --text-secondary: #a0a0a0;
+    --divider-color: var(--border-light);
+    --active-card-bg: #2a2a2e;
 
     /* Fonts */
     --font-body: 'Roboto', 'Open Sans', sans-serif;

@@ -44,7 +44,7 @@ const customerAvatars = {
     "PSYCHEDELIC_EXPLORER": "https://randomuser.me/api/portraits/men/7.jpg"
 };
 const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
-const systemAvatarUrl = "assets/icons/info-icon.svg";
+const systemAvatarUrl = "";
 
 // --- Game State & Managers (customerTemplates and DEBUG_MODE remain global for PoC) ---
 // let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // REMOVED Global Variable
@@ -357,10 +357,17 @@ function initializeUIAndSettings() {
 }
 
 function initGame() {
-    uiManager.initDOMReferences(); // MODIFIED: Call UIManager's DOM reference initialization
-    initializeManagers();
-    initializeUIAndSettings();
-    setupEventListeners();
+    try {
+        uiManager.initDOMReferences(); // MODIFIED: Call UIManager's DOM reference initialization
+        initializeManagers();
+        initializeUIAndSettings();
+        setupEventListeners();
+    } catch (error) {
+        console.error("CRITICAL ERROR during game initialization:", error);
+        // Optionally, display a user-friendly message on the page if possible,
+        // though UIManager might not be initialized enough to do so.
+        // For now, console.error is the primary goal.
+    }
 }
 
 function initializeNewGameState() {
