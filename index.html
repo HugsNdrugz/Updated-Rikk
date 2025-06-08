@@ -115,6 +115,29 @@
                             </select>
                         </div>
                     </div>
+                    <div class="settings-group" data-setting-group="dimensions">
+                        <h3>Sizing</h3>
+                        <div class="setting-row">
+                            <label for="viewport-border-radius-slider">Viewport Border Radius</label>
+                            <input type="range" id="viewport-border-radius-slider" data-variable="--viewport-border-radius" min="0" max="50" step="1">
+                            <span class="value-display" data-target="viewport-border-radius-slider"></span>
+                        </div>
+                        <div class="setting-row">
+                            <label for="modal-border-radius-slider">Modal Border Radius</label>
+                            <input type="range" id="modal-border-radius-slider" data-variable="--modal-border-radius" min="0" max="30" step="1">
+                            <span class="value-display" data-target="modal-border-radius-slider"></span>
+                        </div>
+                        <div class="setting-row">
+                            <label for="button-border-radius-slider">Button Border Radius</label>
+                            <input type="range" id="button-border-radius-slider" data-variable="--button-border-radius" min="0" max="20" step="1">
+                            <span class="value-display" data-target="button-border-radius-slider"></span>
+                        </div>
+                        <div class="setting-row">
+                            <label for="spacing-unit-slider">Spacing Unit</label>
+                            <input type="range" id="spacing-unit-slider" data-variable="--spacing-unit" min="4" max="20" step="1">
+                            <span class="value-display" data-target="spacing-unit-slider"></span>
+                        </div>
+                    </div>
                     <button id="reset-style-settings">Reset to Defaults</button>
                     <button id="preview-style-settings">Preview</button>
                     <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
@@ -299,6 +322,14 @@
                                     <div class="setting-row">
                                         <label for="color-phone-text">Phone Text</label>
                                         <input type="color" id="color-phone-text" data-variable="--color-phone-text">
+                                    </div>
+                                </div>
+                                <div class="settings-group" data-setting-group="dimensions-phone">
+                                    <h3>Sizing</h3>
+                                    <div class="setting-row">
+                                        <label for="phone-border-radius-slider">Phone Border Radius</label>
+                                        <input type="range" id="phone-border-radius-slider" data-variable="--phone-border-radius" min="0" max="50" step="1">
+                                        <span class="value-display" data-target="phone-border-radius-slider"></span>
                                     </div>
                                 </div>
                                 <button id="reset-phone-style-settings">Reset to Defaults</button>

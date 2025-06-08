@@ -12,7 +12,7 @@ import { CustomerManager }
 from './classes/CustomerManager.js';
 import { ContactsAppManager } from './classes/ContactsAppManager.js';
 import { SlotGameManager } from './classes/SlotGameManager.js';
-import { customerTemplates } from './data/customer_templates.js';
+import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js'; // MODIFIED
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
 import { possibleWorldEvents } from './data/data_events.js';
 
@@ -47,6 +47,7 @@ let playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
 let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 let customerManager, contactsAppManager, slotGameManager;
+let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // ADDED: Global let for customer templates
 
 // --- UI State ---
 let chatSpacerElement = null;
@@ -78,6 +79,7 @@ const localStorageAvailable = isLocalStorageAvailable();
 const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
 const SAVE_KEY = 'myNiggaRikkSaveDataV10';
 const STYLE_SETTINGS_KEY = 'rikkGameStyleSettingsV1';
+const CUSTOMER_TEMPLATES_SAVE_KEY = 'rikkGameCustomerTemplatesV1'; // ADDED
 const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
 const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
 
@@ -208,13 +210,72 @@ function assignDOMReferences() {
     mainMenuLightContainer = document.getElementById('main-menu-lights'); // ADDED
 }
 
+// ADDED: Function to save customer templates
+function saveCustomerTemplates() {
+    if (!localStorageAvailable) {
+        console.warn('localStorage is not available. Customer templates will not be saved.');
+        return;
+    }
+    try {
+        localStorage.setItem(CUSTOMER_TEMPLATES_SAVE_KEY, JSON.stringify(customerTemplates)); // Uses global customerTemplates
+        console.log('Customer templates saved successfully.');
+    } catch (error) {
+        console.error('Failed to save customer templates:', error);
+    }
+}
+
+// ADDED: Function to load customer templates
+function loadCustomerTemplates() {
+    if (!localStorageAvailable) {
+        console.warn('localStorage is not available. Using default customer templates.');
+        return JSON.parse(JSON.stringify(defaultCustomerTemplates)); // Return a copy of defaults
+    }
+    try {
+        const savedTemplatesString = localStorage.getItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+        if (savedTemplatesString) {
+            const loadedTemplates = JSON.parse(savedTemplatesString);
+            if (typeof loadedTemplates === 'object' && loadedTemplates !== null && Object.keys(loadedTemplates).length > 0) {
+                console.log('Customer templates loaded from localStorage.');
+                return loadedTemplates; // This will be assigned to the global customerTemplates
+            } else {
+                console.warn('Invalid customer templates found in localStorage. Using defaults.');
+                localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+                return JSON.parse(JSON.stringify(defaultCustomerTemplates));
+            }
+        }
+        return JSON.parse(JSON.stringify(defaultCustomerTemplates)); // Defaults if nothing in storage
+    } catch (error) {
+        console.error('Error loading customer templates from localStorage. Using defaults.', error);
+        localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+        return JSON.parse(JSON.stringify(defaultCustomerTemplates));
+    }
+}
+
 function initializeManagers() {
+    customerTemplates = loadCustomerTemplates(); // MODIFIED: Load templates and assign to global
+
     customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     contactsAppManager = new ContactsAppManager(contactsAppView, customerTemplates);
     slotGameManager = new SlotGameManager(slotGameView, () => cash, (newCash) => {
         cash = newCash;
         updateHUD();
     });
+
+    // ADDED: Event listener for customer template updates
+    if (contactsAppView) {
+       contactsAppView.addEventListener('customerTemplatesUpdated', (event) => {
+           if (event.detail && event.detail.updatedTemplates) {
+               console.log('customerTemplatesUpdated event received in script.js');
+               customerTemplates = event.detail.updatedTemplates; // Update global customerTemplates
+               saveCustomerTemplates(); // Save the updated global customerTemplates
+
+               // Optional: Re-initialize CustomerManager if it needs to react immediately
+               // customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+               // console.log('CustomerManager re-initialized with updated templates.');
+               phoneShowNotification('Contact templates updated and saved!', 'Contacts App');
+           }
+       });
+    }
 }
 
 function setupEventListeners() {

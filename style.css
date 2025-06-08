@@ -161,7 +161,7 @@ body {
     text-shadow: 2px 2px 0px #000, 4px 4px 0px var(--color-secondary);
     margin-bottom: var(--spacing-lg);
 }
-#outfit-splash-tagline{ /* FIXED: Removed leading dot */
+.outfit-splash-tagline{ /* FIXED: Removed leading dot */
   font-family: "Outfit", sans-serif;
   font-optical-sizing: auto;
   font-weight: 400; /* FIXED: Invalid <weight> replaced with 400 */
