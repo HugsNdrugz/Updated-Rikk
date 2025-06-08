@@ -122,7 +122,32 @@ export class CustomerManager {
                     }
                 }
 
-                // 1. If not chosen by addiction, check for Specific Item Demand (World Event)
+                // 1. NEW: Check for Customer's buyPreference
+                if (!chosenItem) {
+                    if (template.gameplayConfig && template.gameplayConfig.buyPreference) {
+                        const buyPref = template.gameplayConfig.buyPreference;
+                        let preferencesToConsider = [];
+                        if (buyPref.or && Array.isArray(buyPref.or)) {
+                            preferencesToConsider = buyPref.or;
+                        } else {
+                            preferencesToConsider.push(buyPref);
+                        }
+
+                        if (preferencesToConsider.length > 0) {
+                            const preferredItemsInStock = potentialItemsToBuy.filter(item => {
+                                for (const p of preferencesToConsider) {
+                                    if (this._inventoryItemMatchesPreference(item, p)) return true;
+                                }
+                                return false;
+                            });
+                            if (preferredItemsInStock.length > 0) {
+                                chosenItem = this._getRandomElement(preferredItemsInStock);
+                            }
+                        }
+                    }
+                }
+
+                // 2. If not chosen by addiction or buyPreference, check for Specific Item Demand (World Event)
                 if (!chosenItem) {
                     const demandedItemsInStock = potentialItemsToBuy.filter(item =>
                         combinedWorldEffects.specificItemDemand && combinedWorldEffects.specificItemDemand.includes(item.id)
@@ -298,21 +323,142 @@ export class CustomerManager {
         return newCustomerInstance;
     }
 
+    _inventoryItemMatchesPreference(inventoryItem, preference) {
+        if (!inventoryItem || !preference) return false;
+        if (preference.any === true) return true;
+
+        let match = true;
+
+        if (preference.id) {
+            match = match && inventoryItem.id === preference.id;
+        }
+        if (preference.type) {
+            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.type;
+        }
+        if (preference.subType) {
+            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.subType;
+        }
+        if (typeof preference.quality === 'number') {
+            match = match && inventoryItem.qualityIndex === preference.quality;
+        }
+        if (typeof preference.minQuality === 'number') {
+            match = match && inventoryItem.qualityIndex >= preference.minQuality;
+        }
+        if (typeof preference.maxQuality === 'number') {
+            match = match && inventoryItem.qualityIndex <= preference.maxQuality;
+        }
+        if (typeof preference.minBaseValue === 'number') {
+            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.baseValue >= preference.minBaseValue;
+        }
+
+        if (!match) return false; // Early exit if basic checks fail
+
+        if (preference.exclude) {
+            let excluded = false;
+            if (preference.exclude.type && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.exclude.type) {
+                excluded = true;
+            }
+            if (!excluded && preference.exclude.subType && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.exclude.subType) {
+                excluded = true;
+            }
+            if (!excluded && preference.exclude.id && inventoryItem.id === preference.exclude.id) {
+                excluded = true;
+            }
+            if (excluded) {
+                match = false;
+            }
+        }
+        return match;
+    }
+
+    _itemTypeMatchesPreference(itemType, preference) {
+        if (!itemType || !preference) return false;
+
+        if (preference.id && itemType.id !== preference.id) {
+            return false;
+        }
+        if (preference.type && itemType.type !== preference.type) {
+            return false;
+        }
+        if (preference.subType && itemType.subType !== preference.subType) {
+            return false;
+        }
+        return true;
+    }
+
     _generateRandomItem(template = null, combinedWorldEffects = {}) {
         if (combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
             return null;
         }
+
+        if (template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
+            const sellPref = template.gameplayConfig.sellPreference;
+            let chosenPreference = null;
+
+            if (sellPref.or && Array.isArray(sellPref.or)) {
+                chosenPreference = this._getRandomElement(sellPref.or);
+            } else {
+                chosenPreference = sellPref;
+            }
+
+            if (chosenPreference) {
+                let applyPreference = true;
+                if (typeof chosenPreference.chance === 'number') {
+                    applyPreference = Math.random() < chosenPreference.chance;
+                }
+
+                if (applyPreference) {
+                    const candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference));
+                    if (candidateItemTypes.length > 0) {
+                        const selectedType = this._getRandomElement(candidateItemTypes);
+
+                        let qualityIndex;
+                        const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
+                        if (typeof chosenPreference.quality === 'number') {
+                            qualityIndex = Math.min(chosenPreference.quality, qualityLevelsForType.length - 1);
+                        } else {
+                            qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
+                        }
+                        const quality = qualityLevelsForType[qualityIndex];
+
+                        const basePurchaseValue = selectedType.baseValue + Math.floor(Math.random() * (selectedType.range * 2)) - selectedType.range;
+                        const item = {
+                            id: selectedType.id,
+                            name: selectedType.name,
+                            itemTypeObj: selectedType,
+                            quality,
+                            qualityIndex,
+                            description: selectedType.description,
+                        };
+                        const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+                        item.purchasePrice = Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
+                        item.estimatedResaleValue = Math.max(item.purchasePrice + CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
+                        return item;
+                    }
+                }
+            }
+        }
+
         if (!this.itemTypes || this.itemTypes.length === 0) {
             return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
         }
+
         let availableItemTypes = [...this.itemTypes];
         if (template && template.itemPool && template.itemPool.length > 0) {
              availableItemTypes = this.itemTypes.filter(it => template.itemPool.includes(it.id));
         }
         if (availableItemTypes.length === 0) {
+            // Fallback if template.itemPool filters out everything, or itemPool is empty
             availableItemTypes = [...this.itemTypes];
         }
+
+        // Ensure selectedType is not null before proceeding
         const selectedType = this._getRandomElement(availableItemTypes);
+        if (!selectedType) { // Should ideally not happen if this.itemTypes is not empty
+            console.error("CustomerManager: Could not select an item type in _generateRandomItem after all filters.");
+            return { id: "error_item_notype", name: "Error Item (No Type)", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
+        }
+
         const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ["Standard"];
         const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
         const quality = qualityLevelsForType[qualityIndex];

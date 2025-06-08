@@ -17,6 +17,7 @@ import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js'; // MODIFIED
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
 import { possibleWorldEvents } from './data/data_events.js';
+import { getRandomElement, isLocalStorageAvailable } from './utils.js';
 
 // =================================================================================
 // I. DOM ELEMENT REFERENCES & GAME STATE VARIABLES
@@ -84,21 +85,6 @@ game.uiManager = uiManager; // Link UIManager instance to the game instance
 // const APP_CONTAINER_SELECTOR = '#game-viewport'; // Moved to global constants
 
 // --- localStorage Availability Check ---
-function isLocalStorageAvailable() {
-    let storage;
-    try {
-        storage = window.localStorage;
-        const x = '__storage_test__';
-        storage.setItem(x, x);
-        storage.removeItem(x);
-        return true;
-    } catch (e) {
-        return e instanceof DOMException && (
-            e.code === 22 || e.code === 1014 ||
-            e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
-            (storage && storage.length !== 0);
-    }
-}
 const localStorageAvailable = isLocalStorageAvailable();
 
 // --- Game Configuration (Most moved to top) ---
@@ -143,12 +129,6 @@ const ELEVENLABS_VOICE_ID_RIKK = "VR6AewLTigWG4xSOh1om";
 // --- TTS Audio Queue Management ---
 let audioQueue = [];
 let isPlayingAudio = false;
-
-// --- Helper function ---
-function getRandomElement(arr) {
-    if (!arr || arr.length === 0) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
-}
 
 // =================================================================================
 // II. DEBUGGING FRAMEWORK
@@ -213,6 +193,16 @@ function getCombinedActiveEventEffects() {
         }
     });
     return combinedEffects;
+}
+
+function applyDealHeat(baseHeat, gameInstance) {
+    // Assume gameInstance.isToolEffectActive('burner_phone') exists and works as intended
+    if (gameInstance.isToolEffectActive && gameInstance.isToolEffectActive('burner_phone')) {
+        debugLogger.log('applyDealHeat', 'Burner phone active, reducing deal heat.', { originalHeat: baseHeat });
+        return Math.round(baseHeat * 0.5);
+    } else {
+        return baseHeat;
+    }
 }
 
 // =================================================================================
@@ -463,6 +453,11 @@ function handleTurnProgressionAndEvents() {
     // So, divide the heat loss by the modifier. If modifier is < 1, heat loss is amplified.
     if (worldEffects.heatModifier !== 0) { // Avoid division by zero, though 0 is unlikely for a modifier
          passiveHeatChange /= worldEffects.heatModifier;
+    }
+
+    if (game.isToolEffectActive && game.isToolEffectActive('info_cops')) { // Assuming game.isToolEffectActive exists
+        debugLogger.log('handleTurnProgressionAndEvents', 'info_cops active, increasing passive heat reduction.');
+        passiveHeatChange -= 2; // Additional passive heat reduction
     }
 
     game.addHeat(Math.round(passiveHeatChange)); // addHeat will handle clamping
@@ -816,6 +811,9 @@ function handleChoice(outcome) {
                     narrationText = `Flipped "${soldItem.name}" for $${outcome.price}.`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
+                    if (game.customerManager && typeof game.customerManager.processPotentialAddiction === 'function') {
+                        game.customerManager.processPotentialAddiction(currentCustomer, soldItem);
+                    }
                 } else {
                     narrationText = "Couldn't find that item.";
                     uiManager.playSound(uiManager.deniedSound);
@@ -865,6 +863,26 @@ function handleChoice(outcome) {
         const outcomeResult = dialogueContextKey ? game.customerManager.getOutcomeDialogue(currentCustomer, dialogueContextKey) : { line: '', payload: null };
         if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
         if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
+
+        const customerForCredConfig = game.getCurrentCustomerInstance();
+        if (customerForCredConfig && customerForCredConfig.archetypeKey) {
+            // Use game.getCustomerTemplates() to get the potentially customized templates
+            const allTemplates = game.getCustomerTemplates ? game.getCustomerTemplates() : game.defaultCustomerTemplates;
+            const customerTemplateData = allTemplates[customerForCredConfig.archetypeKey];
+
+            if (customerTemplateData && customerTemplateData.gameplayConfig) {
+                const config = customerTemplateData.gameplayConfig;
+                if (dealSuccess) { // Only apply if the deal was successful
+                    if (outcome.type === "sell_to_customer" && typeof config.credImpactSell === 'number') {
+                        debugLogger.log('handleChoice', 'Applying credImpactSell from customer gameplayConfig.', { cred: config.credImpactSell });
+                        game.addStreetCred(config.credImpactSell);
+                    } else if (outcome.type === "buy_from_customer" && typeof config.credImpactBuy === 'number') {
+                        debugLogger.log('handleChoice', 'Applying credImpactBuy from customer gameplayConfig.', { cred: config.credImpactBuy });
+                        game.addStreetCred(config.credImpactBuy);
+                    }
+                }
+            }
+        }
 
         uiManager.updateHUD();
         uiManager.updateInventoryDisplay();
@@ -932,6 +950,7 @@ function processPayload(payload, dealSuccess) {
                     let valueToApply = effect.value;
                     if (effect.statToModify === 'heat' && valueToApply > 0) { // Only modify heat increases
                         valueToApply = Math.round(valueToApply * worldEffects.heatModifier);
+                        valueToApply = applyDealHeat(valueToApply, game); // Apply burner phone effect
                     }
 
                     switch (effect.statToModify) {
@@ -975,6 +994,7 @@ function processPayload(payload, dealSuccess) {
                     if (effect.eventName === 'snitchReport' && currentCustomer) {
                         let heatGain = Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin;
                         heatGain = Math.round(heatGain * worldEffects.heatModifier); // Apply world heat modifier
+                        heatGain = applyDealHeat(heatGain, game); // Apply burner phone effect
                         game.addHeat(heatGain);
                         game.addStreetCred(effect.credValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[HEAT_VALUE]', heatGain);
@@ -988,6 +1008,7 @@ function processPayload(payload, dealSuccess) {
                     if (effect.eventName === 'publicIncident' && currentCustomer) {
                         let heatValue = effect.heatValue;
                         heatValue = Math.round(heatValue * worldEffects.heatModifier); // Apply world heat modifier
+                        heatValue = applyDealHeat(heatValue, game); // Apply burner phone effect
                         game.addHeat(heatValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
                     }
@@ -999,6 +1020,26 @@ function processPayload(payload, dealSuccess) {
                 break;
         }
     });
+
+    const customerForConfig = game.getCurrentCustomerInstance(); // Re-fetch to be safe
+    if (customerForConfig && customerForConfig.archetypeKey) {
+        // Access template data through the game instance, which holds defaultCustomerTemplates
+        const customerTemplateData = game.defaultCustomerTemplates[customerForConfig.archetypeKey];
+        if (customerTemplateData && customerTemplateData.gameplayConfig && typeof customerTemplateData.gameplayConfig.heatImpact === 'number') {
+            let heatFromConfig = customerTemplateData.gameplayConfig.heatImpact;
+            // Optional: Decide if heatImpact from config should also be modified by burner phones or world effects.
+            // For now, let's assume it's a direct impact but still subject to burner phone if positive.
+            if (heatFromConfig > 0) {
+                // Applying applyDealHeat to this as well for consistency if it's heat from a "deal interaction"
+                // Alternatively, this could be a flat heat not subject to deal modifiers.
+                // Based on "after a transaction", it implies it's tied to the deal's signature.
+                heatFromConfig = applyDealHeat(heatFromConfig, game);
+            }
+            debugLogger.log('processPayload', 'Applying heatImpact from customer gameplayConfig.', { archetypeKey: customerForConfig.archetypeKey, heat: heatFromConfig });
+            game.addHeat(heatFromConfig);
+        }
+    }
+
     uiManager.updateHUD();
 }
 
