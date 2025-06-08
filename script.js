@@ -8,6 +8,8 @@
 
 // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
+import { Game } from './Game.js'; // ADDED
+import { UIManager } from './UIManager.js'; // ADDED
 import { CustomerManager } 
 from './classes/CustomerManager.js';
 import { ContactsAppManager } from './classes/ContactsAppManager.js';
@@ -46,8 +48,13 @@ let currentCustomerInstance = null, gameActive = false;
 let playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
 let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-let customerManager, contactsAppManager, slotGameManager;
+// let customerManager, contactsAppManager, slotGameManager; // REMOVED global manager variables
 let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // ADDED: Global let for customer templates
+
+// ADDED: Instantiate Game and UIManager
+const game = new Game();
+const uiManager = new UIManager(game);
+game.uiManager = uiManager; // Link UIManager instance to the game instance
 
 // --- UI State ---
 let chatSpacerElement = null;
@@ -252,26 +259,31 @@ function loadCustomerTemplates() {
 }
 
 function initializeManagers() {
-    customerTemplates = loadCustomerTemplates(); // MODIFIED: Load templates and assign to global
+    customerTemplates = loadCustomerTemplates();
 
-    customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    contactsAppManager = new ContactsAppManager(contactsAppView, customerTemplates);
-    slotGameManager = new SlotGameManager(slotGameView, () => cash, (newCash) => {
-        cash = newCash;
-        updateHUD();
-    });
+    game.customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+    game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, customerTemplates);
 
-    // ADDED: Event listener for customer template updates
-    if (contactsAppView) {
-       contactsAppView.addEventListener('customerTemplatesUpdated', (event) => {
+    game.slotGameManager = new SlotGameManager(
+        uiManager.slotGameView,
+        () => game.cash, // Access cash via game object
+        (newCash) => {
+            game.cash = newCash; // Update cash on game object
+            uiManager.updateHUD(); // Call HUD update via uiManager
+        }
+    );
+
+    if (uiManager.contactsAppView) {
+       uiManager.contactsAppView.addEventListener('customerTemplatesUpdated', (event) => {
            if (event.detail && event.detail.updatedTemplates) {
                console.log('customerTemplatesUpdated event received in script.js');
-               customerTemplates = event.detail.updatedTemplates; // Update global customerTemplates
-               saveCustomerTemplates(); // Save the updated global customerTemplates
+               customerTemplates = event.detail.updatedTemplates;
+               saveCustomerTemplates();
 
-               // Optional: Re-initialize CustomerManager if it needs to react immediately
-               // customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-               // console.log('CustomerManager re-initialized with updated templates.');
+               // Re-initialize CustomerManager with the new templates
+               game.customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+               console.log('CustomerManager re-initialized with updated templates due to event.');
+
                phoneShowNotification('Contact templates updated and saved!', 'Contacts App');
            }
        });
@@ -338,9 +350,9 @@ function initializeUIAndSettings() {
 }
 
 function initGame() {
-    assignDOMReferences();
-    initializeManagers();
-    initializeUIAndSettings();
+    uiManager.initPrimaryUI(); // This calls assignDOMReferences internally
+    initializeManagers();    // This will now assign managers to game object
+    initializeUIAndSettings(); // Review this next
     setupEventListeners();
 }
 
@@ -355,8 +367,9 @@ function initializeNewGameState() {
     activeWorldEvents = [];
     dayOfWeek = days[0];
     gameActive = false;
-    customerManager.reset();
-    updateEventTicker();
+    // customerManager.reset(); // This will be game.customerManager.reset()
+    if (game.customerManager) game.customerManager.reset();
+    updateEventTicker(); // This will become uiManager.updateEventTicker()
 }
 
 function startGameFlow() {
@@ -369,11 +382,14 @@ function startGameFlow() {
     startScreen.classList.remove('active');
     endScreen.classList.remove('active');
     gameScreen.classList.add('active');
-    setPhoneUIState('home');
-    updateHUD();
-    updateInventoryDisplay();
-    clearChat();
-    clearChoices();
+    // setPhoneUIState('home'); // This will be uiManager.setPhoneUIState('home')
+    uiManager.setPhoneUIState('home');
+    updateHUD(); // This will be uiManager.updateHUD()
+    updateInventoryDisplay(); // This will be uiManager.updateInventoryDisplay()
+    // clearChat(); // This will be uiManager.clearChat()
+    // clearChoices(); // This will be uiManager.clearChoices()
+    uiManager.clearChat();
+    uiManager.clearChoices();
     nextFiend();
 }
 
@@ -399,7 +415,8 @@ function endGame(reason) {
         }
     }
     finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (cash > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)");
-    setPhoneUIState('offscreen');
+    // setPhoneUIState('offscreen'); // This will be uiManager.setPhoneUIState('offscreen')
+    uiManager.setPhoneUIState('offscreen');
     clearSavedGameState();
 }
 
@@ -415,8 +432,9 @@ function setupUIForNewInteraction() {
     clearChat();
     clearChoices();
     nextCustomerBtn.disabled = true;
-    setPhoneUIState('docked');
-    playSound(doorKnockSound);
+    // setPhoneUIState('docked'); // This will be uiManager.setPhoneUIState('docked')
+    uiManager.setPhoneUIState('docked');
+    playSound(doorKnockSound); // This will be uiManager.playSound(uiManager.doorKnockSound)
     knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`;
     knockEffect.classList.remove('hidden');
     knockEffect.style.animation = 'none';
@@ -426,9 +444,14 @@ function setupUIForNewInteraction() {
 
 function generateAndStartCustomerInteraction() {
     knockEffect.classList.add('hidden');
-    const gameState = { inventory, cash, playerSkills, activeWorldEvents };
-    const interaction = customerManager.generateInteraction(gameState);
-    currentCustomerInstance = interaction.instance;
+    const gameState = { inventory, cash, playerSkills, activeWorldEvents }; // These will be game.inventory, game.cash etc.
+    const interaction = game.customerManager.generateInteraction({
+        inventory: game.inventory,
+        cash: game.cash,
+        playerSkills: game.playerSkills,
+        activeWorldEvents: game.activeWorldEvents
+    });
+    currentCustomerInstance = interaction.instance; // This global might need to be part of game state
     startCustomerInteraction(interaction);
 }
 
@@ -465,11 +488,13 @@ function nextFiend() {
 }
 
 function startCustomerInteraction(interaction) {
-    setPhoneUIState('chatting');
-    phoneTitleGame.textContent = interaction.name;
+    // setPhoneUIState('chatting'); // uiManager.setPhoneUIState
+    uiManager.setPhoneUIState('chatting');
+    phoneTitleGame.textContent = interaction.name; // uiManager.phoneTitleGame
     phoneShowNotification(`Incoming message from: ${interaction.name}`, "New Customer");
     
-    clearChat();
+    // clearChat(); // uiManager.clearChat()
+    uiManager.clearChat();
     let dialogueIndex = 0;
     const displayNext = () => {
         if (dialogueIndex < interaction.dialogue.length) {
@@ -486,12 +511,14 @@ function startCustomerInteraction(interaction) {
 }
 
 function endCustomerInteraction() {
-    clearChoices();
-    phoneTitleGame.textContent = 'Street Talk';
-    currentCustomerInstance = null;
-    setPhoneUIState('home');
-    if (gameActive && fiendsLeft > 0 && heat < MAX_HEAT && (cash > 0 || inventory.length > 0)) {
-        nextCustomerBtn.disabled = false;
+    // clearChoices(); // uiManager.clearChoices()
+    uiManager.clearChoices();
+    phoneTitleGame.textContent = 'Street Talk'; // uiManager.phoneTitleGame
+    currentCustomerInstance = null; // part of game state?
+    // setPhoneUIState('home'); // uiManager.setPhoneUIState
+    uiManager.setPhoneUIState('home');
+    if (gameActive && fiendsLeft > 0 && heat < MAX_HEAT && (cash > 0 || inventory.length > 0)) { // game.gameActive, game.fiendsLeft etc.
+        nextCustomerBtn.disabled = false; // uiManager.nextCustomerBtn
     } else if (gameActive) {
         nextCustomerBtn.disabled = true;
         if (heat >= MAX_HEAT) endGame("heat");
@@ -1024,12 +1051,14 @@ function updateInventoryDisplay() {
 function openInventoryModal() {
     updateInventoryDisplay();
     inventoryModal.classList.add('active');
-    setPhoneUIState('offscreen');
+    // setPhoneUIState('offscreen'); // uiManager.setPhoneUIState
+    uiManager.setPhoneUIState('offscreen');
 }
 
 function closeInventoryModal() {
-    inventoryModal.classList.remove('active');
-    setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home');
+    inventoryModal.classList.remove('active'); // uiManager.inventoryModal
+    // setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home'); // uiManager.setPhoneUIState
+    uiManager.setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home');
 }
 
 // =================================================================================
@@ -1044,7 +1073,8 @@ function handleChoice(outcome) {
     }
 
     try {
-        clearChoices(); // Moved here to ensure choices are cleared even if error occurs later
+        // clearChoices(); // uiManager.clearChoices() // Already called at the start of this function
+        uiManager.clearChoices();
 
         let narrationText = "";
         let dealSuccess = false;
@@ -1054,60 +1084,68 @@ function handleChoice(outcome) {
             case "buy_from_customer":
                 if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
                     cash -= outcome.price;
-                    inventory.push({ ...outcome.item });
+                    game.inventory.push({ ...outcome.item }); // game.inventory
                     dealSuccess = true;
                     narrationText = `Rikk copped "${outcome.item.name}".`;
-                    playSound(cashSound);
+                    // playSound(cashSound); // uiManager.playSound
+                    uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkBuysSuccess';
                 } else {
-                    narrationText = `Deal failed. ${(inventory.length >= MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`;
-                    playSound(deniedSound);
+                    narrationText = `Deal failed. ${(game.inventory.length >= game.MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`; // game.inventory, game.MAX_INVENTORY_SLOTS
+                    // playSound(deniedSound); // uiManager.playSound
+                    uiManager.playSound(uiManager.deniedSound);
                     dialogueContextKey = 'lowCashRikk';
                 }
                 break;
             case "sell_to_customer":
-                const itemIndex = inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality);
+                const itemIndex = game.inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality); // game.inventory
                 if (itemIndex !== -1) {
-                    const itemSold = inventory.splice(itemIndex, 1)[0];
-                    cash += outcome.price;
+                    const itemSold = game.inventory.splice(itemIndex, 1)[0]; // game.inventory
+                    cash += outcome.price; // game.cash
                     dealSuccess = true;
                     narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
-                    playSound(cashSound);
+                    // playSound(cashSound); // uiManager.playSound
+                    uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
                 } else {
                     narrationText = "Couldn't find that item.";
-                    playSound(deniedSound);
+                    // playSound(deniedSound); // uiManager.playSound
+                    uiManager.playSound(uiManager.deniedSound);
                 }
                 break;
             case "negotiate_sell":
                 setTimeout(() => {
-                    if (Math.random() < 0.55 + (playerSkills.negotiator * 0.12)) {
-                        const negoSuccessResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
+                    if (Math.random() < 0.55 + (game.playerSkills.negotiator * 0.12)) { // game.playerSkills
+                        const negoSuccessResult = game.customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
                         queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
                              handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
                         });
                     } else {
-                        const negoFailResult = customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
+                        const negoFailResult = game.customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
                         queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
                             const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
-                            displayChoices(choices);
+                            // displayChoices(choices); // uiManager.displayChoices
+                            uiManager.displayChoices(choices);
                         });
                     }
                 }, 1000);
                 return; // Return early as this choice path has its own async flow
             case "decline_offer_to_buy":
                 narrationText = "Rikk passes on the offer.";
-                playSound(deniedSound);
+                // playSound(deniedSound); // uiManager.playSound
+                uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToBuy';
                 break;
             case "decline_offer_to_sell":
                 narrationText = "Rikk tells them to kick rocks.";
-                playSound(deniedSound);
+                // playSound(deniedSound); // uiManager.playSound
+                uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToSell';
                 break;
             case "acknowledge_empty_stash":
                 narrationText = "Rikk's stash is dry. Customer ain't happy.";
-                playSound(deniedSound);
+                // playSound(deniedSound); // uiManager.playSound
+                uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'acknowledge_empty_stash';
                 break;
             case "acknowledge_error":
