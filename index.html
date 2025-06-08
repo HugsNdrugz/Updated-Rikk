@@ -424,13 +424,25 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         
         <!-- SCRIPT LOADING ORDER -->
+        <!-- Core Data Modules (no dependencies) -->
         <script src="data/data_items.js" type="module"></script>
         <script src="data/customer_templates.js" type="module"></script>
         <script src="data/data_events.js" type="module"></script>
-        <script src="./classes/CustomerManager.js" type="module"></script>
-        <script src="./classes/ContactsAppManager.js" type="module"></script>
-        <script src="./classes/SlotGameManager.js" type="module"></script>
+
+        <!-- Core Class Dependencies -->
+        <script src="utils.js" type="module"></script>
+        <script src="GameState.js" type="module"></script>
+        <script src="UIManager.js" type="module"></script>
+
+        <!-- App Managers -->
+        <script src="classes/ContactsAppManager.js" type="module"></script>
+        <script src="classes/CustomerManager.js" type="module"></script>
+        <script src="classes/SlotGameManager.js" type="module"></script>
+
+        <!-- UI Helpers -->
         <script src="phone_ambient_ui.js" type="module"></script>
+
+        <!-- Main Controller (loads last) -->
         <script src="script.js" type="module"></script>
         
         <div class="settings-loading hidden">

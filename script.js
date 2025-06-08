@@ -292,30 +292,30 @@ function setupEventListeners() {
     if (uiManager.continueGameBtn) uiManager.continueGameBtn.addEventListener('click', handleContinueGameClick);
     if (uiManager.restartGameBtn) uiManager.restartGameBtn.addEventListener('click', handleRestartGameClick);
     if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.addEventListener('click', nextFiend);
-    if (uiManager.openInventoryBtn) uiManager.openInventoryBtn.addEventListener('click', () => uiManager.openInventoryModal()); // Changed
-    if (uiManager.closeModalBtn) uiManager.closeModalBtn.addEventListener('click', () => uiManager.closeInventoryModal()); // Changed
-    if (uiManager.inventoryModal) uiManager.inventoryModal.addEventListener('click', (e) => { // Changed
-        if (e.target === uiManager.inventoryModal) uiManager.closeInventoryModal(); // Changed
+    if (uiManager.openInventoryBtn) uiManager.openInventoryBtn.addEventListener('click', () => uiManager.openInventoryModal());
+    if (uiManager.closeModalBtn) uiManager.closeModalBtn.addEventListener('click', () => uiManager.closeInventoryModal());
+    if (uiManager.inventoryModal) uiManager.inventoryModal.addEventListener('click', (e) => {
+        if (e.target === uiManager.inventoryModal) uiManager.closeInventoryModal();
     });
 
-    if (uiManager.rikkPhoneUI) { // Changed
+    if (uiManager.rikkPhoneUI) {
         uiManager.rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
     }
-    if (uiManager.phoneBackButtons) uiManager.phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick)); // Changed
-    if (uiManager.phoneDockedIndicator) uiManager.phoneDockedIndicator.addEventListener('click', () => uiManager.setPhoneUIState('home')); // Changed
-    if (uiManager.dockPhoneBtn) uiManager.dockPhoneBtn.addEventListener('click', () => uiManager.setPhoneUIState('docked')); // Changed
+    if (uiManager.phoneBackButtons) uiManager.phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
+    if (uiManager.phoneDockedIndicator) uiManager.phoneDockedIndicator.addEventListener('click', () => uiManager.setPhoneUIState('home'));
+    if (uiManager.dockPhoneBtn) uiManager.dockPhoneBtn.addEventListener('click', () => uiManager.setPhoneUIState('docked'));
 
-    if (uiManager.settingsMenuBtn) { // Changed
-        uiManager.settingsMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.settingsMenuPanel)); // Changed
+    if (uiManager.settingsMenuBtn) {
+        uiManager.settingsMenuBtn.addEventListener('click', () => uiManager.openSubmenuPanel(uiManager.settingsMenuPanel));
     }
-    if (uiManager.loadMenuBtn) { // Changed
-        uiManager.loadMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.loadMenuPanel)); // Changed
+    if (uiManager.loadMenuBtn) { // This button might not exist or be handled differently now
+        uiManager.loadMenuBtn.addEventListener('click', () => uiManager.openSubmenuPanel(uiManager.loadMenuPanel));
     }
-    if (uiManager.creditsMenuBtn) { // Changed
-        uiManager.creditsMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.creditsMenuPanel)); // Changed
+    if (uiManager.creditsMenuBtn) { // This button might not exist or be handled differently now
+        uiManager.creditsMenuBtn.addEventListener('click', () => uiManager.openSubmenuPanel(uiManager.creditsMenuPanel));
     }
 
-    if (uiManager.allSubmenuBackBtns) uiManager.allSubmenuBackBtns.forEach(button => { // Changed
+    if (uiManager.allSubmenuBackBtns) uiManager.allSubmenuBackBtns.forEach(button => {
         button.addEventListener('click', (event) => {
             const panelToClose = event.target.closest('.submenu-panel');
             if (panelToClose) {
@@ -328,14 +328,19 @@ function setupEventListeners() {
 function initializeUIAndSettings() {
     // Initial Screen Flow using UIManager
     if (uiManager.splashScreen) {
-        uiManager.splashScreen.classList.add('active');
+        uiManager.showScreen(uiManager.splashScreen); // Use UIManager method
         setTimeout(() => {
-            if (uiManager.splashScreen) {
-                uiManager.splashScreen.classList.remove('active');
-                uiManager.splashScreen.style.display = 'none';
+            // UIManager.showScreen should ideally handle making the previous screen inactive.
+            // If splash needs specific hiding logic, it should be in UIManager.
+            if (uiManager.splashScreen && typeof uiManager.hideSplashScreen === 'function') {
+                uiManager.hideSplashScreen(); // Assuming a dedicated method in UIManager
+            } else if (uiManager.splashScreen) {
+                uiManager.splashScreen.classList.remove('active'); // Fallback if hideSplashScreen not present
+                uiManager.splashScreen.style.display = 'none';    // Fallback
             }
+
             if (uiManager.startScreen) {
-                 uiManager.startScreen.classList.add('active');
+                 uiManager.showScreen(uiManager.startScreen); // Use UIManager method
             }
             if (uiManager.mainMenuLightContainer) {
                 uiManager.activateMainMenuLights(true);
@@ -344,8 +349,8 @@ function initializeUIAndSettings() {
         }, SPLASH_SCREEN_DURATION);
     }
 
-    initStyleSettingsControls(); // Initializes controls for both main menu and phone app
-    loadStyleSettings(); // Loads and applies styles to all relevant controls
+    uiManager.initStyleControls(saveStyleSettings); // Use UIManager method
+    uiManager.loadAndApplyStyleSettings(); // Use UIManager method
 
     // Initialize Sub-modules
     if (uiManager.rikkPhoneUI) {
@@ -660,12 +665,20 @@ function processAudioQueue() {
     const { message, speaker, callback } = audioQueue.shift();
 
     if (!TTS_ENABLED || speaker === 'narration' || !ELEVENLABS_API_KEY || !ELEVENLABS_VOICE_ID_CUSTOMER || !ELEVENLABS_VOICE_ID_RIKK) {
-        uiManager.playSound(uiManager.chatBubbleSound); // MODIFIED
-        uiManager.displayPhoneMessage(message, speaker); // MODIFIED
+        uiManager.playSound(uiManager.chatBubbleSound);
+        uiManager.displayPhoneMessage(message, speaker);
         if (callback) callback();
         setTimeout(() => processAudioQueue(), 400); // Keep delay for non-TTS
         return;
     }
+
+    // Delegate TTS playback to UIManager if a method exists, otherwise keep current fetch logic.
+    // For this exercise, we assume UIManager does not yet have a specific TTS method,
+    // so the fetch logic remains here. If UIManager had `uiManager.playTTSSound(url, ttsPayload, onEndedCallback)`,
+    // that would be used. The direct `new Audio()` and `.play()` are harder to abstract perfectly
+    // without knowing UIManager's intended audio capabilities.
+    // However, the spirit is to move DOM-related things. `new Audio()` is a DOM API.
+    // Let's assume for now uiManager can handle playing a sound from a URL.
 
     let voiceId = speaker === 'customer' ? ELEVENLABS_VOICE_ID_CUSTOMER : ELEVENLABS_VOICE_ID_RIKK;
     const url = `${ELEVENLABS_API_ENDPOINT_BASE}${voiceId}`;
@@ -674,19 +687,26 @@ function processAudioQueue() {
         "Content-Type": "application/json",
         "Accept": "audio/mpeg"
     };
-    const data = {
-        text: message.replace(/\*\*|[\*_]/g, ''), // TTS usually doesn't need markdown
-        model_id: "eleven_monolingual_v1", // Or your preferred model
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 } // Example settings
+    const ttsPayload = { // Renamed 'data' to 'ttsPayload' to avoid conflict
+        text: message.replace(/\*\*|[\*_]/g, ''),
+        model_id: "eleven_monolingual_v1",
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
     };
 
-    fetch(url, { method: "POST", headers: headers, body: JSON.stringify(data) })
+    // Ideal: uiManager.playTTSSound(url, headers, ttsPayload, () => { display message, then callback, then process queue });
+    // Current: Keep fetch, but if UIManager had a simple playFromUrl, that would be an improvement.
+    // For now, this part remains largely unchanged as it's more about external service interaction
+    // than direct page DOM manipulation that UIManager typically handles (like .textContent).
+    // The `new Audio()` part IS DOM related. If UIManager has a generic play method:
+    // uiManager.playSoundFromUrl(audioUrl, 0.8, () => { URL.revoke...; if (cb) cb(); processQ(); });
+
+    fetch(url, { method: "POST", headers: headers, body: JSON.stringify(ttsPayload) })
     .then(response => {
         if (!response.ok) {
-            return response.json().then(errData => { // Try to parse JSON error from ElevenLabs
+            return response.json().then(errData => {
                 const errorDetail = errData.detail?.message || JSON.stringify(errData.detail);
                 throw new Error(`HTTP error ${response.status}: ${errorDetail}`);
-            }).catch(() => { // Fallback if error is not JSON
+            }).catch(() => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             });
         }
@@ -694,24 +714,34 @@ function processAudioQueue() {
     })
     .then(audioBlob => {
         const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.volume = 0.8; // Or from config
         uiManager.displayPhoneMessage(message, speaker); // Display message first
-        audio.play().catch(e => { throw e; }); // Play audio
-        audio.onended = () => {
-            URL.revokeObjectURL(audioUrl);
-            if (callback) callback();
-            processAudioQueue(); // Process next in queue
-        };
+
+        // Assuming uiManager.playSoundUrl or similar method exists or could be added:
+        if (typeof uiManager.playSoundUrl === 'function') {
+            uiManager.playSoundUrl(audioUrl, 0.8, () => {
+                URL.revokeObjectURL(audioUrl);
+                if (callback) callback();
+                processAudioQueue();
+            });
+        } else {
+            // Fallback to existing direct audio element creation if UIManager can't handle it
+            const audio = new Audio(audioUrl);
+            audio.volume = 0.8;
+            audio.play().catch(e => { console.error("TTS Audio Playback Error:", e); throw e; });
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                if (callback) callback();
+                processAudioQueue();
+            };
+        }
     })
     .catch(err => {
         console.error("Error with ElevenLabs TTS:", err);
-        // displaySystemMessage(`TTS service failed. Displaying text only.`); // Use uiManager
         uiManager.displayPhoneMessage(`TTS service failed. Displaying text only.`, "narration");
-        uiManager.playSound(uiManager.chatBubbleSound); // Fallback sound
-        uiManager.displayPhoneMessage(message, speaker); // Display message
+        uiManager.playSound(uiManager.chatBubbleSound);
+        uiManager.displayPhoneMessage(message, speaker);
         if (callback) callback();
-        processAudioQueue(); // Process next
+        processAudioQueue();
     });
 }
 
@@ -1117,11 +1147,18 @@ function clearSavedGameState() {
 }
 
 function checkForSavedGame() {
-    // MODIFIED: Use uiManager properties
-    if (localStorage.getItem(SAVE_KEY)) {
-        if(uiManager.continueGameBtn) uiManager.continueGameBtn.classList.remove('hidden');
+    const hasSave = localStorage.getItem(SAVE_KEY) !== null;
+    if (uiManager.setContinueButtonVisibility && typeof uiManager.setContinueButtonVisibility === 'function') {
+        uiManager.setContinueButtonVisibility(hasSave);
     } else {
-        if(uiManager.continueGameBtn) uiManager.continueGameBtn.classList.add('hidden');
+        // Fallback if UIManager method doesn't exist
+        if (uiManager.continueGameBtn) {
+            if (hasSave) {
+                uiManager.continueGameBtn.classList.remove('hidden');
+            } else {
+                uiManager.continueGameBtn.classList.add('hidden');
+            }
+        }
     }
 }
 
@@ -1180,15 +1217,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // DELETED: applyDefaultsToDOMAndPersist (logic moved to UIManager)
     // DELETED: handleResetToDefaults (functionality moved to UIManager)
 
-    if (resetMainSettingsButton) {
-        resetMainSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
+    if (uiManager.resetMainSettingsButton) { // Use UIManager reference
+        uiManager.resetMainSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
-        console.warn("Reset button for main settings (reset-style-settings) not found.");
+        console.warn("Reset button for main settings (reset-style-settings) not found or not in UIManager refs.");
     }
 
-    if (resetPhoneSettingsButton) {
-        resetPhoneSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
+    if (uiManager.resetPhoneSettingsButton) { // Use UIManager reference
+        uiManager.resetPhoneSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
-        console.warn("Reset button for phone settings (reset-phone-style-settings) not found.");
+        console.warn("Reset button for phone settings (reset-phone-style-settings) not found or not in UIManager refs.");
     }
 });
