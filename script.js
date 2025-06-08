@@ -65,7 +65,9 @@ const uiManagerConfig = {
     APP_CONTAINER_SELECTOR: APP_CONTAINER_SELECTOR,
     customerAvatars: customerAvatars,
     rikkAvatarUrl: rikkAvatarUrl,
-    systemAvatarUrl: systemAvatarUrl
+    systemAvatarUrl: systemAvatarUrl,
+    defaultStyleSettings: defaultStyleSettings, // Pass the global const
+    styleSettingsKey: STYLE_SETTINGS_KEY     // Pass the global const
 };
 
 // Instantiate Managers
@@ -77,8 +79,8 @@ game.uiManager = uiManager; // Link UIManager instance to the game instance
 // let chatSpacerElement = null; // This was likely for UIManager, can be removed if UIManager handles its own spacer
 
 // --- Style Settings Preview Mode State ---
-let isPreviewModeActive = false; // Added for Preview Mode
-let originalSettingsBeforePreview = {}; // Added for Preview Mode
+// let isPreviewModeActive = false; // REMOVED - Moved to UIManager
+// let originalSettingsBeforePreview = {}; // REMOVED - Moved to UIManager
 // const APP_CONTAINER_SELECTOR = '#game-viewport'; // Moved to global constants
 
 // --- localStorage Availability Check ---
@@ -319,6 +321,9 @@ function initializeUIAndSettings() {
     if (uiManager.rikkPhoneUI) {
         initPhoneAmbientUI(uiManager.rikkPhoneUI);
     }
+    // Replace direct calls with UIManager methods
+    uiManager.initStyleControls(saveStyleSettings); // Pass the script.js saveStyleSettings as callback
+    uiManager.loadAndApplyStyleSettings();
 }
 
 function initGame() {
@@ -508,201 +513,20 @@ function endCustomerInteraction() {
 // (Many of these functions will be deleted or moved to UIManager)
 // =================================================================================
 
-function toggleMainMenuButtons(show) {
-    // This function might be kept if it controls elements not part of UIManager's direct responsibility,
-    // or moved if uiManager.primaryActionsContainer and uiManager.submenuNavigationContainer are valid.
-    // For now, assume UIManager properties are valid.
-    if (!uiManager.primaryActionsContainer || !uiManager.submenuNavigationContainer) return;
-    if (show) {
-        uiManager.primaryActionsContainer.classList.remove('hidden');
-        uiManager.submenuNavigationContainer.classList.remove('hidden');
-    } else {
-        uiManager.primaryActionsContainer.classList.add('hidden');
-        uiManager.submenuNavigationContainer.classList.add('hidden');
-    }
-}
+// DELETED: toggleMainMenuButtons (functionality moved to UIManager)
+// DELETED: openSubmenuPanel (functionality moved to UIManager)
+// DELETED: closeSubmenuPanel (functionality moved to UIManager)
 
-function openSubmenuPanel(panelElement) {
-    if (!panelElement) return;
-    toggleMainMenuButtons(false);
-    panelElement.classList.remove('hidden');
-}
+// DELETED: applyStyleSetting (moved to UIManager as _applySingleStyle)
+// DELETED: getSettingsFromLocalStorage (logic moved to UIManager)
+// DELETED: validateAndMergeSettings (logic simplified or moved to UIManager)
+// DELETED: applySettingsToDOM (logic moved to UIManager)
+// DELETED: loadStyleSettings (functionality moved to UIManager.loadAndApplyStyleSettings)
+// DELETED: initStyleSettingsControls (functionality moved to UIManager.initStyleControls)
 
-function closeSubmenuPanel(panelElement) {
-    if (!panelElement) return;
-    panelElement.classList.add('hidden');
-    toggleMainMenuButtons(true);
-}
-
-// Modified: applyStyleSetting now ONLY sets the CSS property. Saving is handled by initStyleSettingsControls.
-function applyStyleSetting(variableName, value) {
-    if (variableName && typeof value !== 'undefined') {
-        let cssValue = value;
-
-        const control = document.querySelector(`[data-variable="${variableName}"]`);
-        if (control && control.type === 'range' &&
-            (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
-            cssValue = String(value) + 'px';
-        }
-        document.documentElement.style.setProperty(variableName, cssValue);
-    }
-}
-
+// MODIFIED: saveStyleSettings in script.js now just a trigger for UIManager method
 function saveStyleSettings() {
-    if (!localStorageAvailable) {
-        console.warn('localStorage is not available. Settings will not be saved.');
-        return;
-    }
-
-    const actualSettingsLoadingElement = document.querySelector('.settings-loading');
-    const actualSettingsErrorElement = document.querySelector('.settings-error');
-    const actualSettingsErrorMessageElement = actualSettingsErrorElement ? actualSettingsErrorElement.querySelector('.error-message') : null;
-
-    if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.remove('hidden');
-    if (actualSettingsErrorElement) actualSettingsErrorElement.classList.add('hidden');
-
-    try {
-        const settingsToSave = {};
-        const styleControls = document.querySelectorAll('[data-variable]');
-        styleControls.forEach(control => {
-            const cssVariable = control.dataset.variable;
-            settingsToSave[cssVariable] = control.value;
-        });
-        localStorage.setItem(STYLE_SETTINGS_KEY, JSON.stringify(settingsToSave));
-
-        if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
-        console.log('Settings saved successfully (minimal).');
-
-    } catch (error) {
-        if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
-        if (actualSettingsErrorElement) {
-            if (actualSettingsErrorMessageElement) actualSettingsErrorMessageElement.textContent = `Failed to save settings: ${error.message}`;
-            actualSettingsErrorElement.classList.remove('hidden');
-        }
-        console.error('Failed to save settings (minimal):', error);
-    }
-}
-
-// --- Style Settings Refactored Helper Functions ---
-
-function getSettingsFromLocalStorage() {
-    if (!localStorageAvailable) {
-        console.warn('localStorage is not available. Cannot load settings.');
-        return null;
-    }
-    try {
-        const settingsString = localStorage.getItem(STYLE_SETTINGS_KEY);
-        if (settingsString) {
-            const parsedSettings = JSON.parse(settingsString);
-            if (typeof parsedSettings === 'object' && parsedSettings !== null) {
-                return parsedSettings;
-            } else {
-                console.warn('Loaded settings are not a valid object. Removing corrupted data.');
-                localStorage.removeItem(STYLE_SETTINGS_KEY);
-                return null;
-            }
-        }
-        return null;
-    } catch (error) {
-        console.error('Error parsing settings from localStorage:', error);
-        localStorage.removeItem(STYLE_SETTINGS_KEY);
-        return null;
-    }
-}
-
-function validateAndMergeSettings(loadedSettings, defaultSettings) {
-    if (!loadedSettings) {
-        return { ...defaultSettings };
-    }
-
-    const validatedSettings = { ...loadedSettings };
-
-    for (const key in defaultSettings) {
-        if (defaultSettings.hasOwnProperty(key)) {
-            if (!validatedSettings.hasOwnProperty(key) || typeof validatedSettings[key] !== typeof defaultSettings[key]) {
-                if (validatedSettings.hasOwnProperty(key)) {
-                    console.warn(`Type mismatch for setting "${key}". Expected ${typeof defaultSettings[key]} but got ${typeof validatedSettings[key]}. Using default for this key.`);
-                }
-                validatedSettings[key] = defaultSettings[key];
-            }
-        }
-    }
-    return { ...defaultSettings, ...validatedSettings };
-}
-
-function applySettingsToDOM(settingsToApply) {
-    const styleControls = document.querySelectorAll('[data-variable]');
-    styleControls.forEach(control => {
-        const cssVariable = control.dataset.variable;
-        if (settingsToApply.hasOwnProperty(cssVariable)) {
-            const value = settingsToApply[cssVariable];
-            control.value = value;
-            applyStyleSetting(cssVariable, value);
-
-            if (control.type === 'range') {
-                const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                if (valueDisplaySpan) valueDisplaySpan.textContent = value;
-            }
-        } else {
-            console.warn(`Control found for ${cssVariable} but it's not in settings to apply. Check settings object.`);
-        }
-    });
-}
-
-function loadStyleSettings() {
-    const loadedSettings = getSettingsFromLocalStorage();
-    const currentStyleSettings = validateAndMergeSettings(loadedSettings, defaultStyleSettings);
-
-    applySettingsToDOM(currentStyleSettings);
-
-    if (loadedSettings === null && localStorageAvailable) {
-        console.log("Saving initial/default styles to localStorage as no valid saved settings were found or localStorage was empty.");
-        saveStyleSettings();
-    } else if (loadedSettings !== null) {
-        console.log("Successfully loaded and applied settings from localStorage.");
-    } else {
-        console.log("Applied default settings (localStorage not available or no settings to load).");
-    }
-}
-
-// --- End of Style Settings Refactored Helper Functions ---
-
-function initStyleSettingsControls() {
-    const styleControls = document.querySelectorAll('[data-variable]');
-
-    styleControls.forEach(control => {
-        const cssVariable = control.dataset.variable;
-        let eventType = 'input';
-        if (control.type === 'select-one') {
-            eventType = 'change';
-        }
-
-        control.addEventListener(eventType, (event) => {
-            const rawValue = event.target.value;
-
-            if (control.type === 'range') {
-                const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                if (valueDisplay) {
-                    valueDisplay.textContent = rawValue;
-                }
-            }
-
-            applyStyleSetting(cssVariable, rawValue);
-
-            if (!isPreviewModeActive) {
-                saveStyleSettings();
-            } else {
-                console.log(`Preview change: ${cssVariable} = ${rawValue} (not saved)`);
-            }
-        });
-
-        if (control.type === 'range') {
-            const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
-            if (valueDisplay) {
-                valueDisplay.textContent = control.value;
-            }
-        }
-    });
+    uiManager.saveStyleSettingsToStorage();
 }
 
 function handleStartNewGameClick() {
@@ -1181,108 +1005,12 @@ function getCurrentSettingsFromInputs() {
 }
 
 function applySettingsToDOMAndInputs(settingsToApply) {
-    if (!settingsToApply) return;
-    for (const variableName in settingsToApply) {
-        if (settingsToApply.hasOwnProperty(variableName)) {
-            const value = settingsToApply[variableName];
-            const inputs = document.querySelectorAll(`[data-variable="${variableName}"]`);
-
-            inputs.forEach(input => {
-                input.value = value;
-                if (input.type === 'range') {
-                    const valueDisplaySpan = document.querySelector(`.value-display[data-target="${input.id}"]`);
-                    if (valueDisplaySpan) valueDisplaySpan.textContent = value;
-                }
-            });
-            applyStyleSetting(variableName, value);
-        }
-    }
-}
-
-function addCancelPreviewButton(panelId, referenceButtonId) {
-    const settingsPanel = document.getElementById(panelId);
-    const referenceButton = document.getElementById(referenceButtonId);
-    const existingCancelButtonId = `cancel-preview-${panelId.replace(/-/g, '')}`;
-    if (document.getElementById(existingCancelButtonId)) {
-        return;
-    }
-
-    if (settingsPanel && referenceButton) {
-        const cancelButton = document.createElement('button');
-        cancelButton.id = existingCancelButtonId;
-        cancelButton.className = 'cancel-preview-button game-button secondary-action';
-        cancelButton.textContent = 'Cancel Preview';
-        cancelButton.type = 'button';
-        cancelButton.addEventListener('click', cancelPreview);
-
-        if(referenceButton.nextSibling) {
-            referenceButton.parentNode.insertBefore(cancelButton, referenceButton.nextSibling);
-        } else {
-            referenceButton.parentNode.appendChild(cancelButton);
-        }
-    }
-}
-
-function removeCancelPreviewButtons() {
-    document.querySelectorAll('.cancel-preview-button').forEach(btn => btn.remove());
-}
-
-function togglePreviewMode() {
-    isPreviewModeActive = !isPreviewModeActive;
-    const appContainer = document.querySelector(uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
-
-    if (!appContainer && typeof phoneShowNotification === 'function') {
-        phoneShowNotification("Error: App container not found.", "Settings Error");
-        console.error("App container not found:", uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
-        isPreviewModeActive = false;
-        return;
-    }
-
-    const previewMainButton = document.getElementById('preview-style-settings');
-    const previewPhoneButton = document.getElementById('preview-phone-style-settings');
-
-    if (isPreviewModeActive) {
-        originalSettingsBeforePreview = getCurrentSettingsFromInputs();
-        if (appContainer) appContainer.classList.add('preview-mode');
-
-        if (previewMainButton) previewMainButton.textContent = 'Apply & Exit Preview';
-        addCancelPreviewButton('settings-menu-panel', 'preview-style-settings');
-
-        if (previewPhoneButton) previewPhoneButton.textContent = 'Apply & Exit Preview';
-        addCancelPreviewButton('phone-theme-settings-view', 'preview-phone-style-settings');
-
-        console.log('Preview Mode Activated.');
-        if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview Mode: Activated. Changes are not saved yet.", "Settings");
-    } else {
-        if (appContainer) appContainer.classList.remove('preview-mode');
-        if (typeof saveStyleSettings === 'function') saveStyleSettings();
-
-        if (previewMainButton) previewMainButton.textContent = 'Preview';
-        if (previewPhoneButton) previewPhoneButton.textContent = 'Preview';
-        removeCancelPreviewButtons();
-        console.log('Preview Mode Deactivated. Changes Applied.');
-        if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview settings applied and saved.", "Settings");
-    }
-}
-
-function cancelPreview() {
-    if (!isPreviewModeActive) return;
-
-    applySettingsToDOMAndInputs(originalSettingsBeforePreview);
-
-    isPreviewModeActive = false;
-    const appContainer = document.querySelector(uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
-    if (appContainer) appContainer.classList.remove('preview-mode');
-
-    const previewMainButton = document.getElementById('preview-style-settings');
-    if (previewMainButton) previewMainButton.textContent = 'Preview';
-    const previewPhoneButton = document.getElementById('preview-phone-style-settings');
-    if (previewPhoneButton) previewPhoneButton.textContent = 'Preview';
-
-    removeCancelPreviewButtons();
-    console.log('Preview Mode Cancelled.');
-    if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview cancelled. Changes reverted.", "Settings");
-}
+// DELETED: getCurrentSettingsFromInputs (logic moved to UIManager)
+// DELETED: applySettingsToDOMAndInputs (logic moved to UIManager)
+// DELETED: addCancelPreviewButton (logic moved to UIManager)
+// DELETED: removeCancelPreviewButtons (logic moved to UIManager)
+// DELETED: togglePreviewMode (functionality moved to UIManager.togglePreview)
+// DELETED: cancelPreview (functionality moved to UIManager.cancelPreview)
 
 // VII. SCRIPT ENTRY POINT
 // =================================================================================
@@ -1296,13 +1024,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
 
     if (previewMainSettingsButton) {
-        previewMainSettingsButton.addEventListener('click', togglePreviewMode);
+        previewMainSettingsButton.addEventListener('click', () => uiManager.togglePreview(saveStyleSettings));
     } else {
         console.warn("Preview button for main settings (preview-style-settings) not found.");
     }
 
     if (previewPhoneSettingsButton) {
-        previewPhoneSettingsButton.addEventListener('click', togglePreviewMode);
+        previewPhoneSettingsButton.addEventListener('click', () => uiManager.togglePreview(saveStyleSettings));
     } else {
         console.warn("Preview button for phone settings (preview-phone-style-settings) not found.");
     }
@@ -1317,66 +1045,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetMainSettingsButton = document.getElementById('reset-style-settings');
     const resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
 
-    function applyDefaultsToDOMAndPersist() {
-        if (typeof defaultStyleSettings === 'undefined') {
-            console.error('Error: defaultStyleSettings object is not defined.');
-            if (typeof phoneShowNotification === 'function') {
-                phoneShowNotification("Error: Default settings not found.", "Settings Error");
-            }
-            return;
-        }
-
-        console.log('Resetting styles to defaults...');
-
-        for (const variableName in defaultStyleSettings) {
-            if (defaultStyleSettings.hasOwnProperty(variableName)) {
-                const defaultValue = defaultStyleSettings[variableName];
-                const inputsToUpdate = document.querySelectorAll(`[data-variable="${variableName}"]`);
-
-                inputsToUpdate.forEach(input => {
-                    input.value = defaultValue;
-                    if (input.type === 'range') {
-                        const valueDisplaySpan = document.querySelector(`.value-display[data-target="${input.id}"]`);
-                        if (valueDisplaySpan) valueDisplaySpan.textContent = defaultValue;
-                    }
-                });
-
-                let valueToApply = defaultValue;
-                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`);
-                if (controlForVar && controlForVar.type === 'range' &&
-                    (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
-                    valueToApply += 'px';
-                }
-                document.documentElement.style.setProperty(variableName, valueToApply);
-            }
-        }
-
-        if (typeof saveStyleSettings === 'function') {
-            saveStyleSettings();
-            console.log('Default styles applied and saved to localStorage.');
-            if (typeof phoneShowNotification === 'function') {
-                phoneShowNotification("Styles have been reset to defaults.", "Settings");
-            }
-        } else {
-            console.error('Error: saveStyleSettings function is not defined. Cannot persist reset settings.');
-            if (typeof phoneShowNotification === 'function') {
-                phoneShowNotification("Error saving reset settings.", "Settings Error");
-            }
-        }
-    }
-
-    function handleResetToDefaults() {
-        applyDefaultsToDOMAndPersist();
-    }
+    // DELETED: applyDefaultsToDOMAndPersist (logic moved to UIManager)
+    // DELETED: handleResetToDefaults (functionality moved to UIManager)
 
     if (resetMainSettingsButton) {
-        resetMainSettingsButton.addEventListener('click', handleResetToDefaults);
+        resetMainSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
         console.warn("Reset button for main settings (reset-style-settings) not found.");
     }
 
     if (resetPhoneSettingsButton) {
-        resetPhoneSettingsButton.addEventListener('click', handleResetToDefaults);
+        resetPhoneSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
         console.warn("Reset button for phone settings (reset-phone-style-settings) not found.");
     }
