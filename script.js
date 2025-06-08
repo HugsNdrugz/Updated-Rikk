@@ -37,6 +37,7 @@ let settingsMenuBtn, loadMenuBtn, creditsMenuBtn;
 let settingsMenuPanel, loadMenuPanel, creditsMenuPanel;
 let allSubmenuBackBtns;
 let phoneThemeSettingsView; // NEW: Declare phone theme settings view
+let mainMenuLightContainer; // ADDED: Reference for the menu light effect
 
 // --- Game State & Managers ---
 let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
@@ -204,6 +205,7 @@ function assignDOMReferences() {
     cashSound = document.getElementById('cash-sound');
     deniedSound = document.getElementById('denied-sound');
     chatBubbleSound = document.getElementById('chat-bubble-sound');
+    mainMenuLightContainer = document.getElementById('main-menu-lights'); // ADDED
 }
 
 function initializeManagers() {
@@ -258,6 +260,12 @@ function initializeUIAndSettings() {
         splashScreen.classList.remove('active');
         splashScreen.style.display = 'none';
         startScreen.classList.add('active');
+        
+        // ADDED: Activate the main menu lights
+        if (mainMenuLightContainer) {
+            mainMenuLightContainer.classList.add('lights-active');
+        }
+
         checkForSavedGame();
     }, SPLASH_SCREEN_DURATION);
 
@@ -291,6 +299,11 @@ function initializeNewGameState() {
 }
 
 function startGameFlow() {
+    // ADDED: Deactivate main menu lights as we are leaving this screen.
+    if (mainMenuLightContainer) {
+        mainMenuLightContainer.classList.remove('lights-active');
+    }
+
     gameActive = true;
     startScreen.classList.remove('active');
     endScreen.classList.remove('active');
