@@ -531,7 +531,13 @@ class UIManager {
                     // Update value display for range inputs
                     if (control.type === 'range') {
                         const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                        if (valueDisplaySpan) valueDisplaySpan.textContent = control.value;
+                        if (valueDisplaySpan) {
+                            try {
+                                valueDisplaySpan.textContent = control.value;
+                            } catch (error) {
+                                debugLogger.error('UIManager', `Error setting textContent for valueDisplaySpan in _applyValuesToControls: ${error.message}`, error);
+                            }
+                        }
                     }
                 }
             });
@@ -550,7 +556,13 @@ class UIManager {
                 const rawValue = event.target.value;
                 if (control.type === 'range') {
                     const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                    if (valueDisplay) valueDisplay.textContent = rawValue;
+                    if (valueDisplay) {
+                        try {
+                            valueDisplay.textContent = rawValue;
+                        } catch (error) {
+                            debugLogger.error('UIManager', `Error setting textContent for valueDisplay in initStyleControls event listener: ${error.message}`, error);
+                        }
+                    }
                 }
                 this._applySingleStyle(cssVariable, rawValue);
                 if (!this.isPreviewModeActive && typeof saveSettingsCb === 'function') {
@@ -560,7 +572,13 @@ class UIManager {
             // Initial update for range value displays after controls are populated by loadAndApplyStyleSettings
             if (control.type === 'range') {
                  const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
-                 if (valueDisplay) valueDisplay.textContent = control.value;
+                 if (valueDisplay) {
+                    try {
+                        valueDisplay.textContent = control.value;
+                    } catch (error) {
+                        debugLogger.error('UIManager', `Error setting textContent for valueDisplay in initStyleControls initial setup: ${error.message}`, error);
+                    }
+                 }
             }
         });
     }
