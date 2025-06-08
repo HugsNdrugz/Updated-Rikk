@@ -166,6 +166,55 @@ const debugLogger = {
     }
 };
 
+// --- World Event Effects Helper ---
+function getCombinedActiveEventEffects() {
+    const activeEvents = game.getActiveWorldEvents(); // 'game' is the GameState instance
+    const combinedEffects = {
+        heatModifier: 1,
+        customerScareChance: 0,
+        drugPriceModifier: 1,
+        drugDemandModifier: 1,
+        dealFailChance: 0,
+        itemScarcity: false,
+        allPriceModifier: 1,
+        specificItemDemand: []
+    };
+
+    activeEvents.forEach(event => {
+        if (!event.effects) return;
+
+        if (event.effects.heatModifier) {
+            combinedEffects.heatModifier *= event.effects.heatModifier;
+        }
+        if (event.effects.customerScareChance) {
+            combinedEffects.customerScareChance = Math.max(combinedEffects.customerScareChance, event.effects.customerScareChance);
+        }
+        if (event.effects.drugPriceModifier) {
+            combinedEffects.drugPriceModifier *= event.effects.drugPriceModifier;
+        }
+        if (event.effects.drugDemandModifier) {
+            combinedEffects.drugDemandModifier *= event.effects.drugDemandModifier;
+        }
+        if (event.effects.dealFailChance) {
+            combinedEffects.dealFailChance = Math.max(combinedEffects.dealFailChance, event.effects.dealFailChance);
+        }
+        if (event.effects.itemScarcity) {
+            combinedEffects.itemScarcity = true;
+        }
+        if (event.effects.allPriceModifier) {
+            combinedEffects.allPriceModifier *= event.effects.allPriceModifier;
+        }
+        if (event.effects.specificItemDemand && Array.isArray(event.effects.specificItemDemand)) {
+            event.effects.specificItemDemand.forEach(item => {
+                if (!combinedEffects.specificItemDemand.includes(item)) {
+                    combinedEffects.specificItemDemand.push(item);
+                }
+            });
+        }
+    });
+    return combinedEffects;
+}
+
 // =================================================================================
 // III. CORE GAME INITIALIZATION & FLOW
 // =================================================================================
@@ -388,14 +437,12 @@ function endGame(reason) {
 }
 
 function handleTurnProgressionAndEvents() {
-    game.advanceDayOfWeek(); // MODIFIED
+    game.advanceDayOfWeek();
 
-    // Refactor activeWorldEvents logic for advanceWorldEvents part:
     let currentEvents = game.getActiveWorldEvents();
     currentEvents.forEach(eventState => eventState.turnsLeft--);
     game.setActiveWorldEvents(currentEvents.filter(eventState => eventState.turnsLeft > 0));
 
-    // Refactor activeWorldEvents logic for triggerWorldEvent part (simplified):
     let worldEventsState = game.getActiveWorldEvents();
     if (worldEventsState.length > 0 && Math.random() < 0.7) { /* do nothing */ }
     else {
@@ -406,13 +453,21 @@ function handleTurnProgressionAndEvents() {
         }
         game.setActiveWorldEvents(worldEventsState);
     }
-    uiManager.updateEventTicker(); // MODIFIED
+    uiManager.updateEventTicker();
 
-    // Refactor heat calculation:
     const skills = game.getPlayerSkills();
-    game.decreaseHeat(1 + (skills.lowProfile || 0)); // MODIFIED
+    const worldEffects = getCombinedActiveEventEffects(); // Get combined world effects
 
-    uiManager.updateHUD(); // MODIFIED
+    let passiveHeatChange = -(1 + (skills.lowProfile || 0)); // Negative for reduction
+    // If heatModifier makes things "hotter" (e.g., 1.5), it should reduce the *effectiveness* of heat loss.
+    // So, divide the heat loss by the modifier. If modifier is < 1, heat loss is amplified.
+    if (worldEffects.heatModifier !== 0) { // Avoid division by zero, though 0 is unlikely for a modifier
+         passiveHeatChange /= worldEffects.heatModifier;
+    }
+
+    game.addHeat(Math.round(passiveHeatChange)); // addHeat will handle clamping
+
+    uiManager.updateHUD();
 }
 
 function setupUIForNewInteraction() {
@@ -426,13 +481,18 @@ function setupUIForNewInteraction() {
 
 function generateAndStartCustomerInteraction() {
     uiManager.hideKnockEffect(); // MODIFIED
-    // gameState object creation removed, direct game state access used below
-    const interaction = game.customerManager.generateInteraction({
-        inventory: game.getInventory(), // MODIFIED
-        cash: game.getCash(), // MODIFIED
-        playerSkills: game.getPlayerSkills(), // MODIFIED
-        activeWorldEvents: game.getActiveWorldEvents() // MODIFIED
-    });
+
+    const combinedWorldEffects = getCombinedActiveEventEffects(); // Get combined effects
+
+    const gameStateForCustomerManager = {
+        inventory: game.getInventory(),
+        cash: game.getCash(),
+        playerSkills: game.getPlayerSkills(),
+        activeWorldEvents: game.getActiveWorldEvents(), // Keep this for now, CM might still use it directly for some things
+        combinedWorldEffects: combinedWorldEffects // Pass the new combined object
+    };
+
+    const interaction = game.customerManager.generateInteraction(gameStateForCustomerManager);
     game.setCurrentCustomerInstance(interaction.instance); // MODIFIED: Use GameState method
     startCustomerInteraction(interaction);
 }
@@ -706,6 +766,28 @@ function handleChoice(outcome) {
     try {
         uiManager.clearChoices(); // MODIFIED
 
+        const combinedWorldEffects = getCombinedActiveEventEffects(); // Get world effects
+
+        // Check for deal failure BEFORE processing the chosen outcome, unless it's a non-deal outcome
+        const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_scared", "end_interaction_no_item"];
+        if (!nonDealOutcomes.includes(outcome.type) && combinedWorldEffects.dealFailChance > 0 && Math.random() < combinedWorldEffects.dealFailChance) {
+            const currentCustomerInst = game.getCurrentCustomerInstance(); // Re-fetch in case it's cleared by other async logic
+            let failMsg = "The deal just fell through... damn.";
+            if (currentCustomerInst) { // Check if customer instance still exists
+                failMsg = `${currentCustomerInst.name} suddenly gets spooked and calls it off!`;
+            }
+            uiManager.displayPhoneMessage(failMsg, "narration");
+
+            // Apply a small heat penalty for a failed deal attempt, if desired
+            // game.addHeat(Math.round(5 * combinedWorldEffects.heatModifier)); // Example heat penalty
+
+            game.decrementFiendsLeft(); // A turn/fiend is still consumed
+            uiManager.updateHUD();
+            // Call endCustomerInteraction directly, bypassing normal outcome processing
+            setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
+            return; // Exit handleChoice early
+        }
+
         let narrationText = "";
         let dealSuccess = false;
         let dialogueContextKey = '';
@@ -829,39 +911,47 @@ function handleChoice(outcome) {
 
 function processPayload(payload, dealSuccess) {
     if (!payload || !payload.effects || payload.type !== "EFFECT") return;
-    const currentCustomer = game.getCurrentCustomerInstance(); // Verified: Uses game.getCurrentCustomerInstance()
+    const currentCustomer = game.getCurrentCustomerInstance();
+
+    const worldEffects = getCombinedActiveEventEffects(); // Get combined world effects
 
     payload.effects.forEach(effect => {
+        // ... existing condition checks ...
         if (effect.condition) {
             if (effect.condition.stat === 'dealSuccess' && dealSuccess !== effect.condition.value) return;
             if (effect.condition.stat === 'mood' && currentCustomer) {
-                const customerMood = currentCustomer.mood; // Verified: Reads mood from currentCustomer
+                const customerMood = currentCustomer.mood;
                 if (effect.condition.op === 'is' && customerMood !== effect.condition.value) return;
                 if (effect.condition.op === 'isNot' && customerMood === effect.condition.value) return;
             }
         }
 
         switch (effect.type) {
-            case 'modifyStat': // Verified: All use game methods (addCash, addHeat, addStreetCred, updatePlayerSkill)
+            case 'modifyStat':
                 if (effect.statToModify && typeof effect.value === 'number') {
+                    let valueToApply = effect.value;
+                    if (effect.statToModify === 'heat' && valueToApply > 0) { // Only modify heat increases
+                        valueToApply = Math.round(valueToApply * worldEffects.heatModifier);
+                    }
+
                     switch (effect.statToModify) {
                         case 'cash':
-                            game.addCash(effect.value);
+                            game.addCash(valueToApply);
                             break;
-                        case 'heat':
-                            game.addHeat(effect.value);
+                        case 'heat': // Value is already modified above if it's a positive gain
+                            game.addHeat(valueToApply);
                             break;
                         case 'streetCred':
-                            game.addStreetCred(effect.value);
+                            game.addStreetCred(valueToApply);
                             break;
                         case 'playerSkills.negotiator':
-                            game.updatePlayerSkill('negotiator', effect.value);
+                            game.updatePlayerSkill('negotiator', valueToApply);
                             break;
                         case 'playerSkills.appraiser':
-                            game.updatePlayerSkill('appraiser', effect.value);
+                            game.updatePlayerSkill('appraiser', valueToApply);
                             break;
                         case 'playerSkills.lowProfile':
-                            game.updatePlayerSkill('lowProfile', effect.value);
+                            game.updatePlayerSkill('lowProfile', valueToApply);
                             break;
                         default:
                             if (typeof debugLogger !== 'undefined' && debugLogger.warn) {
@@ -882,23 +972,26 @@ function processPayload(payload, dealSuccess) {
             case 'triggerEvent':
                 if (Math.random() < effect.chance) {
                     let message = effect.message || '';
-                    if (effect.eventName === 'snitchReport' && currentCustomer) { // Verified: game.addHeat, game.addStreetCred
-                        const heatGain = Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin;
+                    if (effect.eventName === 'snitchReport' && currentCustomer) {
+                        let heatGain = Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin;
+                        heatGain = Math.round(heatGain * worldEffects.heatModifier); // Apply world heat modifier
                         game.addHeat(heatGain);
                         game.addStreetCred(effect.credValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[HEAT_VALUE]', heatGain);
                     }
-                    if (effect.eventName === 'highRollerTip' && currentCustomer) { // Verified: game.getCash, game.addCash, game.addStreetCred
+                    if (effect.eventName === 'highRollerTip' && currentCustomer) {
                         const tip = Math.floor(game.getCash() * effect.tipPercentage);
                         game.addCash(tip);
                         game.addStreetCred(effect.credValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[TIP_AMOUNT]', tip);
                     }
-                    if (effect.eventName === 'publicIncident' && currentCustomer) { // Verified: game.addHeat
-                        game.addHeat(effect.heatValue);
+                    if (effect.eventName === 'publicIncident' && currentCustomer) {
+                        let heatValue = effect.heatValue;
+                        heatValue = Math.round(heatValue * worldEffects.heatModifier); // Apply world heat modifier
+                        game.addHeat(heatValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
                     }
-                    if (message) uiManager.displayPhoneMessage(message, "narration"); // Verified: uiManager.displayPhoneMessage
+                    if (message) uiManager.displayPhoneMessage(message, "narration");
                 }
                 break;
             default:
@@ -906,7 +999,7 @@ function processPayload(payload, dealSuccess) {
                 break;
         }
     });
-    uiManager.updateHUD(); // Verified: uiManager.updateHUD() called once at the end
+    uiManager.updateHUD();
 }
 
 // =================================================================================

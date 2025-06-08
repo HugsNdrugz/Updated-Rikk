@@ -49,8 +49,23 @@ export class CustomerManager {
      * @returns {object} A fully-formed interaction object for the main script to use.
      */
     generateInteraction(gameState) {
-        const { inventory, cash, playerSkills, activeWorldEvents } = gameState;
+        const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects } = gameState;
         const customerInstance = this._selectOrGenerateCustomerFromPool();
+
+        // Apply customerScareChance from world effects
+        if (combinedWorldEffects && combinedWorldEffects.customerScareChance > 0 && Math.random() < combinedWorldEffects.customerScareChance) {
+            const scareDialogue = this._getDialogue(customerInstance, 'customerScaredOff') || { line: `${customerInstance.name} looks around nervously and walks away.`, payload: null };
+            return {
+                instance: customerInstance,
+                name: customerInstance.name,
+                dialogue: [{ speaker: "narration", text: scareDialogue.line }],
+                choices: [{ text: "Unlucky.", outcome: { type: "end_interaction_scared", payload: scareDialogue.payload } }],
+                itemContext: null,
+                archetypeKey: customerInstance.archetypeKey,
+                mood: customerInstance.mood,
+                isScaredOff: true
+            };
+        }
 
         const template = this.customerTemplates[customerInstance.archetypeKey];
         if (!template) {
@@ -67,7 +82,6 @@ export class CustomerManager {
         let choices = [];
         let itemContext = null;
 
-        // Determine interaction type (buy vs. sell) with clear, configurable logic.
         let customerWillOfferItemToRikk = Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE;
         if (inventory.length === 0) customerWillOfferItemToRikk = true;
         if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD) customerWillOfferItemToRikk = false;
@@ -76,59 +90,104 @@ export class CustomerManager {
         }
 
         if (customerWillOfferItemToRikk) {
-            // --- Scenario A: Customer is SELLING an item TO Rikk ---
-            itemContext = this._generateRandomItem(template);
-            customerInstance.currentItemName = itemContext.name;
+            itemContext = this._generateRandomItem(template, combinedWorldEffects);
 
-            const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance });
-            const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
-            dialogue.push({ speaker: "customer", text: offerText });
-
-            const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
-
-            if (cash >= customerDemandsPrice) {
-                choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
+            if (!itemContext) {
+                const noItemDialogue = this._getDialogue(customerInstance, 'customerHasNothingToSell') || { line: `${customerInstance.name} shrugs. "Ain't got nothin' for ya today, chief."`, payload: null };
+                dialogue.push({ speaker: "customer", text: noItemDialogue.line });
+                choices.push({ text: "Aight.", outcome: { type: "end_interaction_no_item", payload: noItemDialogue.payload } });
             } else {
-                choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
+                customerInstance.currentItemName = itemContext.name;
+                const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance, combinedWorldEffects });
+                const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
+                dialogue.push({ speaker: "customer", text: offerText });
+                const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
+                if (cash >= customerDemandsPrice) {
+                    choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
+                } else {
+                    choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
+                }
+                choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy", payload: declineResult.payload, followUpDialogue: declineResult.line } });
             }
-            // CRITICAL FIX: Removed trailing single quote from the outcome type.
-            choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy", payload: declineResult.payload, followUpDialogue: declineResult.line } });
-
         } else if (inventory.length > 0) {
-            // --- Scenario B: Customer is BUYING an item FROM Rikk ---
-            itemContext = this._getRandomElement(inventory);
-            customerInstance.currentItemName = itemContext.name;
+            let potentialItemsToBuy = [...inventory];
+            let chosenItem = null;
 
-            const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerInstance });
-            let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
-            customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
+            if (potentialItemsToBuy.length > 0) {
+                // 0. Check for Addiction Preference (Highest Priority)
+                if (customerInstance.addictionStatus && customerInstance.addictionStatus.isAddicted && customerInstance.addictionStatus.drugId) {
+                    const addictedDrugInStock = potentialItemsToBuy.find(item => item.id === customerInstance.addictionStatus.drugId);
+                    if (addictedDrugInStock && Math.random() < 0.85) { // 85% chance to demand their drug
+                        chosenItem = addictedDrugInStock;
+                    }
+                }
 
-            const askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
-            dialogue.push({ speaker: "customer", text: askText });
+                // 1. If not chosen by addiction, check for Specific Item Demand (World Event)
+                if (!chosenItem) {
+                    const demandedItemsInStock = potentialItemsToBuy.filter(item =>
+                        combinedWorldEffects.specificItemDemand && combinedWorldEffects.specificItemDemand.includes(item.id)
+                    );
+                    if (demandedItemsInStock.length > 0 && Math.random() < 0.75) {
+                        chosenItem = this._getRandomElement(demandedItemsInStock);
+                    }
+                }
 
-            const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToSell');
+                // 2. If still not chosen, apply drug demand modifier (World Event)
+                if (!chosenItem) {
+                    const drugItemsInStock = potentialItemsToBuy.filter(item => item.itemTypeObj && item.itemTypeObj.type === "DRUG");
+                    const nonDrugItemsInStock = potentialItemsToBuy.filter(item => !item.itemTypeObj || item.itemTypeObj.type !== "DRUG");
 
-            if (customerInstance.cashOnHand >= customerOfferPrice) {
-                choices.push({ text: `Serve 'em ($${customerOfferPrice})`, outcome: { type: "sell_to_customer", item: itemContext, price: customerOfferPrice } });
+                    if (drugItemsInStock.length > 0 && combinedWorldEffects.drugDemandModifier > 1) {
+                        const baseDrugChance = 0.5;
+                        const modifiedDrugChance = (baseDrugChance * combinedWorldEffects.drugDemandModifier) /
+                                                   ( (baseDrugChance * combinedWorldEffects.drugDemandModifier) + (1 - baseDrugChance) );
+
+                        if (Math.random() < modifiedDrugChance) {
+                            chosenItem = this._getRandomElement(drugItemsInStock);
+                        } else if (nonDrugItemsInStock.length > 0) {
+                            chosenItem = this._getRandomElement(nonDrugItemsInStock);
+                        } else {
+                            chosenItem = this._getRandomElement(drugItemsInStock); // Only drugs in stock
+                        }
+                    }
+                }
+
+                // 3. If still no item chosen, pick randomly from remaining
+                if (!chosenItem && potentialItemsToBuy.length > 0) {
+                    chosenItem = this._getRandomElement(potentialItemsToBuy);
+                }
+            }
+            itemContext = chosenItem;
+
+            if (!itemContext) {
+                const customerResponse = this._getDialogue(customerInstance, 'rikkHasNothingCustomerWants') || { line: "Aight, guess you ain't got what I need today.", payload: null};
+                dialogue.push({ speaker: "rikk", text: "So, what are you looking for?"});
+                dialogue.push({ speaker: "customer", text: customerResponse.line });
+                choices.push({ text: "My bad.", outcome: { type: "end_interaction_no_desired_item", payload: customerResponse.payload } });
             } else {
-                choices.push({ text: `Serve 'em ($${customerOfferPrice}) (Short!)`, outcome: { type: "sell_to_customer" }, disabled: true });
+                customerInstance.currentItemName = itemContext.name;
+                const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerInstance, combinedWorldEffects });
+                let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
+                customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
+                const askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
+                dialogue.push({ speaker: "customer", text: askText });
+                const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToSell');
+                if (customerInstance.cashOnHand >= customerOfferPrice) {
+                    choices.push({ text: `Serve 'em ($${customerOfferPrice})`, outcome: { type: "sell_to_customer", item: itemContext, price: customerOfferPrice } });
+                } else {
+                    choices.push({ text: `Serve 'em ($${customerOfferPrice}) (Short!)`, outcome: { type: "sell_to_customer" }, disabled: true });
+                }
+                if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + CONFIG.HAGGLE_PRICE_DIFFERENCE_THRESHOLD) {
+                    const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
+                    choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
+                }
+                choices.push({ text: "Nah, kick rocks.", outcome: { type: "rikkDeclinesToSell", payload: declineResult.payload, followUpDialogue: declineResult.line } });
             }
-
-            if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + CONFIG.HAGGLE_PRICE_DIFFERENCE_THRESHOLD) {
-                const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
-                choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
-            }
-            choices.push({ text: "Nah, kick rocks.", outcome: { type: "rikkDeclinesToSell", payload: declineResult.payload, followUpDialogue: declineResult.line } });
-
         } else {
-            // --- Scenario C: Rikk has no inventory to sell ---
-            // LOGIC FIX: Correctly use the retrieved dialogue for both Rikk and the customer.
             const rikkLine = "Stash is drier than a popcorn fart, G. Nothin' to move right now.";
             const customerResponse = this._getDialogue(customerInstance, 'acknowledge_empty_stash');
-            
             dialogue.push({ speaker: "rikk", text: rikkLine });
             dialogue.push({ speaker: "customer", text: customerResponse.line });
-
             choices.push({ text: "Later.", outcome: { type: "end_interaction", payload: customerResponse.payload } });
         }
 
@@ -143,12 +202,6 @@ export class CustomerManager {
         };
     }
     
-    /**
-     * Public method to retrieve a specific dialogue line for outcomes processed outside the main interaction loop.
-     * @param {object} customerInstance - The specific customer instance.
-     * @param {string} contextKey - The key for the dialogue context (e.g., 'negotiation_success').
-     * @returns {object} An object containing the processed line and any payload.
-     */
     getOutcomeDialogue(customerInstance, contextKey) {
         return this._getDialogue(customerInstance, contextKey);
     }
@@ -158,20 +211,29 @@ export class CustomerManager {
         if (!template || !template.dialogue || !template.dialogue[contextKey]) {
             return { line: `... (missing dialogue: ${contextKey})`, payload: null };
         }
-
         const dialogueNode = template.dialogue[contextKey];
-
         for (const block of dialogueNode) {
             let allConditionsMet = true;
             if (block.conditions && block.conditions.length > 0) {
                 for (const condition of block.conditions) {
-                    if (!this._checkCondition(customerInstance, condition)) {
+                    // Check for addiction status condition
+                    if (condition.stat === "addictionStatus.isAddicted") {
+                        if (!customerInstance.addictionStatus || customerInstance.addictionStatus.isAddicted !== condition.value) {
+                            allConditionsMet = false;
+                            break;
+                        }
+                    } else if (condition.stat === "addictionStatus.drugId") {
+                         if (!customerInstance.addictionStatus || customerInstance.addictionStatus.drugId !== condition.value) {
+                            allConditionsMet = false;
+                            break;
+                        }
+                    }
+                    else if (!this._checkCondition(customerInstance, condition)) { // Original condition check
                         allConditionsMet = false;
                         break;
                     }
                 }
             }
-
             if (allConditionsMet) {
                 const randomLine = this._getRandomElement(block.lines) || `(missing lines for ${contextKey})`;
                 const processedLine = randomLine
@@ -180,14 +242,12 @@ export class CustomerManager {
                 return { line: processedLine, payload: block.payload || null };
             }
         }
-
         return { line: `... (no matching dialogue block for ${contextKey})`, payload: null };
     }
 
     _checkCondition(customerInstance, condition) {
-        const customerStatValue = customerInstance[condition.stat];
+        const customerStatValue = customerInstance[condition.stat]; // This might fail if condition.stat is nested like "addictionStatus.isAddicted"
         const checkValue = condition.value;
-
         switch (condition.op) {
             case 'is': return customerStatValue === checkValue;
             case 'isNot': return customerStatValue !== checkValue;
@@ -203,37 +263,32 @@ export class CustomerManager {
         if (this.customersPool.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
             const returningCustomer = this._getRandomElement(this.customersPool);
             const template = this.customerTemplates[returningCustomer.archetypeKey];
-
-            // Refresh the state of the returning customer for this new interaction
             returningCustomer.hasMetRikkBefore = true;
             if (template) {
                 returningCustomer.mood = template.baseStats.mood || 'chill';
                 returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
+                // Ensure addictionStatus is present
+                if (!returningCustomer.addictionStatus) {
+                    returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
+                }
             }
             return returningCustomer;
         }
 
-        // Generate a new customer
         const archetypeKeys = Object.keys(this.customerTemplates);
         const selectedArchetypeKey = this._getRandomElement(archetypeKeys);
         const template = this.customerTemplates[selectedArchetypeKey];
-        
-        // REFACTOR: Simplified and more robust ID/Name generation.
-        const customerId = this.nextCustomerId;
-        this.nextCustomerId++;
-
+        const customerId = this.nextCustomerId++;
         const newCustomerInstance = {
             id: `customer_${customerId}`,
             name: `${template.baseName} #${customerId}`,
             archetypeKey: selectedArchetypeKey,
-            // Use JSON stringify/parse for a deep copy of the stats object, preventing mutation of the original template.
-            // This is safe for JSON-compatible data (no functions, undefined, Symbols).
             ...JSON.parse(JSON.stringify(template.baseStats)), 
             cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
-            hasMetRikkBefore: false
+            hasMetRikkBefore: false,
+            addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 } // Initialize addiction status
         };
 
-        // Add to pool, replacing an old customer if the pool is full.
         if (this.customersPool.length < CONFIG.MAX_CUSTOMERS_IN_POOL) {
             this.customersPool.push(newCustomerInstance);
         } else {
@@ -243,25 +298,25 @@ export class CustomerManager {
         return newCustomerInstance;
     }
 
-    _generateRandomItem(template = null) {
+    _generateRandomItem(template = null, combinedWorldEffects = {}) {
+        if (combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
+            return null;
+        }
         if (!this.itemTypes || this.itemTypes.length === 0) {
             return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
         }
-        
         let availableItemTypes = [...this.itemTypes];
         if (template && template.itemPool && template.itemPool.length > 0) {
              availableItemTypes = this.itemTypes.filter(it => template.itemPool.includes(it.id));
         }
         if (availableItemTypes.length === 0) {
-            availableItemTypes = [...this.itemTypes]; // Fallback to all items if template pool is invalid
+            availableItemTypes = [...this.itemTypes];
         }
-
         const selectedType = this._getRandomElement(availableItemTypes);
         const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ["Standard"];
         const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
         const quality = qualityLevelsForType[qualityIndex];
         const basePurchaseValue = selectedType.baseValue + Math.floor(Math.random() * (selectedType.range * 2)) - selectedType.range;
-        
         const item = {
           id: selectedType.id,
           name: selectedType.name,
@@ -270,7 +325,6 @@ export class CustomerManager {
           qualityIndex,
           description: selectedType.description,
         };
-        
         const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
         item.purchasePrice = Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
         item.estimatedResaleValue = Math.max(item.purchasePrice + CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
@@ -278,37 +332,42 @@ export class CustomerManager {
     }
 
     _calculateItemValue(item, purchaseContext = true, context) {
-        const { playerSkills, activeWorldEvents, customerInstance } = context;
+        const { playerSkills, customerInstance, combinedWorldEffects } = context;
         let customerTemplate = null;
         if (customerInstance && customerInstance.archetypeKey) {
             customerTemplate = this.customerTemplates[customerInstance.archetypeKey];
         }
-
         let baseValue = purchaseContext ? item.purchasePrice : item.estimatedResaleValue;
         if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') { return baseValue; }
-        
         let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
         let effectiveValue = baseValue * qualityModifier;
 
         if (playerSkills) {
-            if (!purchaseContext && playerSkills.appraiser > 0) { // Selling to customer
+            if (!purchaseContext && playerSkills.appraiser > 0) {
                 effectiveValue *= (1 + playerSkills.appraiser * 0.05);
             }
-            if (purchaseContext && playerSkills.appraiser > 0) { // Buying from customer
+            if (purchaseContext && playerSkills.appraiser > 0) {
                 effectiveValue *= (1 - playerSkills.appraiser * 0.03);
             }
         }
         
-        if (activeWorldEvents) {
-            activeWorldEvents.forEach(eventState => {
-                const effects = eventState.effects; 
-                if (!effects) return;
-                if (effects.allPriceModifier) { effectiveValue *= effects.allPriceModifier; }
-                if (effects.drugPriceModifier && item.itemTypeObj.type === "DRUG") { effectiveValue *= effects.drugPriceModifier; }
-            });
+        if (combinedWorldEffects) {
+            if (combinedWorldEffects.allPriceModifier) {
+                effectiveValue *= combinedWorldEffects.allPriceModifier;
+            }
+            if (combinedWorldEffects.drugPriceModifier && item.itemTypeObj && item.itemTypeObj.type === "DRUG") {
+                effectiveValue *= combinedWorldEffects.drugPriceModifier;
+            }
         }
 
-        if (customerTemplate && !purchaseContext) { // When selling to a customer, their tolerance matters
+        // Addiction price tolerance modification
+        if (customerInstance && customerInstance.addictionStatus && customerInstance.addictionStatus.isAddicted &&
+            item.id === customerInstance.addictionStatus.drugId && !purchaseContext) {
+            const cravingFactor = 1 + (customerInstance.addictionStatus.cravingLevel * 0.1);
+            effectiveValue *= cravingFactor;
+        }
+
+        if (customerTemplate && !purchaseContext) {
             effectiveValue *= (customerTemplate.priceToleranceFactor || 1.0);
         }
         return Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(effectiveValue));
@@ -331,8 +390,34 @@ export class CustomerManager {
         };
     }
 
-    // --- Save/Load and State Management ---
+    processPotentialAddiction(customerInstance, soldDrugItem) {
+        if (!customerInstance || !soldDrugItem || !soldDrugItem.itemTypeObj || typeof soldDrugItem.itemTypeObj.addictionChance !== 'number') {
+            // console.warn('[CustomerManager] Invalid parameters for processPotentialAddiction');
+            return;
+        }
 
+        const drugProps = soldDrugItem.itemTypeObj;
+        if (Math.random() < drugProps.addictionChance) {
+            if (!customerInstance.addictionStatus) {
+                customerInstance.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
+            }
+
+            const wasAlreadyAddictedToThisDrug = customerInstance.addictionStatus.isAddicted && customerInstance.addictionStatus.drugId === soldDrugItem.id;
+
+            customerInstance.addictionStatus.isAddicted = true;
+            customerInstance.addictionStatus.drugId = soldDrugItem.id;
+
+            if (wasAlreadyAddictedToThisDrug) {
+                customerInstance.addictionStatus.cravingLevel = Math.min((customerInstance.addictionStatus.cravingLevel || 0) + 1, 5); // Cap craving level, e.g., at 5
+            } else {
+                customerInstance.addictionStatus.cravingLevel = 1; // Start craving at 1 for new addiction
+            }
+
+            // console.log(`[CustomerManager] Customer ${customerInstance.name} addiction status updated for ${soldDrugItem.name}. New status:`, customerInstance.addictionStatus);
+        }
+    }
+
+    // --- Save/Load and State Management ---
     reset() {
         this.customersPool = [];
         this.nextCustomerId = 1;

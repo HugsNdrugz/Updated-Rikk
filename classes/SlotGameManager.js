@@ -7,6 +7,8 @@
 // This is the definitive, working version.
 // =================================================================================
 
+import { createImage, createEmptyArray, hexToObject, decToHex, waitFor } from '../utils.js';
+
 export class SlotGameManager {
     constructor(containerElement, mainGameGetCash, mainGameSetCash) {
         if (!containerElement) {
@@ -143,7 +145,7 @@ export class SlotGameManager {
             const padding = block.padding + block.lineWidth;
             const symbolWidth = block.width - padding * 2, symbolHeight = block.height - padding * 2;
             this.options.ctx.strokeStyle = this.options.color.border; this.options.ctx.lineWidth = block.lineWidth;
-            if (block.color) { const { r, g, b, a } = block.color; this.options.ctx.fillStyle = `#${this.manager.decToHex(r)}${this.manager.decToHex(g)}${this.manager.decToHex(b)}${this.manager.decToHex(a)}`; this.options.ctx.fillRect(this.xOffset, yOffset, this.options.width, this.options.height); }
+            if (block.color) { const { r, g, b, a } = block.color; this.options.ctx.fillStyle = `#${decToHex(r)}${decToHex(g)}${decToHex(b)}${decToHex(a)}`; this.options.ctx.fillRect(this.xOffset, yOffset, this.options.width, this.options.height); }
             this.options.ctx.drawImage(this.options.symbols[symbol], this.xOffset + padding, yOffset + padding, symbolWidth, symbolHeight);
             this.options.ctx.strokeRect(this.xOffset, yOffset, this.options.width, this.options.height);
         }
@@ -175,21 +177,21 @@ export class SlotGameManager {
             this.checking = true; const winners = this.calculator.calculate();
             if (!winners.length) {
                 this.checking = false;
-                if(this.autoSpin) this.manager.waitFor(100).then(() => this.options.buttons.spinManual.click());
+                if(this.autoSpin) waitFor(100).then(() => this.options.buttons.spinManual.click());
                 return;
             }
             this.soundEffects.win.play();
             const totalWin = winners.reduce((acc, { money }) => acc + money, 0);
             for (const winner of winners) { this.visualEffects.highlight(winner.blocks); }
             this.player.addWin(totalWin);
-            this.manager.waitFor(Math.max(this.options.reel.animationTime, 2000)).then(() => {
+            waitFor(Math.max(this.options.reel.animationTime, 2000)).then(() => {
                 this.checking = false;
-                if(this.autoSpin) this.manager.waitFor(100).then(() => this.options.buttons.spinManual.click());
+                if(this.autoSpin) waitFor(100).then(() => this.options.buttons.spinManual.click());
             });
         }
         reset() {
             this.reels = []; this.paintBackground();
-            this.manager.createEmptyArray(this.options.reel.cols).forEach((index) => {
+            createEmptyArray(this.options.reel.cols).forEach((index) => {
                 this.reels.push(new this.manager.Reel(this.manager, { ...this.options, index, ctx: this.ctx, height: this.getHeight() }));
             });
             this.reels.forEach((reel) => reel.reset());
@@ -245,14 +247,14 @@ export class SlotGameManager {
             this.canvas = new this.manager.Canvas(this.manager, { ctx: options.ctx, width: options.block.width, color: options.color, height: options.height, xOffset: xOffset, symbols: options.symbols });
             this.animations = new manager.TWEEN.Group();
             this.symbolKeys = Object.keys(options.symbols);
-            this.reelStrip = this.manager.createEmptyArray(50).map(() => this.getRandomSymbol());
+            this.reelStrip = createEmptyArray(50).map(() => this.getRandomSymbol());
             this.blocks = []; this.isSpinning = false;
         }
         getRandomSymbol() { return this.symbolKeys[Math.floor(Math.random() * this.symbolKeys.length)]; }
         drawBlocks() { for (const block of this.blocks) { this.canvas.draw(block); } }
         reset() {
             this.animations.removeAll(); this.isSpinning = false;
-            this.blocks = this.manager.createEmptyArray(this.options.reel.rows + 6).map((_, i) => ({
+            this.blocks = createEmptyArray(this.options.reel.rows + 6).map((_, i) => ({
                 symbol: this.getRandomSymbol(),
                 coords: { yOffset: (i - 3) * this.options.block.height },
                 block: { ...this.options.block }
@@ -361,11 +363,7 @@ export class SlotGameManager {
         highlight(blocks) { for (const [reelIndex, block] of blocks.entries()) { this.highlightBlock(block, reelIndex); } }
     }
 
-    createImage = ({ src, width, content }) => `<img src="${src}" alt="${content}" width="${width}" class="img-thumbnail rounded" />`;
-    createEmptyArray = (length) => Array.from({ length }).map((_, i) => i);
-    hexToObject = (hex, r=16) => ({ r:parseInt(hex.slice(1,3),r), g:parseInt(hex.slice(3,5),r), b:parseInt(hex.slice(5,7),r), a:parseInt(hex.slice(7,9),r)||255 });
-    decToHex = (v) => Math.floor(v).toString(16).padStart(2,'0');
-    waitFor = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    // Removed local utility function definitions, will use imported versions.
 
     createPayTable(symbols, parent) {
         if (!window.tableBuilder) { console.error("html-table-builder.js is not loaded."); parent.innerHTML = '<p>Pay table library failed to load.</p>'; return; }
@@ -375,7 +373,7 @@ export class SlotGameManager {
             .setBody(tableSymbols.map(symbolKey => ({ symbol: symbolKey, '3': `$<b>${this.payTable[symbolKey]['3']}</b>`, '4': `$<b>${this.payTable[symbolKey]['4']}</b>`, '5': `$<b>${this.payTable[symbolKey]['5']}</b>` })))
             .on('symbol', (tr) => {
                 const width = 30; const content = tr.dataset.content;
-                const img = (s) => this.createImage({ src: symbols[s].src, content: s, width });
+                const img = (s) => createImage({ src: symbols[s].src, content: s, width }); // Use imported createImage
                 switch(content) {
                     case 'Cherry': tr.innerHTML = img('Cherry'); break;
                     case 'Seven': tr.innerHTML = img('Seven'); break;
