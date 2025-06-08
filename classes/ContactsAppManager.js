@@ -1,3 +1,4 @@
+import { debugLogger } from '../utils.js';
 // =================================================================================
 // classes/ContactsAppManager.js - FINAL BUILD
 // =================================================================================
@@ -14,6 +15,10 @@ export class ContactsAppManager {
      */
     constructor(containerElement, initialCustomerData) {
         if (!containerElement) {
+            // Using console.error directly here because debugLogger might not be available if this constructor fails.
+            // Or, ensure this class is only instantiated after utils.js and its logger are confirmed loaded.
+            // For this refactor, we'll assume it's okay for init errors to be raw console.error.
+            console.error("ContactsAppManager CRITICAL: Container element not provided during construction.");
             throw new Error("ContactsAppManager requires a container element to be initialized.");
         }
         this.container = containerElement;
@@ -273,7 +278,7 @@ export class ContactsAppManager {
             this._displayValidationMessage('new-customer-step1-validation-msg', `Customer with key "${formattedKey}" already exists. Please choose a different key.`);
             return false;
         }
-
+        /* REMOVED COMMENTED BLOCK
         if (formattedKey !== originalKey) {
             this._displayValidationMessage('new-customer-step1-validation-msg', `Key format was invalid. It has been corrected to: <strong>${formattedKey}</strong>. Please review and continue.`);
             this.newCustomerFlowState.data.key = formattedKey;
@@ -289,6 +294,16 @@ export class ContactsAppManager {
             // So, if we want the input to update with the corrected key, we must re-render here.
             this.renderNewCustomerFlow(); // Re-render to show corrected key
             return false;
+        }
+        */
+        // If the key was reformatted and different, the user is informed by the message,
+        // and the corrected key is stored. They need to click "Next" again to proceed
+        // if the formatted key is acceptable and not a duplicate.
+        if (formattedKey !== originalKey) {
+             this.newCustomerFlowState.data.key = formattedKey; // Update the data with the corrected key
+             // It's important to re-render here so the user sees the corrected key in the input field.
+             this.renderNewCustomerFlow();
+             return false; // Return false to prevent advancing, user must click next again.
         }
         return true;
     }

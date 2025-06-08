@@ -1,4 +1,5 @@
 // phone_ambient_ui.js
+import { debugLogger } from './utils.js';
 
 /**
 * Handles the ambient UI elements and animations of the phone.
@@ -17,7 +18,7 @@ let timeUpdateInterval, batteryUpdateInterval, wallpaperUpdateInterval;
 */
 export function initPhoneAmbientUI(phoneContainer) {
     if (!phoneContainer) {
-        console.error("Phone container not provided. Ambient UI cannot be initialized.");
+        debugLogger.error('PhoneUI', "Phone container not provided. Ambient UI cannot be initialized.");
         return;
     }
 

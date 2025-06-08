@@ -1,3 +1,4 @@
+import { debugLogger } from '../utils.js';
 // =================================================================================
 // CustomerManager Class (Refactored)
 // =================================================================================
@@ -69,7 +70,7 @@ export class CustomerManager {
 
         const template = this.customerTemplates[customerInstance.archetypeKey];
         if (!template) {
-            console.error(`CustomerManager: Invalid archetypeKey provided: ${customerInstance.archetypeKey}`);
+            debugLogger.error('CustomerManager', `Invalid archetypeKey provided: ${customerInstance.archetypeKey}`);
             return this._createErrorInteraction(customerInstance);
         }
 
@@ -455,7 +456,7 @@ export class CustomerManager {
         // Ensure selectedType is not null before proceeding
         const selectedType = this._getRandomElement(availableItemTypes);
         if (!selectedType) { // Should ideally not happen if this.itemTypes is not empty
-            console.error("CustomerManager: Could not select an item type in _generateRandomItem after all filters.");
+            debugLogger.error('CustomerManager', "Could not select an item type in _generateRandomItem after all filters.");
             return { id: "error_item_notype", name: "Error Item (No Type)", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
         }
 
@@ -538,7 +539,6 @@ export class CustomerManager {
 
     processPotentialAddiction(customerInstance, soldDrugItem) {
         if (!customerInstance || !soldDrugItem || !soldDrugItem.itemTypeObj || typeof soldDrugItem.itemTypeObj.addictionChance !== 'number') {
-            // console.warn('[CustomerManager] Invalid parameters for processPotentialAddiction');
             return;
         }
 
@@ -558,8 +558,6 @@ export class CustomerManager {
             } else {
                 customerInstance.addictionStatus.cravingLevel = 1; // Start craving at 1 for new addiction
             }
-
-            // console.log(`[CustomerManager] Customer ${customerInstance.name} addiction status updated for ${soldDrugItem.name}. New status:`, customerInstance.addictionStatus);
         }
     }
 
@@ -567,7 +565,7 @@ export class CustomerManager {
     reset() {
         this.customersPool = [];
         this.nextCustomerId = 1;
-        console.log("CustomerManager has been reset.");
+        debugLogger.log('CustomerManager', "CustomerManager has been reset.");
     }
 
     getSaveState() {

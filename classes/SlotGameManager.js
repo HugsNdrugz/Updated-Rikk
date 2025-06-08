@@ -7,7 +7,7 @@
 // This is the definitive, working version.
 // =================================================================================
 
-import { createImage, createEmptyArray, hexToObject, decToHex, waitFor } from '../utils.js';
+import { createImage, createEmptyArray, hexToObject, decToHex, waitFor, debugLogger } from '../utils.js';
 
 export class SlotGameManager {
     constructor(containerElement, mainGameGetCash, mainGameSetCash) {
@@ -116,7 +116,7 @@ export class SlotGameManager {
         loadImage(src) {
             const img = new Image(); img.src = src;
             img.onload = () => { this.loadedImages.push({ img, src, name: this.getAssetNameFrom(src) }); if (this.loadedImages.length === this.TOTAL_ASSETS) { this.callbacks.forEach((fn) => fn(this.loadedImages)); } };
-            img.onerror = () => console.error(`SlotGame: Failed to load image: ${src}`);
+            img.onerror = () => debugLogger.error('SlotGameManager', `Failed to load image: ${src}`);
         }
         onLoadFinish(fns) { this.callbacks.push(fns); return this; }
         start() { const imageURLsToLoad = this.getFilteredImages(this.assets); imageURLsToLoad.forEach(src => this.loadImage(src)); }
@@ -338,7 +338,7 @@ export class SlotGameManager {
     
     Sound = class {
         constructor(options) { this.options = { volume: 1, startAt: 0, endAt: 0, loop: false, ...options }; this.audio = new Audio(this.options.src); this.audio.preload = 'auto'; this.audio.currentTime = this.options.startAt; this.audio.volume = this.options.volume; this.audio.loop = this.options.loop; }
-        play() { this.audio.play().catch(console.error); }
+        play() { this.audio.play().catch(e => debugLogger.error('SlotGameManager', 'Audio play error in Slot.Sound', e)); }
     }
 
     SoundEffects = class {
@@ -366,7 +366,7 @@ export class SlotGameManager {
     // Removed local utility function definitions, will use imported versions.
 
     createPayTable(symbols, parent) {
-        if (!window.tableBuilder) { console.error("html-table-builder.js is not loaded."); parent.innerHTML = '<p>Pay table library failed to load.</p>'; return; }
+        if (!window.tableBuilder) { debugLogger.error('SlotGameManager', "html-table-builder.js is not loaded."); parent.innerHTML = '<p>Pay table library failed to load.</p>'; return; }
         const tableSymbols = ['Cherry', 'Seven', '3xBAR', '2xBAR', '1xBAR', 'AnyBar'];
         window.tableBuilder({ class: 'table table-sm table-bordered table-dark table-striped table-hover', border: 1 })
             .setHeader({ Symbol:{key:'symbol'}, '3-Match':{key:'3'}, '4-Match':{key:'4'}, '5-Match':{key:'5'} })
