@@ -1,4 +1,5 @@
 // GameState.js
+import { debugLogger } from './utils.js';
 
 class GameState {
     constructor(config = {}) {
@@ -38,7 +39,7 @@ class GameState {
 
         // Initial console log to confirm instantiation and config
         if (this.DEBUG_MODE) {
-            console.log('[GameState] Initialized with config:', config);
+            debugLogger.log('GameState', 'Initialized with config:', config);
         }
     }
 
@@ -85,7 +86,7 @@ class GameState {
         if (this.playerSkills.hasOwnProperty(skillName)) {
             this.playerSkills[skillName] = Math.max(0, this.playerSkills[skillName] + valueChange);
         } else {
-            if (this.DEBUG_MODE) console.warn(`[GameState] Attempted to update unknown skill: ${skillName}`);
+            if (this.DEBUG_MODE) debugLogger.warn('GameState', `Attempted to update unknown skill: ${skillName}`);
         }
     }
     setPlayerSkills(skillsObject) { this.playerSkills = { ...this.playerSkills, ...skillsObject }; }
@@ -96,7 +97,7 @@ class GameState {
             this.inventory.push(item);
             return true;
         }
-        if (this.DEBUG_MODE) console.warn('[GameState] Inventory full. Cannot add item:', item);
+        if (this.DEBUG_MODE) debugLogger.warn('GameState', 'Inventory full. Cannot add item:', item);
         return false;
     }
     removeItemFromInventoryById(itemId) {
@@ -104,7 +105,7 @@ class GameState {
         if (itemIndex > -1) {
             return this.inventory.splice(itemIndex, 1)[0];
         }
-        if (this.DEBUG_MODE) console.warn(`[GameState] Item with id ${itemId} not found in inventory.`);
+        if (this.DEBUG_MODE) debugLogger.warn('GameState', `Item with id ${itemId} not found in inventory.`);
         return null;
     }
     isInventoryFull() {
@@ -142,7 +143,7 @@ class GameState {
         this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;
         this.customerTemplates = config.defaultCustomerTemplates ? JSON.parse(JSON.stringify(config.defaultCustomerTemplates)) : this.customerTemplates;
 
-        if (this.DEBUG_MODE) console.log('[GameState] State reset to defaults.');
+        if (this.DEBUG_MODE) debugLogger.log('GameState', 'State reset to defaults.');
     }
 
     // --- Persistence ---
@@ -175,7 +176,7 @@ class GameState {
 
         // customerTemplates are handled by script.js and ContactsAppManager for persistence
         // MAX_*, DAYS_ARRAY are from config
-        if (this.DEBUG_MODE) console.log('[GameState] State loaded from saved data.');
+        if (this.DEBUG_MODE) debugLogger.log('GameState', 'State loaded from saved data.');
     }
 }
 

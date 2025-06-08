@@ -17,7 +17,7 @@ import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js'; // MODIFIED
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
 import { possibleWorldEvents } from './data/data_events.js';
-import { getRandomElement, isLocalStorageAvailable } from './utils.js';
+import { getRandomElement, isLocalStorageAvailable, debugLogger, DEBUG_MODE } from './utils.js';
 
 // =================================================================================
 // I. DOM ELEMENT REFERENCES & GAME STATE VARIABLES
@@ -48,7 +48,7 @@ const systemAvatarUrl = "assets/icons/info-icon.svg";
 
 // --- Game State & Managers (customerTemplates and DEBUG_MODE remain global for PoC) ---
 // let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // REMOVED Global Variable
-let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // DEBUG_MODE remains global for now
+// let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // DEBUG_MODE is now imported from utils.js
 
 // Prepare Configuration Objects
 const gameStateConfig = {
@@ -135,16 +135,7 @@ let isPlayingAudio = false;
 // =================================================================================
 
 let rikkDebugInterval = null;
-// let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // Moved to global state section
-
-const debugLogger = {
-    log: (component, message, data) => {
-        if (DEBUG_MODE) console.log(`[${component}] ${message}`, data || '');
-    },
-    error: (component, message, error) => {
-        if (DEBUG_MODE) console.error(`[${component} ERROR] ${message}`, error || '');
-    }
-};
+// const debugLogger = { ... }; // debugLogger is now imported from utils.js
 
 // --- World Event Effects Helper ---
 function getCombinedActiveEventEffects() {

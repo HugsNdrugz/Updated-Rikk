@@ -1,5 +1,22 @@
 // utils.js
 
+export const DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false;
+
+export const debugLogger = {
+    log: (component, message, data) => {
+        if (DEBUG_MODE) console.log(`[${component}] ${message}`, data || '');
+    },
+    error: (component, message, error) => {
+        if (DEBUG_MODE) console.error(`[${component} ERROR] ${message}`, error || '');
+    },
+    warn: (component, message, data) => { // Added for console.warn
+        if (DEBUG_MODE) console.warn(`[${component} WARN] ${message}`, data || '');
+    },
+    info: (component, message, data) => { // Added for console.info
+        if (DEBUG_MODE) console.info(`[${component} INFO] ${message}`, data || '');
+    }
+};
+
 export function getRandomElement(arr) {
     if (!arr || arr.length === 0) return null;
     return arr[Math.floor(Math.random() * arr.length)];

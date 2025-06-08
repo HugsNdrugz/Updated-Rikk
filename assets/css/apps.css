@@ -1,0 +1,79 @@
+/* ======================================================================== */
+/* === STYLES FOR INTEGRATED CONTACTS APP (SCOPED & REFACTORED) === */
+/* ======================================================================== */
+
+#contacts-app-view {
+    background-color: var(--color-dark-bg);
+    color: var(--text-color); /* Assuming --text-color is defined in variables.css or is a general variable */
+    display: flex;
+    flex-direction: column;
+    padding-top: 0; /* Was already there, kept for consistency */
+}
+
+#contacts-app-view #details-panel-contacts {
+    background-color: var(--color-dark-bg);
+}
+
+#contacts-app-view .app-header-contacts {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 15px; background-color: var(--color-surface);
+    flex-shrink: 0; border-bottom: 1px solid var(--divider-color); /* Assuming --divider-color */
+}
+#contacts-app-view #app-title-contacts { font-size: 1.2em; font-weight: 700; color: var(--primary-color); } /* Assuming --primary-color */
+#contacts-app-view .header-icons-contacts { display: flex; gap: 10px; }
+#contacts-app-view .icon-btn { background: none; border: none; color: var(--subtle-text-color); font-size: 1.2em; cursor: pointer; } /* Assuming --subtle-text-color */
+#contacts-app-view .main-app-content-contacts { flex-grow: 1; position: relative; overflow: hidden; }
+#contacts-app-view #contacts-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; background-color: var(--bg-color); padding: 0 10px 15px 10px; } /* Assuming --bg-color */
+#contacts-app-view .list-section-header { font-size: 0.8em; color: var(--subtle-text-color); margin-top: 15px; margin-bottom: 8px; padding-left: 5px; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+#contacts-app-view .star-icon { color: gold; font-size: 1.1em; }
+#contacts-app-view .customer-card { background-color: var(--surface-color); border-radius: 15px; padding: 8px 10px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.2s; user-select: none; position: relative; overflow: hidden; } /* Assuming --surface-color */
+#contacts-app-view .customer-card:not(.no-divider):not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 60px; right: 15px; height: 1px; background-color: var(--divider-color); }
+#contacts-app-view .customer-card.active { background-color: var(--active-card-bg); } /* Assuming --active-card-bg */
+#contacts-app-view .customer-card.my-profile-card { margin-top: 8px; margin-bottom: 8px; }
+#contacts-app-view .customer-card-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover; flex-shrink: 0; background-color: #666; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; color: #fff; overflow: hidden; }
+#contacts-app-view .customer-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+#contacts-app-view .avatar-initial { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+#contacts-app-view .customer-card-info { flex-grow: 1; }
+#contacts-app-view .customer-card-name { font-size: 0.9em; margin-bottom: 2px; font-weight: 500; color: var(--text-color); }
+#contacts-app-view .customer-card-key { font-size: 0.7em; color: var(--subtle-text-color); }
+#contacts-app-view .customer-card.active .customer-card-name { color: var(--text-color-dark); } /* Assuming --text-color-dark */
+#contacts-app-view .customer-card.active .customer-card-key { color: #555; }
+#contacts-app-view #details-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform: translateX(100%); transition: transform 0.3s ease-out; z-index: 10; display: flex; flex-direction: column; }
+#contacts-app-view #details-panel-contacts.active { transform: translateX(0); }
+#contacts-app-view .details-panel-header { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--divider-color); flex-shrink: 0; background-color: var(--surface-color); }
+#contacts-app-view .details-panel-header .icon-btn { margin-right: 10px; font-size: 1.5em;}
+#contacts-app-view #details-panel-title { flex-grow: 1; font-size: 1.1em; color: var(--primary-color); text-align: center; margin-right: 40px; }
+#contacts-app-view #details-panel-content { flex-grow: 1; padding: 15px; overflow-y: auto; }
+#contacts-app-view .editor-pane, #contacts-app-view .new-customer-step-content { padding: 10px; }
+#contacts-app-view .editor-section { padding: 15px; margin-bottom:15px; background: var(--surface-color); border-radius: 10px; }
+#contacts-app-view .form-group { margin-bottom: 15px; }
+#contacts-app-view .form-group label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--subtle-text-color); }
+#contacts-app-view .form-group input, #contacts-app-view .form-group textarea, #contacts-app-view .form-group select { width: 100%; padding: 10px; background: var(--color-dark-bg); border: 1px solid var(--divider-color); border-radius: 5px; color: var(--text-color); font-size: 0.9rem; }
+#contacts-app-view .checkbox-group { display: flex; flex-direction: column; gap: 5px; }
+#contacts-app-view .checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 8px; background-color: var(--color-dark-bg); border-radius: 5px;}
+#contacts-app-view pre { background: #000; padding: 10px; border-radius: 5px; font-size: 0.7rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;}
+
+/* ======================================================================== */
+/* === SCOPED STYLES FOR SLOT GAME APP === */
+/* ======================================================================== */
+
+#slot-game-view {
+    background: #000;
+    font-family: 'Black Ops One', sans-serif;
+    color: white;
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+}
+#slot-game-view .phone-header { background-color: #111; border-bottom: 1px solid #333; } /* This was already in phone.css, but specific enough to be here too or overridden */
+#slot-game-view .game-container { display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; padding: 10px; flex-grow: 1; transform: scale(0.65); transform-origin: center center; margin-top: -40px; }
+#slot-game-view #slot { border: 4px solid #343a40; max-width: 100%; height: auto; box-sizing: content-box; border-radius: 40px; }
+#slot-game-view .winner-display { color: #FFD700; font-size: 28px; border-radius: 20px; border: 0; font-weight: bold; overflow: hidden; padding: 8px 16px; }
+#slot-game-view #spin-manual { background-color: #9a0102; color: wheat; border: 4px solid #dc3545; border-radius: 40px; padding: 16px; font-size: 24px; cursor: pointer; justify-content: center; text-align: center; flex: 1; }
+#slot-game-view .bet-action-btn { border-radius: 50%; border: solid 4px #343a40; background-color: #313030; color: wheat; }
+#slot-game-view #spin-auto, #slot-game-view #pay-table { background-color: #313030; color: wheat; border: 4px solid #343a40; border-radius: 40px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
+#slot-game-view .controls .left { font-size: 20px; }
+#slot-game-view .controls .middle { width: 250px; }
+#slot-game-view button:hover { opacity: 0.8 !important; box-shadow: 0 0 10px 0 #000000; }
+#slot-game-view .modal-dialog { margin: 1rem; }
+#slot-game-view div.modal-footer, #slot-game-view div.modal-body, #slot-game-view div.modal-header { background-color: #000000de; color: white; }

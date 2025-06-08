@@ -1,0 +1,78 @@
+:root {
+    /* Colors */
+    --color-dark-bg: #121212;
+    --color-surface: #1e1e1e;
+    --color-primary: #bb86fc;
+    --color-secondary: #03dac6;
+    --color-error: #cf6679;
+    --color-on-surface: #e0e0e0;
+    --color-on-primary: #000000;
+    --color-light-text: #f0f0f1;
+    --color-mid-dark: #2c3e50;
+    --color-grey-dark: #333333;
+    --color-grey-mid: #757575;
+    --color-grey-light: #bdbdbd;
+    --color-grey-dim: #9e9e9e;
+    --color-accent-gold: #f39c12;
+    --color-accent-orange: #e67e22;
+    --color-link-blue: #3498db;
+    --color-success-green: #2ecc71;
+    --color-danger-red: var(--color-error);
+    --color-overlay-dark-strong: rgba(0, 0, 0, 0.9);
+    --color-overlay-dark-medium: rgba(0, 0, 0, 0.65);
+    --color-button-primary-bg: var(--color-primary);
+    --color-button-primary-text: var(--color-on-primary);
+    --color-button-primary-border: var(--color-primary);
+    --color-button-secondary-bg: transparent;
+    --color-button-secondary-text: var(--color-secondary);
+    --color-button-secondary-border: var(--color-secondary);
+    --color-disabled-bg: rgba(224, 224, 224, 0.12);
+    --color-disabled-border: rgba(224, 224, 224, 0.12);
+    --color-disabled-text: rgba(224, 224, 224, 0.38);
+    --color-bubble-customer: #3E3E42;
+    --color-bubble-customer-text: var(--color-on-surface);
+    --color-bubble-rikk-main: var(--color-primary);
+    --color-bubble-rikk-text: var(--color-on-primary);
+    --color-bubble-narration: transparent;
+    --color-bubble-narration-text: var(--color-grey-mid);
+    --color-hub-action-main: var(--color-secondary);
+    --color-hub-action-hover: #018786;
+    --color-hub-inventory-main: var(--color-primary);
+    --color-hub-inventory-hover: #7f39fb;
+
+    /* NEW UI-SPECIFIC VARS */
+    --primary-accent: #e040fb;
+    --alert-color: #f44336;
+    --ui-bg: rgba(25, 25, 25, 0.6);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+
+    /* Fonts */
+    --font-body: 'Roboto', 'Open Sans', sans-serif;
+    --font-display: 'Press Start 2P', 'Comic Neue', cursive;
+    /* Sizes & Dimensions */
+    --viewport-max-width: 480px;
+    --viewport-border-radius: 12px;
+    --phone-max-width: 320px;
+    --phone-max-height: 70vh;
+    --phone-border-radius: 28px;
+    --phone-screen-inset-radius: calc(var(--phone-border-radius) - 10px);
+    --modal-max-width: 420px;
+    --modal-border-radius: 10px;
+    --button-border-radius: 8px;
+    --chat-bubble-border-radius: 18px;
+    --icon-size: 22px;
+    /* Spacing */
+    --spacing-unit: 8px;
+    --spacing-xs: calc(var(--spacing-unit) * 0.5);
+    --spacing-sm: var(--spacing-unit);
+    --spacing-md: calc(var(--spacing-unit) * 1.5);
+    --spacing-lg: calc(var(--spacing-unit) * 2);
+    --spacing-xl: calc(var(--spacing-unit) * 3);
+    /* Transitions & Animations */
+    --transition-duration-short: 0.2s;
+    --transition-duration-medium: 0.4s;
+    --transition-easing: ease-in-out;
+    --transition-phone-slide: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}

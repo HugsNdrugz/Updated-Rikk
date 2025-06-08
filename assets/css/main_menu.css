@@ -1,0 +1,208 @@
+/* === REVISED MAIN MENU STYLES === */
+#main-menu-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: var(--spacing-xl);
+    text-align: center;
+    position: relative;
+    z-index: 10; /* Ensure content is above background lights */
+}
+
+/* Settings Cog Button */
+#start-screen #settings-menu-btn {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s ease, transform 0.3s ease;
+    padding: 0px;
+}
+
+#start-screen #settings-menu-btn:hover {
+    color: #fff;
+    transform: rotate(45deg);
+}
+
+/* === SPLIT BUTTON MAIN MENU STYLES (DEBUGGED) === */
+.split-button-container {
+    display: flex;
+    align-items: center; /* For aligning items within the container if they have different heights */
+    gap: 8px;
+    font-family: 'Inter', sans-serif, system-ui;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+}
+
+.split-button-container .btn {
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: border-bottom;
+    align-items: center;
+    font-weight: 700;
+    user-select: none;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+
+    /* DEBUGGED: Using colors from the example */
+    background-color: var(--color-primary);
+    color: var(--color-light-text);
+}
+
+.split-button-container .btn-main {
+    padding:  20px 6px; /* Adjusted padding for the new text */
+    font-size: 1.2rem;
+    font-family: var(--font-display);
+    border-radius: 50px;
+}
+
+.split-button-container .btn-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+/* DEBUGGED: Using hover color from the example */
+.split-button-container:hover .btn {
+    background-color: var(--color-secondary);
+    color: var(--color-light-text);
+}
+
+.split-button-container .btn:active {
+    transform: scale(0.97);
+}
+
+
+/* === Sub-Menu Panel Styles (Unchanged) === */
+.submenu-panel {
+    background-color: var(--color-surface);
+    padding: var(--spacing-xl);
+    border-radius: var(--modal-border-radius);
+    border: 1px solid var(--color-grey-dark);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 450px;
+    z-index: 1010;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    color: var(--color-on-surface);
+}
+
+.submenu-panel h2 {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.8rem;
+}
+
+.submenu-panel p {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    line-height: 1.6;
+}
+
+.submenu-back-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: bold;
+    background-color: var(--color-grey-dark);
+    color: var(--color-on-surface);
+    border: 1px solid var(--color-grey-mid);
+    border-radius: var(--button-border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    display: block;
+    margin: var(--spacing-xl) auto 0;
+    min-width: 150px;
+    text-align: center;
+}
+
+.submenu-back-btn:hover {
+    background-color: var(--color-grey-mid);
+    border-color: var(--color-grey-light);
+}
+
+/* === MAIN MENU LIGHT EFFECT === */
+
+#start-screen .light-container {
+    position: bottom-right-radius; /* This seems like a typo, should likely be 'absolute' or 'fixed' depending on desired effect */
+    inset: 0; /* top, right, bottom, left = 0 */
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Sit behind the menu content but over the background image */
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0); /* Add a dark overlay to make lights pop */
+
+    /* Controlled by JS */
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+#start-screen .light-container.lights-active {
+    opacity: 1;
+}
+
+#start-screen .light {
+    position: absolute;
+    top: 10;
+    left: -10;
+    width: 150%;
+    height: 150%;
+    opacity: 0;
+    will-change: opacity;
+}
+
+#start-screen .left-bank {
+    background: radial-gradient(circle at 25% 50%, rgba(255, 0, 0, 0.7), transparent 50%);
+    filter: blur(40px);
+    animation: left-side-flash 1s infinite;
+}
+
+#start-screen .right-bank {
+    background: radial-gradient(circle at 75% 50%, rgba(0, 80, 255, 0.7), transparent 50%);
+    filter: blur(40px);
+    animation: right-side-flash 1s infinite;
+}
+
+#start-screen .left-strobe {
+    background: radial-gradient(circle at 25% 50%, #ff5050, transparent 25%);
+    filter: blur(5px);
+    animation: left-side-flash 1s infinite;
+}
+
+#start-screen .right-strobe {
+    background: radial-gradient(circle at 75% 50%, #50a0ff, transparent 25%);
+    filter: blur(5px);
+    animation: right-side-flash 1s infinite;
+}
+
+@keyframes left-side-flash {
+    0% { opacity: 1; }
+    10% { opacity: 0; }
+    20% { opacity: 1; }
+    30%, 100% { opacity: 0; }
+}
+
+@keyframes right-side-flash {
+    0%, 49.9% { opacity: 0; }
+    50% { opacity: 1; }
+    60% { opacity: 0; }
+    70% { opacity: 1; }
+    80%, 100% { opacity: 0; }
+}

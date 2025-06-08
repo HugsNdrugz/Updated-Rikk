@@ -1,4 +1,5 @@
 // UIManager.js
+import { debugLogger } from './utils.js';
 
 class UIManager {
     constructor(gameStateInstance, config = {}) {
@@ -171,13 +172,13 @@ class UIManager {
             this.chatSpacerElement.className = 'chat-spacer';
             this.chatContainer.appendChild(this.chatSpacerElement);
         }
-        console.log('[UIManager] DOM references initialized.');
+        debugLogger.log('UIManager', 'DOM references initialized.');
     }
 
     // --- HUD Updates ---
     updateHUD() {
         if (!this.cashDisplay || !this.dayDisplay || !this.heatDisplay || !this.credDisplay) {
-            console.warn("[UIManager] HUD elements not fully initialized for updateHUD.");
+            debugLogger.warn('UIManager', "HUD elements not fully initialized for updateHUD.");
             return;
         }
         this.cashDisplay.textContent = this.gameState.getCash();
@@ -217,7 +218,7 @@ class UIManager {
     setPhoneUIState(state) {
         this.currentPhoneState = state; // Store the state
         if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppView || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
-            console.warn("[UIManager] Phone UI elements not fully initialized for setPhoneUIState.");
+            debugLogger.warn('UIManager', "Phone UI elements not fully initialized for setPhoneUIState.");
             return;
         }
 
@@ -272,7 +273,7 @@ class UIManager {
                 this.phoneScreenArea.classList.add('screen-off');
                 break;
             default:
-                console.warn(`[UIManager] Unknown phone state: ${state}`);
+                debugLogger.warn('UIManager', `Unknown phone state: ${state}`);
                 this.setPhoneUIState('docked'); // Default to docked
                 break;
         }
@@ -318,7 +319,7 @@ class UIManager {
 
     updateInventoryDisplay() {
         if (!this.inventoryList || !this.inventoryCountDisplay || !this.modalInventorySlotsDisplay) {
-            console.warn("[UIManager] Inventory display elements not fully initialized.");
+            debugLogger.warn('UIManager', "Inventory display elements not fully initialized.");
             return;
         }
 
@@ -352,9 +353,9 @@ class UIManager {
     playSound(soundElement) {
         if (soundElement && typeof soundElement.play === 'function') {
             soundElement.currentTime = 0;
-            soundElement.play().catch(e => console.warn(`[UIManager] Audio play failed: ${e.name}`, e));
+            soundElement.play().catch(e => debugLogger.warn('UIManager', `Audio play failed: ${e.name}`, e));
         } else {
-            // console.warn("[UIManager] Attempted to play an invalid sound element:", soundElement);
+            // debugLogger.warn('UIManager', "Attempted to play an invalid sound element:", soundElement);
         }
     }
 
@@ -389,7 +390,7 @@ class UIManager {
         this.clearChoices(); // Clear previous choices
 
         if (!choices || choices.length === 0) {
-            // console.warn("[UIManager] No choices to display.");
+            // debugLogger.warn('UIManager', "No choices to display.");
             return;
         }
 
@@ -405,7 +406,7 @@ class UIManager {
             if (!choice.disabled && typeof handleChoiceCallback === 'function') {
                 button.addEventListener('click', () => handleChoiceCallback(choice.outcome));
             } else if (!choice.disabled) {
-                // console.warn("[UIManager] handleChoiceCallback not provided for active choice button:", choice.text);
+                // debugLogger.warn('UIManager', "handleChoiceCallback not provided for active choice button:", choice.text);
             }
             this.choicesArea.appendChild(button);
         });
@@ -419,7 +420,7 @@ class UIManager {
             messageText = "..."; // Default for undefined messages
         }
         if (!this.chatContainer || !this.chatSpacerElement) {
-            console.warn("[UIManager] Chat container not ready for messages.");
+            debugLogger.warn('UIManager', "Chat container not ready for messages.");
             return;
         }
 
@@ -577,7 +578,7 @@ class UIManager {
                     else localStorage.removeItem(this.styleSettingsKey);
                 }
             } catch (e) {
-                console.error('[UIManager] Error parsing style settings from localStorage:', e);
+                debugLogger.error('UIManager', 'Error parsing style settings from localStorage:', e);
                 localStorage.removeItem(this.styleSettingsKey);
             }
         }
@@ -597,15 +598,15 @@ class UIManager {
     saveStyleSettingsToStorage() {
         // Assuming localStorageAvailable is a global or passed via config
         if (typeof localStorageAvailable === 'undefined' || !localStorageAvailable) {
-            console.warn('[UIManager] localStorage not available. Cannot save style settings.');
+            debugLogger.warn('UIManager', 'localStorage not available. Cannot save style settings.');
             return;
         }
         try {
             const settingsToSave = this._getValuesFromControls();
             localStorage.setItem(this.styleSettingsKey, JSON.stringify(settingsToSave));
-            console.log('[UIManager] Style settings saved to storage.');
+            debugLogger.log('UIManager', 'Style settings saved to storage.');
         } catch (error) {
-            console.error('[UIManager] Failed to save style settings:', error);
+            debugLogger.error('UIManager', 'Failed to save style settings:', error);
         }
     }
 
@@ -685,7 +686,7 @@ class UIManager {
     // --- Submenu Panel Methods ---
     toggleMainMenuButtons(show) {
         if (!this.primaryActionsContainer || !this.submenuNavigationContainer) {
-            console.warn('[UIManager] Main menu button containers not found.');
+            debugLogger.warn('UIManager', 'Main menu button containers not found.');
             return;
         }
         if (show) {
@@ -699,7 +700,7 @@ class UIManager {
 
     openSubmenuPanel(panelElement) {
         if (!panelElement) {
-            console.warn('[UIManager] Attempted to open a null panel.');
+            debugLogger.warn('UIManager', 'Attempted to open a null panel.');
             return;
         }
         this.toggleMainMenuButtons(false);
@@ -708,7 +709,7 @@ class UIManager {
 
     closeSubmenuPanel(panelElement) {
         if (!panelElement) {
-            console.warn('[UIManager] Attempted to close a null panel.');
+            debugLogger.warn('UIManager', 'Attempted to close a null panel.');
             return;
         }
         panelElement.classList.add('hidden');
