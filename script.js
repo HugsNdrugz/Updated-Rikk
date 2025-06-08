@@ -8,7 +8,7 @@
 
 // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
-import { Game } from './Game.js'; // ADDED
+import { GameState } from './GameState.js'; // MODIFIED
 import { UIManager } from './UIManager.js'; // ADDED
 import { CustomerManager } 
 from './classes/CustomerManager.js';
@@ -22,47 +22,64 @@ import { possibleWorldEvents } from './data/data_events.js';
 // I. DOM ELEMENT REFERENCES & GAME STATE VARIABLES
 // =================================================================================
 
-// --- DOM Element References (Declared with `let`, assigned in `initGame`) ---
-let splashScreen, gameViewport, startScreen, gameScreen, endScreen;
-let newGameBtn, continueGameBtn, restartGameBtn;
-let cashDisplay, dayDisplay, heatDisplay, credDisplay, finalCredDisplay;
-let eventTicker, gameScene, knockEffect;
-let rikkPhoneUI, phoneScreenArea, androidHomeScreen, gameChatView, contactsAppView, slotGameView;
-let chatContainer, choicesArea, phoneTitleGame, phoneBackButtons;
-let phoneDock, phoneHomeIndicator, phoneDockedIndicator, dockPhoneBtn;
-let openInventoryBtn, inventoryCountDisplay, nextCustomerBtn;
-let inventoryModal, closeModalBtn, inventoryList, modalInventorySlotsDisplay;
-let finalDaysDisplay, finalCashDisplay, finalVerdictText;
-let doorKnockSound, cashSound, deniedSound, chatBubbleSound;
-let primaryActionsContainer, submenuNavigationContainer;
-let settingsMenuBtn, loadMenuBtn, creditsMenuBtn;
-let settingsMenuPanel, loadMenuPanel, creditsMenuPanel;
-let allSubmenuBackBtns;
-let phoneThemeSettingsView; // NEW: Declare phone theme settings view
-let mainMenuLightContainer; // ADDED: Reference for the menu light effect
-
-// --- Game State & Managers ---
-let cash = 0, fiendsLeft = 0, heat = 0, streetCred = 0;
-let inventory = [], activeWorldEvents = [];
-let currentCustomerInstance = null, gameActive = false;
-let playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
-let dayOfWeek = 'Monday';
+// --- Global Constants & Game Configuration ---
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-// let customerManager, contactsAppManager, slotGameManager; // REMOVED global manager variables
-let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // ADDED: Global let for customer templates
+const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
+const SAVE_KEY = 'myNiggaRikkSaveDataV10';
+const STYLE_SETTINGS_KEY = 'rikkGameStyleSettingsV1';
+const CUSTOMER_TEMPLATES_SAVE_KEY = 'rikkGameCustomerTemplatesV1';
+const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
+const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
+const APP_CONTAINER_SELECTOR = '#game-viewport';
 
-// ADDED: Instantiate Game and UIManager
-const game = new Game();
-const uiManager = new UIManager(game);
+// --- Avatars (For chat UI) ---
+const customerAvatars = {
+    "DESPERATE_FIEND": "https://randomuser.me/api/portraits/men/32.jpg",
+    "HIGH_ROLLER": "https://randomuser.me/api/portraits/men/45.jpg",
+    "REGULAR_JOE": "https://randomuser.me/api/portraits/women/67.jpg",
+    "INFORMANT": "https://randomuser.me/api/portraits/men/78.jpg",
+    "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg",
+    "STIMULANT_USER": "https://randomuser.me/api/portraits/men/9.jpg",
+    "PSYCHEDELIC_EXPLORER": "https://randomuser.me/api/portraits/men/7.jpg"
+};
+const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
+const systemAvatarUrl = "assets/icons/info-icon.svg";
+
+// --- Game State & Managers (customerTemplates and DEBUG_MODE remain global for PoC) ---
+// let customerTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // REMOVED Global Variable
+let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // DEBUG_MODE remains global for now
+
+// Prepare Configuration Objects
+const gameStateConfig = {
+    STARTING_CASH: STARTING_CASH,
+    MAX_FIENDS: MAX_FIENDS,
+    DAYS: days,
+    STARTING_STREET_CRED: STARTING_STREET_CRED,
+    MAX_INVENTORY_SLOTS: MAX_INVENTORY_SLOTS,
+    MAX_HEAT: MAX_HEAT,
+    defaultCustomerTemplates: defaultCustomerTemplates, // Using the imported default, not the global 'let'
+    DEBUG_MODE: DEBUG_MODE
+};
+
+const uiManagerConfig = {
+    APP_CONTAINER_SELECTOR: APP_CONTAINER_SELECTOR,
+    customerAvatars: customerAvatars,
+    rikkAvatarUrl: rikkAvatarUrl,
+    systemAvatarUrl: systemAvatarUrl
+};
+
+// Instantiate Managers
+const game = new GameState(gameStateConfig); // MODIFIED
+const uiManager = new UIManager(game, uiManagerConfig);
 game.uiManager = uiManager; // Link UIManager instance to the game instance
 
-// --- UI State ---
-let chatSpacerElement = null;
+// --- UI State (chatSpacerElement might be managed by UIManager later) ---
+// let chatSpacerElement = null; // This was likely for UIManager, can be removed if UIManager handles its own spacer
 
 // --- Style Settings Preview Mode State ---
 let isPreviewModeActive = false; // Added for Preview Mode
 let originalSettingsBeforePreview = {}; // Added for Preview Mode
-const APP_CONTAINER_SELECTOR = '#game-viewport'; // Added for Preview Mode (using game-viewport)
+// const APP_CONTAINER_SELECTOR = '#game-viewport'; // Moved to global constants
 
 // --- localStorage Availability Check ---
 function isLocalStorageAvailable() {
@@ -82,13 +99,13 @@ function isLocalStorageAvailable() {
 }
 const localStorageAvailable = isLocalStorageAvailable();
 
-// --- Game Configuration ---
-const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000;
-const SAVE_KEY = 'myNiggaRikkSaveDataV10';
-const STYLE_SETTINGS_KEY = 'rikkGameStyleSettingsV1';
-const CUSTOMER_TEMPLATES_SAVE_KEY = 'rikkGameCustomerTemplatesV1'; // ADDED
-const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500;
-const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10;
+// --- Game Configuration (Most moved to top) ---
+// const CUSTOMER_WAIT_TIME = 1100, KNOCK_ANIMATION_DURATION = 1000; // Moved
+// const SAVE_KEY = 'myNiggaRikkSaveDataV10'; // Moved
+// const STYLE_SETTINGS_KEY = 'rikkGameStyleSettingsV1'; // Moved
+// const CUSTOMER_TEMPLATES_SAVE_KEY = 'rikkGameCustomerTemplatesV1'; // Moved
+// const STARTING_CASH = 500, MAX_FIENDS = 15, SPLASH_SCREEN_DURATION = 2500; // Moved
+// const STARTING_STREET_CRED = 0, MAX_HEAT = 100, MAX_INVENTORY_SLOTS = 10; // Moved
 
 const defaultStyleSettings = {
     '--color-dark-bg': '#121212',
@@ -109,18 +126,10 @@ const defaultStyleSettings = {
     '--spacing-unit': '8'
 };
 
-// --- Avatars (For chat UI) ---
-const customerAvatars = {
-    "DESPERATE_FIEND": "https://randomuser.me/api/portraits/men/32.jpg",
-    "HIGH_ROLLER": "https://randomuser.me/api/portraits/men/45.jpg",
-    "REGULAR_JOE": "https://randomuser.me/api/portraits/women/67.jpg",
-    "INFORMANT": "https://randomuser.me/api/portraits/men/78.jpg",
-    "SNITCH": "https://randomuser.me/api/portraits/women/12.jpg",
-    "STIMULANT_USER": "https://randomuser.me/api/portraits/men/9.jpg",
-    "PSYCHEDELIC_EXPLORER": "https://randomuser.me/api/portraits/men/7.jpg"
-};
-const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
-const systemAvatarUrl = "assets/icons/info-icon.svg";
+// --- Avatars (For chat UI) --- // Moved to top
+// const customerAvatars = { ... };
+// const rikkAvatarUrl = "...";
+// const systemAvatarUrl = "...";
 
 // --- ElevenLabs TTS API Configuration ---
 const TTS_ENABLED = false;
@@ -144,7 +153,7 @@ function getRandomElement(arr) {
 // =================================================================================
 
 let rikkDebugInterval = null;
-let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false;
+// let DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false; // Moved to global state section
 
 const debugLogger = {
     log: (component, message, data) => {
@@ -159,63 +168,9 @@ const debugLogger = {
 // III. CORE GAME INITIALIZATION & FLOW
 // =================================================================================
 
-function assignDOMReferences() {
-    splashScreen = document.getElementById('splash-screen');
-    gameViewport = document.getElementById('game-viewport');
-    startScreen = document.getElementById('start-screen');
-    gameScreen = document.getElementById('game-screen');
-    endScreen = document.getElementById('end-screen');
-    newGameBtn = document.getElementById('new-game-btn');
-    continueGameBtn = document.getElementById('continue-game-btn');
-    restartGameBtn = document.getElementById('restart-game-btn');
-    cashDisplay = document.getElementById('cash-display');
-    dayDisplay = document.getElementById('day-display');
-    heatDisplay = document.getElementById('heat-display');
-    credDisplay = document.getElementById('cred-display');
-    finalCredDisplay = document.getElementById('final-cred-display');
-    eventTicker = document.getElementById('event-ticker');
-    gameScene = document.getElementById('game-scene');
-    knockEffect = document.getElementById('knock-effect');
-    rikkPhoneUI = document.getElementById('rikk-phone-ui');
-    phoneScreenArea = document.getElementById('phone-screen-area');
-    androidHomeScreen = document.getElementById('android-home-screen');
-    gameChatView = document.getElementById('game-chat-view');
-    contactsAppView = document.getElementById('contacts-app-view');
-    slotGameView = document.getElementById('slot-game-view');
-    phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
-    chatContainer = document.getElementById('chat-container-game');
-    choicesArea = document.getElementById('choices-area-game');
-    phoneTitleGame = document.getElementById('phone-title-game');
-    phoneBackButtons = document.querySelectorAll('.phone-back-button');
-    phoneDock = rikkPhoneUI.querySelector('.dock');
-    phoneHomeIndicator = rikkPhoneUI.querySelector('.home-indicator');
-    phoneDockedIndicator = document.getElementById('phone-docked-indicator');
-    dockPhoneBtn = document.getElementById('dock-phone-btn');
-    openInventoryBtn = document.getElementById('open-inventory-btn');
-    inventoryCountDisplay = document.getElementById('inventory-count-display');
-    nextCustomerBtn = document.getElementById('next-customer-btn');
-    inventoryModal = document.getElementById('inventory-modal');
-    closeModalBtn = document.querySelector('#inventory-dialog .close-modal-btn');
-    inventoryList = document.getElementById('inventory-list');
-    modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
-    finalDaysDisplay = document.getElementById('final-days-display');
-    finalCashDisplay = document.getElementById('final-cash-display');
-    finalVerdictText = document.getElementById('final-verdict-text');
-    primaryActionsContainer = document.getElementById('primary-actions');
-    submenuNavigationContainer = document.getElementById('submenu-navigation');
-    settingsMenuBtn = document.getElementById('settings-menu-btn');
-    loadMenuBtn = document.getElementById('load-menu-btn');
-    creditsMenuBtn = document.getElementById('credits-menu-btn');
-    settingsMenuPanel = document.getElementById('settings-menu-panel');
-    loadMenuPanel = document.getElementById('load-menu-panel');
-    creditsMenuPanel = document.getElementById('credits-menu-panel');
-    allSubmenuBackBtns = document.querySelectorAll('.submenu-back-btn');
-    doorKnockSound = document.getElementById('door-knock-sound');
-    cashSound = document.getElementById('cash-sound');
-    deniedSound = document.getElementById('denied-sound');
-    chatBubbleSound = document.getElementById('chat-bubble-sound');
-    mainMenuLightContainer = document.getElementById('main-menu-lights'); // ADDED
-}
+// function assignDOMReferences() { // DELETED
+// ... DOM element assignments removed ...
+// }
 
 // ADDED: Function to save customer templates
 function saveCustomerTemplates() {
@@ -224,52 +179,60 @@ function saveCustomerTemplates() {
         return;
     }
     try {
-        localStorage.setItem(CUSTOMER_TEMPLATES_SAVE_KEY, JSON.stringify(customerTemplates)); // Uses global customerTemplates
-        console.log('Customer templates saved successfully.');
+        // Get templates from the GameState instance
+        const templatesToSave = game.getCustomerTemplates();
+        localStorage.setItem(CUSTOMER_TEMPLATES_SAVE_KEY, JSON.stringify(templatesToSave));
+        console.log('Customer templates (from GameState) saved successfully.');
     } catch (error) {
-        console.error('Failed to save customer templates:', error);
+        console.error('Failed to save customer templates (from GameState):', error);
     }
 }
 
 // ADDED: Function to load customer templates
 function loadCustomerTemplates() {
+    let loadedTemplates;
     if (!localStorageAvailable) {
         console.warn('localStorage is not available. Using default customer templates.');
-        return JSON.parse(JSON.stringify(defaultCustomerTemplates)); // Return a copy of defaults
-    }
-    try {
-        const savedTemplatesString = localStorage.getItem(CUSTOMER_TEMPLATES_SAVE_KEY);
-        if (savedTemplatesString) {
-            const loadedTemplates = JSON.parse(savedTemplatesString);
-            if (typeof loadedTemplates === 'object' && loadedTemplates !== null && Object.keys(loadedTemplates).length > 0) {
-                console.log('Customer templates loaded from localStorage.');
-                return loadedTemplates; // This will be assigned to the global customerTemplates
+        loadedTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates));
+    } else {
+        try {
+            const savedTemplatesString = localStorage.getItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+            if (savedTemplatesString) {
+                const parsed = JSON.parse(savedTemplatesString);
+                if (typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length > 0) {
+                    console.log('Customer templates loaded from localStorage.');
+                    loadedTemplates = parsed;
+                } else {
+                    console.warn('Invalid customer templates found in localStorage. Using defaults.');
+                    localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+                    loadedTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates));
+                }
             } else {
-                console.warn('Invalid customer templates found in localStorage. Using defaults.');
-                localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
-                return JSON.parse(JSON.stringify(defaultCustomerTemplates));
+                loadedTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates)); // Defaults if nothing in storage
             }
+        } catch (error) {
+            console.error('Error loading customer templates from localStorage. Using defaults.', error);
+            localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
+            loadedTemplates = JSON.parse(JSON.stringify(defaultCustomerTemplates));
         }
-        return JSON.parse(JSON.stringify(defaultCustomerTemplates)); // Defaults if nothing in storage
-    } catch (error) {
-        console.error('Error loading customer templates from localStorage. Using defaults.', error);
-        localStorage.removeItem(CUSTOMER_TEMPLATES_SAVE_KEY);
-        return JSON.parse(JSON.stringify(defaultCustomerTemplates));
     }
+    game.updateCustomerTemplates(loadedTemplates); // Update GameState instance
 }
 
 function initializeManagers() {
-    customerTemplates = loadCustomerTemplates();
+    loadCustomerTemplates(); // Load and set templates into 'game' instance
 
-    game.customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, customerTemplates);
+    const currentTemplates = game.getCustomerTemplates(); // Get from GameState
+
+    game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+    game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates);
 
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
-        () => game.cash, // Access cash via game object
+        () => game.getCash(),
         (newCash) => {
-            game.cash = newCash; // Update cash on game object
-            uiManager.updateHUD(); // Call HUD update via uiManager
+            game.setCash(newCash);
+            uiManager.updateHUD();
         }
     );
 
@@ -277,12 +240,13 @@ function initializeManagers() {
        uiManager.contactsAppView.addEventListener('customerTemplatesUpdated', (event) => {
            if (event.detail && event.detail.updatedTemplates) {
                console.log('customerTemplatesUpdated event received in script.js');
-               customerTemplates = event.detail.updatedTemplates;
-               saveCustomerTemplates();
+               // customerTemplates = event.detail.updatedTemplates; // REMOVE THIS LINE
+               game.updateCustomerTemplates(event.detail.updatedTemplates); // Update in GameState
+               saveCustomerTemplates(); // Will now save from game.getCustomerTemplates()
 
-               // Re-initialize CustomerManager with the new templates
-               game.customerManager = new CustomerManager(customerTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-               console.log('CustomerManager re-initialized with updated templates due to event.');
+               // Re-initialize CustomerManager with the new templates from GameState
+               game.customerManager = new CustomerManager(game.getCustomerTemplates(), itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+               console.log('CustomerManager re-initialized with updated templates (from GameState) due to event.');
 
                phoneShowNotification('Contact templates updated and saved!', 'Contacts App');
            }
@@ -291,32 +255,35 @@ function initializeManagers() {
 }
 
 function setupEventListeners() {
-    newGameBtn.addEventListener('click', handleStartNewGameClick);
-    continueGameBtn.addEventListener('click', handleContinueGameClick);
-    restartGameBtn.addEventListener('click', handleRestartGameClick);
-    nextCustomerBtn.addEventListener('click', nextFiend);
-    openInventoryBtn.addEventListener('click', openInventoryModal);
-    closeModalBtn.addEventListener('click', closeInventoryModal);
-    inventoryModal.addEventListener('click', (e) => {
-        if (e.target === inventoryModal) closeInventoryModal();
+    // Assumes uiManager.newGameBtn etc. are now populated by uiManager.initDOMReferences()
+    if (uiManager.newGameBtn) uiManager.newGameBtn.addEventListener('click', handleStartNewGameClick);
+    if (uiManager.continueGameBtn) uiManager.continueGameBtn.addEventListener('click', handleContinueGameClick);
+    if (uiManager.restartGameBtn) uiManager.restartGameBtn.addEventListener('click', handleRestartGameClick);
+    if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.addEventListener('click', nextFiend);
+    if (uiManager.openInventoryBtn) uiManager.openInventoryBtn.addEventListener('click', () => uiManager.openInventoryModal()); // Changed
+    if (uiManager.closeModalBtn) uiManager.closeModalBtn.addEventListener('click', () => uiManager.closeInventoryModal()); // Changed
+    if (uiManager.inventoryModal) uiManager.inventoryModal.addEventListener('click', (e) => { // Changed
+        if (e.target === uiManager.inventoryModal) uiManager.closeInventoryModal(); // Changed
     });
 
-    rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
-    phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
-    phoneDockedIndicator.addEventListener('click', () => setPhoneUIState('home'));
-    dockPhoneBtn.addEventListener('click', () => setPhoneUIState('docked'));
+    if (uiManager.rikkPhoneUI) { // Changed
+        uiManager.rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
+    }
+    if (uiManager.phoneBackButtons) uiManager.phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick)); // Changed
+    if (uiManager.phoneDockedIndicator) uiManager.phoneDockedIndicator.addEventListener('click', () => uiManager.setPhoneUIState('home')); // Changed
+    if (uiManager.dockPhoneBtn) uiManager.dockPhoneBtn.addEventListener('click', () => uiManager.setPhoneUIState('docked')); // Changed
 
-    if (settingsMenuBtn) {
-        settingsMenuBtn.addEventListener('click', () => openSubmenuPanel(settingsMenuPanel));
+    if (uiManager.settingsMenuBtn) { // Changed
+        uiManager.settingsMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.settingsMenuPanel)); // Changed
     }
-    if (loadMenuBtn) {
-        loadMenuBtn.addEventListener('click', () => openSubmenuPanel(loadMenuPanel));
+    if (uiManager.loadMenuBtn) { // Changed
+        uiManager.loadMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.loadMenuPanel)); // Changed
     }
-    if (creditsMenuBtn) {
-        creditsMenuBtn.addEventListener('click', () => openSubmenuPanel(creditsMenuPanel));
+    if (uiManager.creditsMenuBtn) { // Changed
+        uiManager.creditsMenuBtn.addEventListener('click', () => openSubmenuPanel(uiManager.creditsMenuPanel)); // Changed
     }
 
-    allSubmenuBackBtns.forEach(button => {
+    if (uiManager.allSubmenuBackBtns) uiManager.allSubmenuBackBtns.forEach(button => { // Changed
         button.addEventListener('click', (event) => {
             const panelToClose = event.target.closest('.submenu-panel');
             if (panelToClose) {
@@ -327,150 +294,160 @@ function setupEventListeners() {
 }
 
 function initializeUIAndSettings() {
-    // Initial Screen Flow
-    splashScreen.classList.add('active');
-    setTimeout(() => {
-        splashScreen.classList.remove('active');
-        splashScreen.style.display = 'none';
-        startScreen.classList.add('active');
-        
-        // ADDED: Activate the main menu lights
-        if (mainMenuLightContainer) {
-            mainMenuLightContainer.classList.add('lights-active');
-        }
-
-        checkForSavedGame();
-    }, SPLASH_SCREEN_DURATION);
+    // Initial Screen Flow using UIManager
+    if (uiManager.splashScreen) {
+        uiManager.splashScreen.classList.add('active');
+        setTimeout(() => {
+            if (uiManager.splashScreen) {
+                uiManager.splashScreen.classList.remove('active');
+                uiManager.splashScreen.style.display = 'none';
+            }
+            if (uiManager.startScreen) {
+                 uiManager.startScreen.classList.add('active');
+            }
+            if (uiManager.mainMenuLightContainer) {
+                uiManager.activateMainMenuLights(true);
+            }
+            checkForSavedGame();
+        }, SPLASH_SCREEN_DURATION);
+    }
 
     initStyleSettingsControls(); // Initializes controls for both main menu and phone app
     loadStyleSettings(); // Loads and applies styles to all relevant controls
 
     // Initialize Sub-modules
-    initPhoneAmbientUI(rikkPhoneUI);
+    if (uiManager.rikkPhoneUI) {
+        initPhoneAmbientUI(uiManager.rikkPhoneUI);
+    }
 }
 
 function initGame() {
-    uiManager.initPrimaryUI(); // This calls assignDOMReferences internally
-    initializeManagers();    // This will now assign managers to game object
-    initializeUIAndSettings(); // Review this next
+    uiManager.initDOMReferences(); // MODIFIED: Call UIManager's DOM reference initialization
+    initializeManagers();
+    initializeUIAndSettings();
     setupEventListeners();
 }
 
 function initializeNewGameState() {
     clearSavedGameState();
-    cash = STARTING_CASH;
-    fiendsLeft = MAX_FIENDS;
-    heat = 0;
-    streetCred = STARTING_STREET_CRED;
-    inventory = [];
-    playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
-    activeWorldEvents = [];
-    dayOfWeek = days[0];
-    gameActive = false;
-    // customerManager.reset(); // This will be game.customerManager.reset()
+    game.resetToDefault(gameStateConfig); // MODIFIED: Use GameState's reset method
+
     if (game.customerManager) game.customerManager.reset();
-    updateEventTicker(); // This will become uiManager.updateEventTicker()
+    uiManager.updateEventTicker(); // MODIFIED: Call UIManager method
 }
 
 function startGameFlow() {
-    // ADDED: Deactivate main menu lights as we are leaving this screen.
-    if (mainMenuLightContainer) {
-        mainMenuLightContainer.classList.remove('lights-active');
+    if (uiManager.mainMenuLightContainer) { // MODIFIED
+        uiManager.activateMainMenuLights(false); // MODIFIED
     }
 
-    gameActive = true;
-    startScreen.classList.remove('active');
-    endScreen.classList.remove('active');
-    gameScreen.classList.add('active');
-    // setPhoneUIState('home'); // This will be uiManager.setPhoneUIState('home')
-    uiManager.setPhoneUIState('home');
-    updateHUD(); // This will be uiManager.updateHUD()
-    updateInventoryDisplay(); // This will be uiManager.updateInventoryDisplay()
-    // clearChat(); // This will be uiManager.clearChat()
-    // clearChoices(); // This will be uiManager.clearChoices()
-    uiManager.clearChat();
-    uiManager.clearChoices();
+    game.setGameActive(true); // MODIFIED
+    uiManager.showScreen(uiManager.gameScreen);  // MODIFIED
+    if (uiManager.startScreen) uiManager.startScreen.classList.remove('active'); // MODIFIED
+    if (uiManager.endScreen) uiManager.endScreen.classList.remove('active'); // MODIFIED
+
+    uiManager.setPhoneUIState('home'); // MODIFIED
+    uiManager.updateHUD(); // MODIFIED
+    uiManager.updateInventoryDisplay(); // MODIFIED
+    uiManager.clearChat(); // MODIFIED
+    uiManager.clearChoices(); // MODIFIED
     nextFiend();
 }
 
 function endGame(reason) {
-    gameActive = false;
-    gameScreen.classList.remove('active');
-    endScreen.classList.add('active');
-    finalDaysDisplay.textContent = MAX_FIENDS - fiendsLeft;
-    finalCashDisplay.textContent = cash;
-    finalCredDisplay.textContent = streetCred;
+    game.setGameActive(false); // MODIFIED
+    uiManager.showScreen(uiManager.endScreen); // MODIFIED
+    if (uiManager.gameScreen) uiManager.gameScreen.classList.remove('active'); // MODIFIED
+
+    if (uiManager.finalDaysDisplay) uiManager.finalDaysDisplay.textContent = gameStateConfig.MAX_FIENDS - game.getFiendsLeft(); // MODIFIED
+    if (uiManager.finalCashDisplay) uiManager.finalCashDisplay.textContent = game.getCash(); // MODIFIED
+    if (uiManager.finalCredDisplay) uiManager.finalCredDisplay.textContent = game.getStreetCred(); // MODIFIED
     
     if (reason === "heat") {
-        finalVerdictText.textContent = `The block's too hot, nigga! 5-0 swarming. Heat: ${heat}. Time to ghost.`;
+        if (uiManager.finalVerdictText) uiManager.finalVerdictText.textContent = `The block's too hot, nigga! 5-0 swarming. Heat: ${game.getHeat()}. Time to ghost.`; // MODIFIED
     } else if (reason === "bankrupt") {
-        finalVerdictText.textContent = "Broke as a joke, and empty handed. Can't hustle on E, fam.";
+        if (uiManager.finalVerdictText) uiManager.finalVerdictText.textContent = "Broke as a joke, and empty handed. Can't hustle on E, fam."; // MODIFIED
     } else if (reason === "completed") {
-        if (cash >= STARTING_CASH * 3) {
-            finalVerdictText.textContent = "You a certified KINGPIN! The streets whisper your name.";
-        } else if (cash >= STARTING_CASH * 1.5) {
-            finalVerdictText.textContent = "Solid hustle, G. Made bank and respect.";
+        if (game.getCash() >= STARTING_CASH * 3) { // MODIFIED
+            if (uiManager.finalVerdictText) uiManager.finalVerdictText.textContent = "You a certified KINGPIN! The streets whisper your name."; // MODIFIED
+        } else if (game.getCash() >= STARTING_CASH * 1.5) { // MODIFIED
+            if (uiManager.finalVerdictText) uiManager.finalVerdictText.textContent = "Solid hustle, G. Made bank and respect."; // MODIFIED
         } else {
-            finalVerdictText.textContent = "Broke even or worse. Gotta step your game up, Rikk.";
+            if (uiManager.finalVerdictText) uiManager.finalVerdictText.textContent = "Broke even or worse. Gotta step your game up, Rikk."; // MODIFIED
         }
     }
-    finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (cash > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)");
-    // setPhoneUIState('offscreen'); // This will be uiManager.setPhoneUIState('offscreen')
-    uiManager.setPhoneUIState('offscreen');
+    if (uiManager.finalVerdictText) uiManager.finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (game.getCash() > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)"); // MODIFIED
+
+    uiManager.setPhoneUIState('offscreen'); // MODIFIED
     clearSavedGameState();
 }
 
 function handleTurnProgressionAndEvents() {
-    updateDayOfWeek();
-    advanceWorldEvents();
-    triggerWorldEvent();
-    heat = Math.max(0, heat - (1 + playerSkills.lowProfile));
-    updateHUD();
+    game.advanceDayOfWeek(); // MODIFIED
+
+    // Refactor activeWorldEvents logic for advanceWorldEvents part:
+    let currentEvents = game.getActiveWorldEvents();
+    currentEvents.forEach(eventState => eventState.turnsLeft--);
+    game.setActiveWorldEvents(currentEvents.filter(eventState => eventState.turnsLeft > 0));
+
+    // Refactor activeWorldEvents logic for triggerWorldEvent part (simplified):
+    let worldEventsState = game.getActiveWorldEvents();
+    if (worldEventsState.length > 0 && Math.random() < 0.7) { /* do nothing */ }
+    else {
+        worldEventsState = worldEventsState.filter(event => event.turnsLeft > 0);
+        if (possibleWorldEvents.length > 0 && Math.random() < 0.25 && worldEventsState.length === 0) {
+            const eventTemplate = getRandomElement(possibleWorldEvents);
+            worldEventsState.push({ ...eventTemplate, turnsLeft: eventTemplate.duration });
+        }
+        game.setActiveWorldEvents(worldEventsState);
+    }
+    uiManager.updateEventTicker(); // MODIFIED
+
+    // Refactor heat calculation:
+    const skills = game.getPlayerSkills();
+    game.decreaseHeat(1 + (skills.lowProfile || 0)); // MODIFIED
+
+    uiManager.updateHUD(); // MODIFIED
 }
 
 function setupUIForNewInteraction() {
-    clearChat();
-    clearChoices();
-    nextCustomerBtn.disabled = true;
-    // setPhoneUIState('docked'); // This will be uiManager.setPhoneUIState('docked')
-    uiManager.setPhoneUIState('docked');
-    playSound(doorKnockSound); // This will be uiManager.playSound(uiManager.doorKnockSound)
-    knockEffect.textContent = `*${dayOfWeek} hustle... someone's knockin'.*`;
-    knockEffect.classList.remove('hidden');
-    knockEffect.style.animation = 'none';
-    void knockEffect.offsetWidth; // Trigger reflow
-    knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
+    uiManager.clearChat(); // MODIFIED
+    uiManager.clearChoices(); // MODIFIED
+    if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.disabled = true; // MODIFIED
+    uiManager.setPhoneUIState('docked'); // MODIFIED
+    uiManager.playSound(uiManager.doorKnockSound); // MODIFIED
+    uiManager.displayKnockEffect(game.getDayOfWeek()); // MODIFIED
 }
 
 function generateAndStartCustomerInteraction() {
-    knockEffect.classList.add('hidden');
-    const gameState = { inventory, cash, playerSkills, activeWorldEvents }; // These will be game.inventory, game.cash etc.
+    uiManager.hideKnockEffect(); // MODIFIED
+    // gameState object creation removed, direct game state access used below
     const interaction = game.customerManager.generateInteraction({
-        inventory: game.inventory,
-        cash: game.cash,
-        playerSkills: game.playerSkills,
-        activeWorldEvents: game.activeWorldEvents
+        inventory: game.getInventory(), // MODIFIED
+        cash: game.getCash(), // MODIFIED
+        playerSkills: game.getPlayerSkills(), // MODIFIED
+        activeWorldEvents: game.getActiveWorldEvents() // MODIFIED
     });
-    currentCustomerInstance = interaction.instance; // This global might need to be part of game state
+    game.setCurrentCustomerInstance(interaction.instance); // MODIFIED: Use GameState method
     startCustomerInteraction(interaction);
 }
 
 function nextFiend() {
-    if (!gameActive || fiendsLeft <= 0) {
+    if (!game.isGameActive() || game.getFiendsLeft() <= 0) { // MODIFIED
         endGame("completed");
         return;
     }
 
     try {
         handleTurnProgressionAndEvents();
-        setupUIForNewInteraction(); // Shows knock effect
+        setupUIForNewInteraction();
 
         setTimeout(() => {
             try {
                 generateAndStartCustomerInteraction();
             } catch (e) {
                 console.error("[SCRIPT ERROR in generateAndStartCustomerInteraction]", e);
-                if (typeof nextCustomerBtn !== 'undefined') nextCustomerBtn.disabled = true;
+                if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.disabled = true; // MODIFIED
                 if (typeof phoneShowNotification === 'function') phoneShowNotification("Oops! A glitch in the matrix. Try restarting if issues persist.", "System Error");
             }
         }, KNOCK_ANIMATION_DURATION);
@@ -480,77 +457,79 @@ function nextFiend() {
         if (typeof debugLogger !== 'undefined' && debugLogger.error) {
             debugLogger.error('nextFiend', 'Critical error in turn progression', e);
         }
-        if (typeof nextCustomerBtn !== 'undefined') nextCustomerBtn.disabled = true;
+        if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.disabled = true; // MODIFIED
         if (typeof phoneShowNotification === 'function') phoneShowNotification("An error occurred. Things might be unstable.", "System Error");
     }
 
-    saveGameState();
+    saveGameState(); // saveGameState will need refactoring to use game.toJSON()
 }
 
 function startCustomerInteraction(interaction) {
-    // setPhoneUIState('chatting'); // uiManager.setPhoneUIState
-    uiManager.setPhoneUIState('chatting');
-    phoneTitleGame.textContent = interaction.name; // uiManager.phoneTitleGame
+    uiManager.setPhoneUIState('chatting'); // MODIFIED
+    uiManager.setPhoneTitle(interaction.name); // MODIFIED
     phoneShowNotification(`Incoming message from: ${interaction.name}`, "New Customer");
     
-    // clearChat(); // uiManager.clearChat()
-    uiManager.clearChat();
+    uiManager.clearChat(); // MODIFIED
     let dialogueIndex = 0;
     const displayNext = () => {
         if (dialogueIndex < interaction.dialogue.length) {
             const msg = interaction.dialogue[dialogueIndex];
             dialogueIndex++;
-            queueNextMessage(msg.text, msg.speaker, () => {
+            queueNextMessage(msg.text, msg.speaker, () => { // queueNextMessage will use uiManager.displayPhoneMessage
                 setTimeout(displayNext, CUSTOMER_WAIT_TIME);
             });
         } else {
-            displayChoices(interaction.choices);
+            uiManager.displayChoices(interaction.choices, handleChoice); // MODIFIED: Pass handleChoice
         }
     };
     displayNext();
 }
 
 function endCustomerInteraction() {
-    // clearChoices(); // uiManager.clearChoices()
-    uiManager.clearChoices();
-    phoneTitleGame.textContent = 'Street Talk'; // uiManager.phoneTitleGame
-    currentCustomerInstance = null; // part of game state?
-    // setPhoneUIState('home'); // uiManager.setPhoneUIState
-    uiManager.setPhoneUIState('home');
-    if (gameActive && fiendsLeft > 0 && heat < MAX_HEAT && (cash > 0 || inventory.length > 0)) { // game.gameActive, game.fiendsLeft etc.
-        nextCustomerBtn.disabled = false; // uiManager.nextCustomerBtn
-    } else if (gameActive) {
-        nextCustomerBtn.disabled = true;
-        if (heat >= MAX_HEAT) endGame("heat");
-        else if (cash <= 0 && inventory.length === 0) endGame("bankrupt");
-        else if (fiendsLeft <= 0) endGame("completed");
+    uiManager.clearChoices(); // MODIFIED
+    uiManager.setPhoneTitle('Street Talk'); // MODIFIED
+    game.clearCurrentCustomerInstance(); // MODIFIED
+    uiManager.setPhoneUIState('home'); // MODIFIED
+
+    // MODIFIED: Use game getters for conditions
+    if (game.isGameActive() && game.getFiendsLeft() > 0 && game.getHeat() < game.getMaxHeat() && (game.getCash() > 0 || game.getInventory().length > 0)) {
+        uiManager.setNextCustomerButtonDisabled(false); // MODIFIED
+    } else if (game.isGameActive()) { // MODIFIED
+        uiManager.setNextCustomerButtonDisabled(true); // MODIFIED
+        if (game.getHeat() >= game.getMaxHeat()) endGame("heat"); // MODIFIED
+        else if (game.getCash() <= 0 && game.getInventory().length === 0) endGame("bankrupt"); // MODIFIED
+        else if (game.getFiendsLeft() <= 0) endGame("completed"); // MODIFIED
     }
-    saveGameState();
+    saveGameState(); // Needs refactor
 }
 
 // =================================================================================
 // IV. UI MANAGEMENT & DISPLAY FUNCTIONS
+// (Many of these functions will be deleted or moved to UIManager)
 // =================================================================================
 
 function toggleMainMenuButtons(show) {
-    if (!primaryActionsContainer || !submenuNavigationContainer) return; // Guard clause
+    // This function might be kept if it controls elements not part of UIManager's direct responsibility,
+    // or moved if uiManager.primaryActionsContainer and uiManager.submenuNavigationContainer are valid.
+    // For now, assume UIManager properties are valid.
+    if (!uiManager.primaryActionsContainer || !uiManager.submenuNavigationContainer) return;
     if (show) {
-        primaryActionsContainer.classList.remove('hidden');
-        submenuNavigationContainer.classList.remove('hidden');
+        uiManager.primaryActionsContainer.classList.remove('hidden');
+        uiManager.submenuNavigationContainer.classList.remove('hidden');
     } else {
-        primaryActionsContainer.classList.add('hidden');
-        submenuNavigationContainer.classList.add('hidden');
+        uiManager.primaryActionsContainer.classList.add('hidden');
+        uiManager.submenuNavigationContainer.classList.add('hidden');
     }
 }
 
 function openSubmenuPanel(panelElement) {
-    if (!panelElement) return; // Guard clause
+    if (!panelElement) return;
     toggleMainMenuButtons(false);
     panelElement.classList.remove('hidden');
 }
 
 function closeSubmenuPanel(panelElement) {
-    if (!panelElement) return; // Guard clause
+    if (!panelElement) return;
     panelElement.classList.add('hidden');
     toggleMainMenuButtons(true);
 }
@@ -558,12 +537,11 @@ function closeSubmenuPanel(panelElement) {
 // Modified: applyStyleSetting now ONLY sets the CSS property. Saving is handled by initStyleSettingsControls.
 function applyStyleSetting(variableName, value) {
     if (variableName && typeof value !== 'undefined') {
-        let cssValue = value; // Value from input, e.g. "12" or "#FFFFFF" or "'Roboto', sans-serif"
+        let cssValue = value;
 
         const control = document.querySelector(`[data-variable="${variableName}"]`);
         if (control && control.type === 'range' &&
             (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
-            // Ensure value is string for concatenation, input.value is usually string
             cssValue = String(value) + 'px';
         }
         document.documentElement.style.setProperty(variableName, cssValue);
@@ -573,8 +551,6 @@ function applyStyleSetting(variableName, value) {
 function saveStyleSettings() {
     if (!localStorageAvailable) {
         console.warn('localStorage is not available. Settings will not be saved.');
-        // Optionally, inform the user via UI that settings cannot be saved.
-        // showErrorState("Cannot save settings: Storage unavailable.", null); // Example if showErrorState is available
         return;
     }
 
@@ -583,20 +559,19 @@ function saveStyleSettings() {
     const actualSettingsErrorMessageElement = actualSettingsErrorElement ? actualSettingsErrorElement.querySelector('.error-message') : null;
 
     if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.remove('hidden');
-    if (actualSettingsErrorElement) actualSettingsErrorElement.classList.add('hidden'); // Hide error if showing
+    if (actualSettingsErrorElement) actualSettingsErrorElement.classList.add('hidden');
 
     try {
         const settingsToSave = {};
         const styleControls = document.querySelectorAll('[data-variable]');
         styleControls.forEach(control => {
             const cssVariable = control.dataset.variable;
-            settingsToSave[cssVariable] = control.value; // Store the raw control value
+            settingsToSave[cssVariable] = control.value;
         });
         localStorage.setItem(STYLE_SETTINGS_KEY, JSON.stringify(settingsToSave));
 
         if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
         console.log('Settings saved successfully (minimal).');
-        // Optional: if (typeof phoneShowNotification === 'function') phoneShowNotification("Settings Saved!", "System");
 
     } catch (error) {
         if (actualSettingsLoadingElement) actualSettingsLoadingElement.classList.add('hidden');
@@ -627,39 +602,32 @@ function getSettingsFromLocalStorage() {
                 return null;
             }
         }
-        return null; // No settings found
+        return null;
     } catch (error) {
         console.error('Error parsing settings from localStorage:', error);
-        localStorage.removeItem(STYLE_SETTINGS_KEY); // Attempt to clear corrupted data
+        localStorage.removeItem(STYLE_SETTINGS_KEY);
         return null;
     }
 }
 
 function validateAndMergeSettings(loadedSettings, defaultSettings) {
     if (!loadedSettings) {
-        return { ...defaultSettings }; // Return a deep copy of defaults
+        return { ...defaultSettings };
     }
 
-    const validatedSettings = { ...loadedSettings }; // Start with loaded settings
+    const validatedSettings = { ...loadedSettings };
 
     for (const key in defaultSettings) {
         if (defaultSettings.hasOwnProperty(key)) {
-            // If key is missing in loaded or type is different, revert to default for that key
             if (!validatedSettings.hasOwnProperty(key) || typeof validatedSettings[key] !== typeof defaultSettings[key]) {
-                if (validatedSettings.hasOwnProperty(key)) { // Log if type was mismatched
+                if (validatedSettings.hasOwnProperty(key)) {
                     console.warn(`Type mismatch for setting "${key}". Expected ${typeof defaultSettings[key]} but got ${typeof validatedSettings[key]}. Using default for this key.`);
                 }
                 validatedSettings[key] = defaultSettings[key];
             }
         }
     }
-    // Optional: remove keys from validatedSettings that are not in defaultSettings
-    // for (const key in validatedSettings) {
-    //     if (!defaultSettings.hasOwnProperty(key)) {
-    //         delete validatedSettings[key];
-    //     }
-    // }
-    return { ...defaultSettings, ...validatedSettings }; // Ensure all defaults are present, overriding with validated loaded values
+    return { ...defaultSettings, ...validatedSettings };
 }
 
 function applySettingsToDOM(settingsToApply) {
@@ -668,8 +636,8 @@ function applySettingsToDOM(settingsToApply) {
         const cssVariable = control.dataset.variable;
         if (settingsToApply.hasOwnProperty(cssVariable)) {
             const value = settingsToApply[cssVariable];
-            control.value = value; // Set input control value
-            applyStyleSetting(cssVariable, value); // Apply to CSS (handles 'px' conversion)
+            control.value = value;
+            applyStyleSetting(cssVariable, value);
 
             if (control.type === 'range') {
                 const valueDisplaySpan = document.querySelector(`.value-display[data-target="${control.id}"]`);
@@ -687,11 +655,9 @@ function loadStyleSettings() {
 
     applySettingsToDOM(currentStyleSettings);
 
-    // If no valid settings were loaded from localStorage (meaning defaults were used entirely or partially due to corruption)
-    // and localStorage is available, save the current (potentially merged/default) settings.
     if (loadedSettings === null && localStorageAvailable) {
         console.log("Saving initial/default styles to localStorage as no valid saved settings were found or localStorage was empty.");
-        saveStyleSettings(); // saveStyleSettings reads from DOM inputs, which are now set by applySettingsToDOM
+        saveStyleSettings();
     } else if (loadedSettings !== null) {
         console.log("Successfully loaded and applied settings from localStorage.");
     } else {
@@ -702,43 +668,34 @@ function loadStyleSettings() {
 // --- End of Style Settings Refactored Helper Functions ---
 
 function initStyleSettingsControls() {
-    // Modify to query all controls with data-variable, enabling it for both main menu and phone app
     const styleControls = document.querySelectorAll('[data-variable]');
 
     styleControls.forEach(control => {
         const cssVariable = control.dataset.variable;
-        let eventType = 'input'; // For live updates on color pickers and range sliders
+        let eventType = 'input';
         if (control.type === 'select-one') {
-            eventType = 'change'; // 'change' is better for select elements
+            eventType = 'change';
         }
 
-        // Remove existing listener to prevent duplicates if called multiple times (e.g., during app re-launch)
-        // This needs to be done carefully to avoid removing listeners that are only *meant* to be there once.
-        // For simplicity with this current design, we assume init is called once on DOMContentLoaded.
-        // If apps were truly dynamic, a more robust event delegation or cleanup pattern would be needed.
-
         control.addEventListener(eventType, (event) => {
-            const rawValue = event.target.value; // e.g., "12", "#FFFFFF"
-            // const cssVariable = control.dataset.variable; // cssVariable is already defined in outer scope
+            const rawValue = event.target.value;
 
             if (control.type === 'range') {
                 const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
                 if (valueDisplay) {
-                    valueDisplay.textContent = rawValue; // Show numeric value
+                    valueDisplay.textContent = rawValue;
                 }
             }
 
-            applyStyleSetting(cssVariable, rawValue); // Apply visually to CSS (handles 'px' conversion internally)
+            applyStyleSetting(cssVariable, rawValue);
 
-            if (!isPreviewModeActive) { // isPreviewModeActive needs to be defined globally
+            if (!isPreviewModeActive) {
                 saveStyleSettings();
             } else {
                 console.log(`Preview change: ${cssVariable} = ${rawValue} (not saved)`);
             }
         });
 
-        // Initial update of the value display span for range inputs (if they exist)
-        // This is handled by loadStyleSettings, but a fallback can be here if needed.
         if (control.type === 'range') {
             const valueDisplay = document.querySelector(`.value-display[data-target="${control.id}"]`);
             if (valueDisplay) {
@@ -754,10 +711,11 @@ function handleStartNewGameClick() {
 }
 
 function handleContinueGameClick() {
-    if (loadGameState()) {
+    if (loadGameState()) { // loadGameState will need refactor for game.fromJSON()
         startGameFlow();
     } else {
-        displaySystemMessage("System: No saved game found.");
+        // displaySystemMessage("System: No saved game found."); // This will be uiManager.displayPhoneMessage
+        uiManager.displayPhoneMessage("System: No saved game found.", "narration"); // Example
         initializeNewGameState();
         startGameFlow();
     }
@@ -768,90 +726,37 @@ function handleRestartGameClick() {
     startGameFlow();
 }
 
-function setPhoneUIState(state) {
-    if (!rikkPhoneUI) return;
-    
-    // Hide all phone content views initially
-    rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
-    androidHomeScreen.classList.add('hidden'); 
-    gameChatView.classList.add('hidden'); 
-    contactsAppView.classList.add('hidden');
-    slotGameView.classList.add('hidden');
-    phoneThemeSettingsView.classList.add('hidden'); // NEW: Hide phone theme settings view
-    
-    phoneScreenArea.classList.remove('screen-off');
-    phoneDockedIndicator.classList.add('hidden');
-    phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
-    phoneDock.classList.add('hidden'); 
-    phoneHomeIndicator.classList.add('hidden'); 
-    
-    switch (state) {
-        case 'chatting':
-            rikkPhoneUI.classList.add('chatting-game'); 
-            gameChatView.classList.remove('hidden');
-            break;
-        case 'home':
-            rikkPhoneUI.classList.add('home-screen-active'); 
-            androidHomeScreen.classList.remove('hidden');
-            phoneDock.classList.remove('hidden');
-            phoneHomeIndicator.classList.remove('hidden');
-            break;
-        case 'contacts':
-            rikkPhoneUI.classList.add('app-menu-game'); 
-            contactsAppView.classList.remove('hidden');
-            phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-            break;
-        case 'slots':
-            rikkPhoneUI.classList.add('app-menu-game');
-            slotGameView.classList.remove('hidden');
-            slotGameManager.launch();
-            phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-            break;
-        case 'theme-settings': // NEW: Phone Theme Settings case
-            rikkPhoneUI.classList.add('app-menu-game');
-            phoneThemeSettingsView.classList.remove('hidden');
-            // Re-initialize controls if needed (though initStyleSettingsControls runs globally)
-            // loadStyleSettings() ensures controls are up-to-date
-            phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-            break;
-        case 'docked':
-            rikkPhoneUI.classList.add('is-offscreen'); 
-            phoneScreenArea.classList.add('screen-off');
-            phoneDockedIndicator.classList.remove('hidden');
-            break;
-        case 'offscreen':
-            rikkPhoneUI.classList.add('is-offscreen');
-            phoneScreenArea.classList.add('screen-off');
-            break;
-    }
-}
+// function setPhoneUIState(state) { // DELETED - Now in UIManager
+// ...
+// }
 
 function handlePhoneAppClick(event) {
     const action = event.currentTarget.dataset.action;
     switch(action) {
         case 'messages':
-            if (!nextCustomerBtn.disabled && fiendsLeft > 0 && gameActive) { 
+            // MODIFIED: Use game/uiManager properties/methods
+            if (uiManager.nextCustomerBtn && !uiManager.nextCustomerBtn.disabled && game.getFiendsLeft() > 0 && game.isGameActive()) {
                 nextFiend(); 
-            } else if (currentCustomerInstance) { 
-                setPhoneUIState('chatting'); 
+            } else if (game.getCurrentCustomerInstance()) {
+                uiManager.setPhoneUIState('chatting');
             } else { 
                 phoneShowNotification("No new messages.", "Rikk's Inbox"); 
             }
             break;
         case 'inventory-app': 
-            openInventoryModal(); 
+            uiManager.openInventoryModal(); // MODIFIED
             break;
         case 'contacts-app':
-            setPhoneUIState('contacts');
+            uiManager.setPhoneUIState('contacts'); // MODIFIED
             break;
         case 'slot-game':
-            setPhoneUIState('slots');
+            uiManager.setPhoneUIState('slots'); // MODIFIED
             break;
-        case 'theme-settings': // NEW: Handle Theme Settings app click
-            setPhoneUIState('theme-settings');
+        case 'theme-settings':
+            uiManager.setPhoneUIState('theme-settings'); // MODIFIED
             break;
         case 'back-to-home': 
-            setPhoneUIState('home'); 
+            uiManager.setPhoneUIState('home');  // MODIFIED
             break;
         default: 
             phoneShowNotification(`App "${action}" not implemented.`, "System"); 
@@ -860,6 +765,8 @@ function handlePhoneAppClick(event) {
 }
 
 function queueNextMessage(message, speaker, callback) {
+    // This function's core logic (TTS or direct display) will largely remain,
+    // but calls to displayPhoneMessage and playSound will go through uiManager.
     audioQueue.push({ message, speaker, callback });
     if (!isPlayingAudio) {
         processAudioQueue();
@@ -876,10 +783,10 @@ function processAudioQueue() {
     const { message, speaker, callback } = audioQueue.shift();
 
     if (!TTS_ENABLED || speaker === 'narration' || !ELEVENLABS_API_KEY || !ELEVENLABS_VOICE_ID_CUSTOMER || !ELEVENLABS_VOICE_ID_RIKK) {
-        playSound(chatBubbleSound);
-        displayPhoneMessage(message, speaker);
+        uiManager.playSound(uiManager.chatBubbleSound); // MODIFIED
+        uiManager.displayPhoneMessage(message, speaker); // MODIFIED
         if (callback) callback();
-        setTimeout(() => processAudioQueue(), 400);
+        setTimeout(() => processAudioQueue(), 400); // Keep delay for non-TTS
         return;
     }
 
@@ -891,18 +798,18 @@ function processAudioQueue() {
         "Accept": "audio/mpeg"
     };
     const data = {
-        text: message.replace(/\*\*|[\*_]/g, ''),
-        model_id: "eleven_monolingual_v1",
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+        text: message.replace(/\*\*|[\*_]/g, ''), // TTS usually doesn't need markdown
+        model_id: "eleven_monolingual_v1", // Or your preferred model
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 } // Example settings
     };
 
     fetch(url, { method: "POST", headers: headers, body: JSON.stringify(data) })
     .then(response => {
         if (!response.ok) {
-            return response.json().then(errData => {
+            return response.json().then(errData => { // Try to parse JSON error from ElevenLabs
                 const errorDetail = errData.detail?.message || JSON.stringify(errData.detail);
                 throw new Error(`HTTP error ${response.status}: ${errorDetail}`);
-            }).catch(() => {
+            }).catch(() => { // Fallback if error is not JSON
                 throw new Error(`HTTP error! status: ${response.status}`);
             });
         }
@@ -911,258 +818,150 @@ function processAudioQueue() {
     .then(audioBlob => {
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
-        audio.volume = 0.8;
-        displayPhoneMessage(message, speaker);
-        audio.play().catch(e => { throw e; });
+        audio.volume = 0.8; // Or from config
+        uiManager.displayPhoneMessage(message, speaker); // Display message first
+        audio.play().catch(e => { throw e; }); // Play audio
         audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             if (callback) callback();
-            processAudioQueue();
+            processAudioQueue(); // Process next in queue
         };
     })
     .catch(err => {
         console.error("Error with ElevenLabs TTS:", err);
-        displaySystemMessage(`TTS service failed. Displaying text only.`);
-        playSound(chatBubbleSound);
-        displayPhoneMessage(message, speaker);
+        // displaySystemMessage(`TTS service failed. Displaying text only.`); // Use uiManager
+        uiManager.displayPhoneMessage(`TTS service failed. Displaying text only.`, "narration");
+        uiManager.playSound(uiManager.chatBubbleSound); // Fallback sound
+        uiManager.displayPhoneMessage(message, speaker); // Display message
         if (callback) callback();
-        processAudioQueue();
+        processAudioQueue(); // Process next
     });
 }
 
-function displayPhoneMessage(message, speaker) {
-    if (typeof message === 'undefined' || message === null) {
-        message = "...";
-    }
-    
-    const messageContainer = document.createElement('div');
-    messageContainer.classList.add('chat__conversation-board__message-container');
+// function displayPhoneMessage(message, speaker) { // DELETED - Now in UIManager
+// ...
+// }
 
-    if (speaker === 'rikk') {
-        messageContainer.classList.add('reversed');
-    }
-
-    const personDiv = document.createElement('div');
-    personDiv.classList.add('chat__conversation-board__message__person');
-    const avatarDiv = document.createElement('div');
-    avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
-    const avatarImg = document.createElement('img');
-    
-    if (speaker === 'customer' && currentCustomerInstance?.archetypeKey) {
-        avatarImg.src = customerAvatars[currentCustomerInstance.archetypeKey] || 'https://via.placeholder.com/56/555555/FFFFFF?text=?';
-        avatarImg.alt = currentCustomerInstance.name || 'Customer';
-    } else if (speaker === 'rikk') {
-        avatarImg.src = rikkAvatarUrl;
-        avatarImg.alt = 'Rikk';
-    } else { 
-        avatarImg.src = systemAvatarUrl;
-        avatarImg.alt = 'System';
-    }
-    avatarDiv.appendChild(avatarImg);
-    personDiv.appendChild(avatarDiv);
-
-    if (speaker !== 'narration') {
-        messageContainer.appendChild(personDiv);
-    }
-
-    const contextDiv = document.createElement('div');
-    contextDiv.classList.add('chat__conversation-board__message__context');
-    const bubble = document.createElement('div');
-    bubble.classList.add('chat-bubble', speaker);
-
-    if (speaker === 'customer' || speaker === 'rikk') {
-        const speakerNameElement = document.createElement('span');
-        speakerNameElement.classList.add('speaker-name');
-        speakerNameElement.textContent = (speaker === 'customer') ? (currentCustomerInstance.name || '[Customer]') : 'Rikk';
-        bubble.appendChild(speakerNameElement);
-    }
-    
-    const messageParts = message.split(/(\*\*.*?\*\*)/g);
-    messageParts.forEach(part => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-            const boldEl = document.createElement('strong');
-            boldEl.textContent = part.slice(2, -2);
-            bubble.appendChild(boldEl);
-        } else {
-            bubble.appendChild(document.createTextNode(part));
-        }
-    });
-
-    contextDiv.appendChild(bubble);
-    messageContainer.appendChild(contextDiv);
-
-    if (chatContainer && chatSpacerElement) {
-        chatContainer.insertBefore(messageContainer, chatSpacerElement);
-    } else if (chatContainer) {
-        chatContainer.appendChild(messageContainer);
-    }
-
-    if(chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+function displaySystemMessage(message) { // This can use uiManager.displayPhoneMessage directly
+    uiManager.displayPhoneMessage(message, 'narration'); // MODIFIED
+    phoneShowNotification(message, "System Alert"); // phoneShowNotification is from phone_ambient_ui.js, can remain for now
 }
 
-function displaySystemMessage(message) {
-    displayPhoneMessage(message, 'narration');
-    phoneShowNotification(message, "System Alert");
-}
+// function displayChoices(choices) { // DELETED - Now in UIManager, but handleChoice is passed
+// ...
+// }
 
-function displayChoices(choices) {
-    choicesArea.innerHTML = '';
-    if (!choices) return;
-    choices.forEach(choice => {
-        const button = document.createElement('button');
-        button.classList.add('choice-button');
-        if (choice.outcome.type.startsWith('decline')) {
-            button.classList.add('decline');
-        }
-        button.textContent = choice.text;
-        button.disabled = choice.disabled || false;
-        if (!choice.disabled) {
-            button.addEventListener('click', () => handleChoice(choice.outcome));
-        }
-        choicesArea.appendChild(button);
-    });
-}
+// function updateHUD() { // DELETED - Now uiManager.updateHUD()
+// ...
+// }
 
-function updateHUD() {
-    cashDisplay.textContent = cash;
-    dayDisplay.textContent = fiendsLeft;
-    heatDisplay.textContent = heat;
-    credDisplay.textContent = streetCred;
-}
+// function updateInventoryDisplay() { // DELETED - Now uiManager.updateInventoryDisplay()
+// ...
+// }
 
-function updateInventoryDisplay() {
-    inventoryCountDisplay.textContent = inventory.length;
-    modalInventorySlotsDisplay.textContent = `${inventory.length}/${MAX_INVENTORY_SLOTS}`;
-    inventoryList.innerHTML = '';
-    if (inventory.length > 0) {
-        inventory.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.classList.add('inventory-item-card');
-            itemDiv.innerHTML = `<h4>${item.name} (${item.quality})</h4><p class="item-detail">Copped: $${item.purchasePrice}<br>Heat: +${item.itemTypeObj.heat}</p>`;
-            inventoryList.appendChild(itemDiv);
-        });
-    } else {
-        inventoryList.innerHTML = "<p class='empty-stash-message'>Your stash is bone dry.</p>";
-    }
-}
+// function openInventoryModal() { // DELETED - Now uiManager.openInventoryModal()
+// ...
+// }
 
-function openInventoryModal() {
-    updateInventoryDisplay();
-    inventoryModal.classList.add('active');
-    // setPhoneUIState('offscreen'); // uiManager.setPhoneUIState
-    uiManager.setPhoneUIState('offscreen');
-}
-
-function closeInventoryModal() {
-    inventoryModal.classList.remove('active'); // uiManager.inventoryModal
-    // setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home'); // uiManager.setPhoneUIState
-    uiManager.setPhoneUIState(currentCustomerInstance ? 'chatting' : 'home');
-}
+// function closeInventoryModal() { // DELETED - Now uiManager.closeInventoryModal()
+// ...
+// }
 
 // =================================================================================
 // V. INTERACTION & CHOICE LOGIC
 // =================================================================================
 
 function handleChoice(outcome) {
-    if (!currentCustomerInstance) {
-        console.error("handleChoice called with no active customer instance.");
-        // Potentially call endCustomerInteraction() or a reset function here
+    // MODIFIED: Get current customer from GameState
+    const currentCustomer = game.getCurrentCustomerInstance();
+    if (!currentCustomer) {
+        console.error("handleChoice called with no active customer instance from GameState.");
         return;
     }
 
     try {
-        // clearChoices(); // uiManager.clearChoices() // Already called at the start of this function
-        uiManager.clearChoices();
+        uiManager.clearChoices(); // MODIFIED
 
         let narrationText = "";
         let dealSuccess = false;
         let dialogueContextKey = '';
 
+        // MODIFIED: Use game state getters and setters
         switch (outcome.type) {
-            case "buy_from_customer":
-                if (cash >= outcome.price && inventory.length < MAX_INVENTORY_SLOTS) {
-                    cash -= outcome.price;
-                    game.inventory.push({ ...outcome.item }); // game.inventory
+            case "buy_from_customer": // Verified: Uses game.getCash(), game.isInventoryFull(), game.removeCash(), game.addItemToInventory()
+                if (game.getCash() >= outcome.price && !game.isInventoryFull()) {
+                    game.removeCash(outcome.price);
+                    game.addItemToInventory({ ...outcome.item });
                     dealSuccess = true;
                     narrationText = `Rikk copped "${outcome.item.name}".`;
-                    // playSound(cashSound); // uiManager.playSound
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkBuysSuccess';
                 } else {
-                    narrationText = `Deal failed. ${(game.inventory.length >= game.MAX_INVENTORY_SLOTS) ? "Stash full." : "Not enough cash."}`; // game.inventory, game.MAX_INVENTORY_SLOTS
-                    // playSound(deniedSound); // uiManager.playSound
+                    narrationText = `Deal failed. ${(game.isInventoryFull()) ? "Stash full." : "Not enough cash."}`;
                     uiManager.playSound(uiManager.deniedSound);
                     dialogueContextKey = 'lowCashRikk';
                 }
                 break;
-            case "sell_to_customer":
-                const itemIndex = game.inventory.findIndex(i => i.id === outcome.item.id && i.quality === outcome.item.quality); // game.inventory
-                if (itemIndex !== -1) {
-                    const itemSold = game.inventory.splice(itemIndex, 1)[0]; // game.inventory
-                    cash += outcome.price; // game.cash
+            case "sell_to_customer": // Verified: Uses game.removeItemFromInventoryById(), game.addCash()
+                const soldItem = game.removeItemFromInventoryById(outcome.item.id);
+                if (soldItem) {
+                    game.addCash(outcome.price);
                     dealSuccess = true;
-                    narrationText = `Flipped "${itemSold.name}" for $${outcome.price}.`;
-                    // playSound(cashSound); // uiManager.playSound
+                    narrationText = `Flipped "${soldItem.name}" for $${outcome.price}.`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
                 } else {
                     narrationText = "Couldn't find that item.";
-                    // playSound(deniedSound); // uiManager.playSound
                     uiManager.playSound(uiManager.deniedSound);
                 }
                 break;
-            case "negotiate_sell":
+            case "negotiate_sell": // Verified: Uses game.getPlayerSkills()
                 setTimeout(() => {
-                    if (Math.random() < 0.55 + (game.playerSkills.negotiator * 0.12)) { // game.playerSkills
-                        const negoSuccessResult = game.customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationSuccess');
+                    // MODIFIED: Use game.getPlayerSkills()
+                    if (Math.random() < 0.55 + (game.getPlayerSkills().negotiator * 0.12)) {
+                        const negoSuccessResult = game.customerManager.getOutcomeDialogue(currentCustomer, 'negotiationSuccess');
                         queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
                              handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
                         });
                     } else {
-                        const negoFailResult = game.customerManager.getOutcomeDialogue(currentCustomerInstance, 'negotiationFail');
+                        const negoFailResult = game.customerManager.getOutcomeDialogue(currentCustomer, 'negotiationFail');
                         queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
                             const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
-                            // displayChoices(choices); // uiManager.displayChoices
-                            uiManager.displayChoices(choices);
+                            uiManager.displayChoices(choices, handleChoice);
                         });
                     }
                 }, 1000);
-                return; // Return early as this choice path has its own async flow
-            case "decline_offer_to_buy":
+                return;
+            case "decline_offer_to_buy": // Verified: uiManager.playSound
                 narrationText = "Rikk passes on the offer.";
-                // playSound(deniedSound); // uiManager.playSound
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToBuy';
                 break;
-            case "decline_offer_to_sell":
+            case "decline_offer_to_sell": // Verified: uiManager.playSound
                 narrationText = "Rikk tells them to kick rocks.";
-                // playSound(deniedSound); // uiManager.playSound
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToSell';
                 break;
-            case "acknowledge_empty_stash":
+            case "acknowledge_empty_stash": // Verified: uiManager.playSound
                 narrationText = "Rikk's stash is dry. Customer ain't happy.";
-                // playSound(deniedSound); // uiManager.playSound
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'acknowledge_empty_stash';
                 break;
-            case "acknowledge_error":
+            case "acknowledge_error": // No state/UI changes here
                 narrationText = "System error acknowledged.";
                 break;
         }
 
-        if (outcome.type !== "negotiate_sell") {
-            fiendsLeft--;
+        if (outcome.type !== "negotiate_sell") { // Verified: game.decrementFiendsLeft()
+            game.decrementFiendsLeft();
         }
 
-        const outcomeResult = dialogueContextKey ? customerManager.getOutcomeDialogue(currentCustomerInstance, dialogueContextKey) : { line: '', payload: null };
+        const outcomeResult = dialogueContextKey ? game.customerManager.getOutcomeDialogue(currentCustomer, dialogueContextKey) : { line: '', payload: null };
         if (outcome.payload) { processPayload(outcome.payload, dealSuccess); }
         if (outcomeResult.payload) { processPayload(outcomeResult.payload, dealSuccess); }
 
-        updateHUD();
-        updateInventoryDisplay();
+        uiManager.updateHUD();
+        uiManager.updateInventoryDisplay();
 
         if (narrationText.trim() !== "") {
             queueNextMessage(narrationText, 'narration', () => {
@@ -1182,11 +981,12 @@ function handleChoice(outcome) {
             setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
         }
 
-        if (heat >= MAX_HEAT) {
+        // Verified: game.getHeat(), game.getMaxHeat(), game.getCash(), game.getInventory(), game.getFiendsLeft()
+        if (game.getHeat() >= game.getMaxHeat()) {
             endGame("heat");
             return;
         }
-        if (cash <= 0 && inventory.length === 0 && fiendsLeft > 0) {
+        if (game.getCash() <= 0 && game.getInventory().length === 0 && game.getFiendsLeft() > 0) {
             endGame("bankrupt");
             return;
         }
@@ -1199,54 +999,47 @@ function handleChoice(outcome) {
         if (typeof phoneShowNotification === 'function') {
             phoneShowNotification("Error processing that action. Please try again or proceed.", "System Error");
         }
-        endCustomerInteraction(); // Attempt to reset for next turn
+        endCustomerInteraction();
     }
 }
 
 function processPayload(payload, dealSuccess) {
     if (!payload || !payload.effects || payload.type !== "EFFECT") return;
+    const currentCustomer = game.getCurrentCustomerInstance(); // Verified: Uses game.getCurrentCustomerInstance()
 
     payload.effects.forEach(effect => {
         if (effect.condition) {
             if (effect.condition.stat === 'dealSuccess' && dealSuccess !== effect.condition.value) return;
-            if (effect.condition.stat === 'mood') {
-                const customerMood = currentCustomerInstance.mood;
+            if (effect.condition.stat === 'mood' && currentCustomer) {
+                const customerMood = currentCustomer.mood; // Verified: Reads mood from currentCustomer
                 if (effect.condition.op === 'is' && customerMood !== effect.condition.value) return;
                 if (effect.condition.op === 'isNot' && customerMood === effect.condition.value) return;
             }
         }
 
         switch (effect.type) {
-            case 'modifyStat':
+            case 'modifyStat': // Verified: All use game methods (addCash, addHeat, addStreetCred, updatePlayerSkill)
                 if (effect.statToModify && typeof effect.value === 'number') {
                     switch (effect.statToModify) {
                         case 'cash':
-                            cash += effect.value;
-                            // No explicit min for cash, can go negative (bankrupt condition)
+                            game.addCash(effect.value);
                             break;
                         case 'heat':
-                            heat += effect.value;
-                            if (heat < 0) heat = 0;
-                            if (heat > MAX_HEAT) heat = MAX_HEAT; // MAX_HEAT is 100
+                            game.addHeat(effect.value);
                             break;
                         case 'streetCred':
-                            streetCred += effect.value;
-                            if (streetCred < 0) streetCred = 0; // Assuming street cred shouldn't be negative
+                            game.addStreetCred(effect.value);
                             break;
                         case 'playerSkills.negotiator':
-                            playerSkills.negotiator += effect.value;
-                            if (playerSkills.negotiator < 0) playerSkills.negotiator = 0;
+                            game.updatePlayerSkill('negotiator', effect.value);
                             break;
                         case 'playerSkills.appraiser':
-                            playerSkills.appraiser += effect.value;
-                            if (playerSkills.appraiser < 0) playerSkills.appraiser = 0;
+                            game.updatePlayerSkill('appraiser', effect.value);
                             break;
                         case 'playerSkills.lowProfile':
-                            playerSkills.lowProfile += effect.value;
-                            if (playerSkills.lowProfile < 0) playerSkills.lowProfile = 0;
+                            game.updatePlayerSkill('lowProfile', effect.value);
                             break;
                         default:
-                            // Use debugLogger if available, otherwise console.warn
                             if (typeof debugLogger !== 'undefined' && debugLogger.warn) {
                                 debugLogger.warn('PayloadSystem', `Unknown statToModify: ${effect.statToModify}`);
                             } else {
@@ -1254,40 +1047,34 @@ function processPayload(payload, dealSuccess) {
                             }
                             break;
                     }
-                    // Call updateHUD() once after all potential stat changes within this effect,
-                    // if any of the modified stats are cash, heat, or streetCred.
-                    if (['cash', 'heat', 'streetCred'].includes(effect.statToModify)) {
-                        updateHUD();
-                    }
                 } else {
-                     // Use debugLogger if available, otherwise console.warn
                     if (typeof debugLogger !== 'undefined' && debugLogger.warn) {
-                        debugLogger.warn('PayloadSystem', 'Invalid modifyStat effect (missing statToModify or value is not a number):', effect);
+                        debugLogger.warn('PayloadSystem', 'Invalid modifyStat effect:', effect);
                     } else {
-                        console.warn('[PayloadSystem WARNING] Invalid modifyStat effect (missing statToModify or value is not a number):', effect);
+                        console.warn('[PayloadSystem WARNING] Invalid modifyStat effect:', effect);
                     }
                 }
                 break;
             case 'triggerEvent':
                 if (Math.random() < effect.chance) {
                     let message = effect.message || '';
-                    if (effect.eventName === 'snitchReport') {
+                    if (effect.eventName === 'snitchReport' && currentCustomer) { // Verified: game.addHeat, game.addStreetCred
                         const heatGain = Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin;
-                        heat += heatGain;
-                        streetCred += effect.credValue;
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name).replace('[HEAT_VALUE]', heatGain);
+                        game.addHeat(heatGain);
+                        game.addStreetCred(effect.credValue);
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[HEAT_VALUE]', heatGain);
                     }
-                    if (effect.eventName === 'highRollerTip') {
-                        const tip = Math.floor(cash * effect.tipPercentage);
-                        cash += tip;
-                        streetCred += effect.credValue;
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name).replace('[TIP_AMOUNT]', tip);
+                    if (effect.eventName === 'highRollerTip' && currentCustomer) { // Verified: game.getCash, game.addCash, game.addStreetCred
+                        const tip = Math.floor(game.getCash() * effect.tipPercentage);
+                        game.addCash(tip);
+                        game.addStreetCred(effect.credValue);
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[TIP_AMOUNT]', tip);
                     }
-                    if (effect.eventName === 'publicIncident') {
-                        heat += effect.heatValue;
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomerInstance.name);
+                    if (effect.eventName === 'publicIncident' && currentCustomer) { // Verified: game.addHeat
+                        game.addHeat(effect.heatValue);
+                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
                     }
-                    if (message) displaySystemMessage(message);
+                    if (message) uiManager.displayPhoneMessage(message, "narration"); // Verified: uiManager.displayPhoneMessage
                 }
                 break;
             default:
@@ -1295,69 +1082,52 @@ function processPayload(payload, dealSuccess) {
                 break;
         }
     });
+    uiManager.updateHUD(); // Verified: uiManager.updateHUD() called once at the end
 }
 
 // =================================================================================
-// VI. DATA & UTILITY FUNCTIONS
+// VI. DATA & UTILITY FUNCTIONS (Many will be deleted or their logic moved)
 // =================================================================================
 
-function updateDayOfWeek() {
-    const currentIndex = days.indexOf(dayOfWeek);
-    dayOfWeek = days[(currentIndex + 1) % days.length];
-}
+// function updateDayOfWeek() { // DELETED - Handled by game.advanceDayOfWeek()
+// ...
+// }
 
-function triggerWorldEvent() {
-    if (activeWorldEvents.length > 0 && Math.random() < 0.7) return;
-    activeWorldEvents = activeWorldEvents.filter(event => event.turnsLeft > 0);
-    if (possibleWorldEvents.length > 0 && Math.random() < 0.25 && activeWorldEvents.length === 0) {
-        const eventTemplate = getRandomElement(possibleWorldEvents);
-        activeWorldEvents.push({ ...eventTemplate, turnsLeft: eventTemplate.duration });
-    }
-    updateEventTicker();
-}
+// function triggerWorldEvent() { // DELETED - Logic moved to handleTurnProgressionAndEvents
+// ...
+// }
 
-function advanceWorldEvents() { 
-    activeWorldEvents.forEach(eventState => {
-        eventState.turnsLeft--;
-    });
-    activeWorldEvents = activeWorldEvents.filter(eventState => eventState.turnsLeft > 0);
-}
+// function advanceWorldEvents() { // DELETED - Logic moved to handleTurnProgressionAndEvents
+// ...
+// }
 
-function updateEventTicker() { 
-    if (activeWorldEvents.length > 0) {
-        const currentEvent = activeWorldEvents[0];
-        eventTicker.textContent = `Word on the street: ${currentEvent.name} (${currentEvent.turnsLeft} turns left)`;
-    } else {
-        eventTicker.textContent = `Word on the street: All quiet... for now. (${dayOfWeek})`;
-    }
-}
+// function updateEventTicker() { // DELETED - Handled by uiManager.updateEventTicker()
+// ...
+// }
 
-function clearChat() { 
-    if(chatContainer) {
-        chatContainer.innerHTML = ''; 
-        chatSpacerElement = document.createElement('div');
-        chatSpacerElement.className = 'chat-spacer';
-        chatContainer.appendChild(chatSpacerElement);
-    }
-}
+// function clearChat() { // DELETED - Handled by uiManager.clearChat()
+// ...
+// }
 
-function clearChoices() {
-    if(choicesArea) choicesArea.innerHTML = '';
-}
+// function clearChoices() { // DELETED - Handled by uiManager.clearChoices()
+// ...
+// }
 
-function playSound(audioElement) {
-    if (audioElement?.play) {
-        audioElement.currentTime = 0;
-        audioElement.play().catch(e => console.log(`Audio play failed: ${e.name}`));
-    }
-}
+// function playSound(audioElement) { // DELETED - Handled by uiManager.playSound()
+// ...
+// }
 
 function saveGameState() {
-    if (!gameActive && fiendsLeft > 0) return;
-    const stateToSave = {
-        cash, fiendsLeft, heat, streetCred, inventory, playerSkills, activeWorldEvents, dayOfWeek,
-        customerManagerState: customerManager.getSaveState()
-    };
+    // MODIFIED: Use game.toJSON() and game.isGameActive()
+    if (!game.isGameActive() && game.getFiendsLeft() > 0) return;
+
+    const stateToSave = game.toJSON(); // GameState now provides the core save data
+    // Add CustomerManager state if it's still managed separately for PoC
+    if (game.customerManager && typeof game.customerManager.getSaveState === 'function') {
+        stateToSave.customerManagerState = game.customerManager.getSaveState();
+    }
+    // Consider if customerTemplates (global let) needs to be saved here or if GameState handles it
+
     localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
 }
 
@@ -1366,18 +1136,19 @@ function loadGameState() {
     if (savedData) {
         try {
             const loadedState = JSON.parse(savedData);
-            cash = loadedState.cash ?? STARTING_CASH;
-            fiendsLeft = loadedState.fiendsLeft ?? MAX_FIENDS;
-            heat = loadedState.heat ?? 0;
-            streetCred = loadedState.streetCred ?? STARTING_STREET_CRED;
-            inventory = loadedState.inventory ?? [];
-            playerSkills = loadedState.playerSkills ?? { negotiator: 0, appraiser: 0, lowProfile: 0 };
-            activeWorldEvents = loadedState.activeWorldEvents ?? [];
-            dayOfWeek = loadedState.dayOfWeek ?? days[0];
-            customerManager.loadSaveState(loadedState.customerManagerState);
-            updateEventTicker();
+            game.fromJSON(loadedState, gameStateConfig); // GameState handles its own loading
+
+            // Load CustomerManager state if it's still managed separately
+            if (game.customerManager && typeof game.customerManager.loadSaveState === 'function' && loadedState.customerManagerState) {
+                game.customerManager.loadSaveState(loadedState.customerManagerState);
+            }
+            // customerTemplates is loaded in initializeManagers for now. If GameState handles it, this might change.
+
+            uiManager.updateEventTicker(); // Update ticker after loading
+            uiManager.updateHUD(); // Update HUD after loading
             return true;
         } catch (e) {
+            console.error("Error loading game state:", e);
             clearSavedGameState();
             return false;
         }
@@ -1390,10 +1161,11 @@ function clearSavedGameState() {
 }
 
 function checkForSavedGame() {
+    // MODIFIED: Use uiManager properties
     if (localStorage.getItem(SAVE_KEY)) {
-        continueGameBtn.classList.remove('hidden');
+        if(uiManager.continueGameBtn) uiManager.continueGameBtn.classList.remove('hidden');
     } else {
-        continueGameBtn.classList.add('hidden');
+        if(uiManager.continueGameBtn) uiManager.continueGameBtn.classList.add('hidden');
     }
 }
 
@@ -1403,7 +1175,7 @@ function checkForSavedGame() {
 function getCurrentSettingsFromInputs() {
     const settings = {};
     document.querySelectorAll('[data-variable]').forEach(input => {
-        settings[input.dataset.variable] = input.value; // Store raw input value
+        settings[input.dataset.variable] = input.value;
     });
     return settings;
 }
@@ -1412,7 +1184,7 @@ function applySettingsToDOMAndInputs(settingsToApply) {
     if (!settingsToApply) return;
     for (const variableName in settingsToApply) {
         if (settingsToApply.hasOwnProperty(variableName)) {
-            const value = settingsToApply[variableName]; // Raw value, e.g., "12"
+            const value = settingsToApply[variableName];
             const inputs = document.querySelectorAll(`[data-variable="${variableName}"]`);
 
             inputs.forEach(input => {
@@ -1422,7 +1194,7 @@ function applySettingsToDOMAndInputs(settingsToApply) {
                     if (valueDisplaySpan) valueDisplaySpan.textContent = value;
                 }
             });
-            applyStyleSetting(variableName, value); // Applies to CSS (new applyStyleSetting handles 'px')
+            applyStyleSetting(variableName, value);
         }
     }
 }
@@ -1430,7 +1202,6 @@ function applySettingsToDOMAndInputs(settingsToApply) {
 function addCancelPreviewButton(panelId, referenceButtonId) {
     const settingsPanel = document.getElementById(panelId);
     const referenceButton = document.getElementById(referenceButtonId);
-    // Ensure no duplicate cancel button for the same panel
     const existingCancelButtonId = `cancel-preview-${panelId.replace(/-/g, '')}`;
     if (document.getElementById(existingCancelButtonId)) {
         return;
@@ -1442,7 +1213,7 @@ function addCancelPreviewButton(panelId, referenceButtonId) {
         cancelButton.className = 'cancel-preview-button game-button secondary-action';
         cancelButton.textContent = 'Cancel Preview';
         cancelButton.type = 'button';
-        cancelButton.addEventListener('click', cancelPreview); // cancelPreview function defined below
+        cancelButton.addEventListener('click', cancelPreview);
 
         if(referenceButton.nextSibling) {
             referenceButton.parentNode.insertBefore(cancelButton, referenceButton.nextSibling);
@@ -1458,12 +1229,12 @@ function removeCancelPreviewButtons() {
 
 function togglePreviewMode() {
     isPreviewModeActive = !isPreviewModeActive;
-    const appContainer = document.querySelector(APP_CONTAINER_SELECTOR);
+    const appContainer = document.querySelector(uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
 
     if (!appContainer && typeof phoneShowNotification === 'function') {
         phoneShowNotification("Error: App container not found.", "Settings Error");
-        console.error("App container not found:", APP_CONTAINER_SELECTOR);
-        isPreviewModeActive = false; // Revert state
+        console.error("App container not found:", uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
+        isPreviewModeActive = false;
         return;
     }
 
@@ -1478,14 +1249,13 @@ function togglePreviewMode() {
         addCancelPreviewButton('settings-menu-panel', 'preview-style-settings');
 
         if (previewPhoneButton) previewPhoneButton.textContent = 'Apply & Exit Preview';
-        // Assuming phone settings view is separate, add cancel button there too
         addCancelPreviewButton('phone-theme-settings-view', 'preview-phone-style-settings');
 
         console.log('Preview Mode Activated.');
         if (typeof phoneShowNotification === 'function') phoneShowNotification("Preview Mode: Activated. Changes are not saved yet.", "Settings");
-    } else { // Exiting Preview Mode (Applying changes)
+    } else {
         if (appContainer) appContainer.classList.remove('preview-mode');
-        if (typeof saveStyleSettings === 'function') saveStyleSettings(); // Saves current state of inputs
+        if (typeof saveStyleSettings === 'function') saveStyleSettings();
 
         if (previewMainButton) previewMainButton.textContent = 'Preview';
         if (previewPhoneButton) previewPhoneButton.textContent = 'Preview';
@@ -1498,11 +1268,10 @@ function togglePreviewMode() {
 function cancelPreview() {
     if (!isPreviewModeActive) return;
 
-    applySettingsToDOMAndInputs(originalSettingsBeforePreview); // Revert inputs and CSS
-    // No saveStyleSettings() call needed, as we reverted to last known saved state.
+    applySettingsToDOMAndInputs(originalSettingsBeforePreview);
 
     isPreviewModeActive = false;
-    const appContainer = document.querySelector(APP_CONTAINER_SELECTOR);
+    const appContainer = document.querySelector(uiManagerConfig.APP_CONTAINER_SELECTOR); // Use config
     if (appContainer) appContainer.classList.remove('preview-mode');
 
     const previewMainButton = document.getElementById('preview-style-settings');
@@ -1519,9 +1288,10 @@ function cancelPreview() {
 // =================================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initGame(); // Initialize the game and its UI elements
+    initGame();
 
     // --- Preview Mode Button Event Listeners ---
+    // These buttons might also become part of UIManager's references if they are standard UI elements
     const previewMainSettingsButton = document.getElementById('preview-style-settings');
     const previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
 
@@ -1547,16 +1317,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetMainSettingsButton = document.getElementById('reset-style-settings');
     const resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
 
-    // defaultStyleSettings, applyStyleSetting, saveStyleSettings are assumed to be available in this scope
-    // as they are defined globally or within the script's top scope.
-
     function applyDefaultsToDOMAndPersist() {
         if (typeof defaultStyleSettings === 'undefined') {
             console.error('Error: defaultStyleSettings object is not defined.');
             if (typeof phoneShowNotification === 'function') {
                 phoneShowNotification("Error: Default settings not found.", "Settings Error");
             }
-            return; // Moved check to the top of this function
+            return;
         }
 
         console.log('Resetting styles to defaults...');
@@ -1575,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 let valueToApply = defaultValue;
-                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`); // Assuming one control is enough to check type
+                const controlForVar = document.querySelector(`[data-variable="${variableName}"]`);
                 if (controlForVar && controlForVar.type === 'range' &&
                     (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
                     valueToApply += 'px';
@@ -1585,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (typeof saveStyleSettings === 'function') {
-            saveStyleSettings(); // saveStyleSettings reads from DOM inputs, which are now set to defaults
+            saveStyleSettings();
             console.log('Default styles applied and saved to localStorage.');
             if (typeof phoneShowNotification === 'function') {
                 phoneShowNotification("Styles have been reset to defaults.", "Settings");
@@ -1609,8 +1376,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (resetPhoneSettingsButton) {
-        // Assuming both buttons trigger a global reset to the defined defaults.
-        // If phone settings had a separate default object or subset, this would need adjustment.
         resetPhoneSettingsButton.addEventListener('click', handleResetToDefaults);
     } else {
         console.warn("Reset button for phone settings (reset-phone-style-settings) not found.");

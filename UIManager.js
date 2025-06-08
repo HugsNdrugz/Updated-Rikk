@@ -1,14 +1,14 @@
 // UIManager.js
 
-// Imports that UIManager might need later (e.g., for initPhoneAmbientUI)
-// For now, this can be minimal. initPhoneAmbientUI is called in initPrimaryUI.
-import { initPhoneAmbientUI } from './phone_ambient_ui.js';
+class UIManager {
+    constructor(gameStateInstance, config = {}) {
+        if (!gameStateInstance) {
+            throw new Error("UIManager requires a GameState instance.");
+        }
+        this.gameState = gameStateInstance;
+        this.config = config; // For UI-specific configurations like APP_CONTAINER_SELECTOR
 
-export class UIManager {
-    constructor(gameInstance) {
-        this.game = gameInstance; // Reference to the main Game logic instance
-
-        // DOM Element Properties (initialized to null)
+        // --- Core UI Element References ---
         this.splashScreen = null;
         this.gameViewport = null;
         this.startScreen = null;
@@ -17,11 +17,13 @@ export class UIManager {
         this.newGameBtn = null;
         this.continueGameBtn = null;
         this.restartGameBtn = null;
+        this.nextCustomerBtn = null;
+        this.openInventoryBtn = null;
+        this.dockPhoneBtn = null;
         this.cashDisplay = null;
-        this.dayDisplay = null; // Represents fiendsLeft in the HUD
+        this.dayDisplay = null;
         this.heatDisplay = null;
         this.credDisplay = null;
-        this.finalCredDisplay = null;
         this.eventTicker = null;
         this.gameScene = null;
         this.knockEffect = null;
@@ -39,16 +41,14 @@ export class UIManager {
         this.phoneDock = null;
         this.phoneHomeIndicator = null;
         this.phoneDockedIndicator = null;
-        this.dockPhoneBtn = null;
-        this.openInventoryBtn = null;
-        this.inventoryCountDisplay = null;
-        this.nextCustomerBtn = null;
         this.inventoryModal = null;
         this.closeModalBtn = null;
         this.inventoryList = null;
+        this.inventoryCountDisplay = null;
         this.modalInventorySlotsDisplay = null;
         this.finalDaysDisplay = null;
         this.finalCashDisplay = null;
+        this.finalCredDisplay = null;
         this.finalVerdictText = null;
         this.primaryActionsContainer = null;
         this.submenuNavigationContainer = null;
@@ -64,178 +64,424 @@ export class UIManager {
         this.deniedSound = null;
         this.chatBubbleSound = null;
         this.mainMenuLightContainer = null;
-
-        // Elements for style settings UI
-        this.settingsLoadingElement = null;
-        this.settingsErrorElement = null;
-        this.settingsErrorMessageElement = null; // Child of settingsErrorElement
-        this.previewMainSettingsButton = null;
-        this.previewPhoneSettingsButton = null;
-        this.resetMainSettingsButton = null;
-        this.resetPhoneSettingsButton = null;
-
-        // UI-specific state
+        this.appContainer = null;
+        this.styleControls = null;
         this.chatSpacerElement = null;
-        this.isPreviewModeActive = false; // Related to style settings
-        this.originalSettingsBeforePreview = {}; // Related to style settings
-        this.APP_CONTAINER_SELECTOR = '#game-viewport'; // Used by style settings preview
+
+        // UI State specific to UIManager
+        this.currentPhoneState = 'docked'; // Example initial state
     }
 
-    // Method to query and assign DOM elements
-    assignDOMReferences() {
-        console.log("UIManager: assignDOMReferences called (stub)");
+    initDOMReferences() {
         this.splashScreen = document.getElementById('splash-screen');
         this.gameViewport = document.getElementById('game-viewport');
         this.startScreen = document.getElementById('start-screen');
         this.gameScreen = document.getElementById('game-screen');
         this.endScreen = document.getElementById('end-screen');
+
         this.newGameBtn = document.getElementById('new-game-btn');
         this.continueGameBtn = document.getElementById('continue-game-btn');
         this.restartGameBtn = document.getElementById('restart-game-btn');
+
         this.cashDisplay = document.getElementById('cash-display');
-        this.dayDisplay = document.getElementById('day-display');
+        this.dayDisplay = document.getElementById('day-display'); // Represents fiendsLeft
         this.heatDisplay = document.getElementById('heat-display');
         this.credDisplay = document.getElementById('cred-display');
-        this.finalCredDisplay = document.getElementById('final-cred-display');
+
         this.eventTicker = document.getElementById('event-ticker');
         this.gameScene = document.getElementById('game-scene');
         this.knockEffect = document.getElementById('knock-effect');
+
         this.rikkPhoneUI = document.getElementById('rikk-phone-ui');
         this.phoneScreenArea = document.getElementById('phone-screen-area');
         this.androidHomeScreen = document.getElementById('android-home-screen');
         this.gameChatView = document.getElementById('game-chat-view');
-        this.contactsAppView = document.getElementById('contacts-app-view');
-        this.slotGameView = document.getElementById('slot-game-view');
+        this.contactsAppView = document.getElementById('contacts-app-view'); // Passed to ContactsAppManager
+        this.slotGameView = document.getElementById('slot-game-view');       // Passed to SlotGameManager
         this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
+
         this.chatContainer = document.getElementById('chat-container-game');
         this.choicesArea = document.getElementById('choices-area-game');
         this.phoneTitleGame = document.getElementById('phone-title-game');
         this.phoneBackButtons = document.querySelectorAll('.phone-back-button');
-        if (this.rikkPhoneUI) { // Ensure rikkPhoneUI exists before querying its children
+
+        if (this.rikkPhoneUI) {
             this.phoneDock = this.rikkPhoneUI.querySelector('.dock');
             this.phoneHomeIndicator = this.rikkPhoneUI.querySelector('.home-indicator');
         }
         this.phoneDockedIndicator = document.getElementById('phone-docked-indicator');
         this.dockPhoneBtn = document.getElementById('dock-phone-btn');
+
         this.openInventoryBtn = document.getElementById('open-inventory-btn');
         this.inventoryCountDisplay = document.getElementById('inventory-count-display');
         this.nextCustomerBtn = document.getElementById('next-customer-btn');
+
         this.inventoryModal = document.getElementById('inventory-modal');
-        this.closeModalBtn = document.querySelector('#inventory-dialog .close-modal-btn'); // Corrected selector
+        const inventoryDialog = this.inventoryModal ? this.inventoryModal.querySelector('#inventory-dialog') : null;
+        if (inventoryDialog) {
+            this.closeModalBtn = inventoryDialog.querySelector('.close-modal-btn');
+        }
         this.inventoryList = document.getElementById('inventory-list');
         this.modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
+
         this.finalDaysDisplay = document.getElementById('final-days-display');
         this.finalCashDisplay = document.getElementById('final-cash-display');
+        this.finalCredDisplay = document.getElementById('final-cred-display');
         this.finalVerdictText = document.getElementById('final-verdict-text');
+
         this.primaryActionsContainer = document.getElementById('primary-actions');
         this.submenuNavigationContainer = document.getElementById('submenu-navigation');
+
         this.settingsMenuBtn = document.getElementById('settings-menu-btn');
         this.loadMenuBtn = document.getElementById('load-menu-btn');
         this.creditsMenuBtn = document.getElementById('credits-menu-btn');
+
         this.settingsMenuPanel = document.getElementById('settings-menu-panel');
         this.loadMenuPanel = document.getElementById('load-menu-panel');
         this.creditsMenuPanel = document.getElementById('credits-menu-panel');
         this.allSubmenuBackBtns = document.querySelectorAll('.submenu-back-btn');
+
         this.doorKnockSound = document.getElementById('door-knock-sound');
         this.cashSound = document.getElementById('cash-sound');
         this.deniedSound = document.getElementById('denied-sound');
         this.chatBubbleSound = document.getElementById('chat-bubble-sound');
+
         this.mainMenuLightContainer = document.getElementById('main-menu-lights');
 
-        this.settingsLoadingElement = document.querySelector('.settings-loading');
-        this.settingsErrorElement = document.querySelector('.settings-error');
-        if (this.settingsErrorElement) {
-            this.settingsErrorMessageElement = this.settingsErrorElement.querySelector('.error-message');
-        }
-        this.previewMainSettingsButton = document.getElementById('preview-style-settings');
-        this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
-        this.resetMainSettingsButton = document.getElementById('reset-style-settings');
-        this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
+        this.appContainer = document.querySelector(this.config.APP_CONTAINER_SELECTOR || '#game-viewport');
+        this.styleControls = document.querySelectorAll('[data-variable]');
 
-        // Initialize phone ambient UI here as it depends on rikkPhoneUI
-        if (this.rikkPhoneUI) {
-            initPhoneAmbientUI(this.rikkPhoneUI);
+        if (this.chatContainer) {
+            this.chatSpacerElement = document.createElement('div');
+            this.chatSpacerElement.className = 'chat-spacer';
+            this.chatContainer.appendChild(this.chatSpacerElement);
         }
+        console.log('[UIManager] DOM references initialized.');
     }
 
-    // --- STUBS for UI Update Methods ---
-    // These will be implemented by moving logic from script.js
-
-    initPrimaryUI() {
-        // This method will orchestrate initial UI setup that UIManager is responsible for.
-        // For now, it mainly ensures DOM references are set.
-        // Other initializations like style settings controls will be added here later.
-        this.assignDOMReferences(); // Call assignDOMReferences internally
-        console.log("UIManager: initPrimaryUI called (stub)");
-
-        // Initial hide for style settings loading/error indicators
-        if (this.settingsLoadingElement) this.settingsLoadingElement.classList.add('hidden');
-        if (this.settingsErrorElement) this.settingsErrorElement.classList.add('hidden');
-    }
-
+    // --- HUD Updates ---
     updateHUD() {
-        console.log("UIManager: updateHUD called (stub)");
-        // Example: if (this.cashDisplay) this.cashDisplay.textContent = this.game.cash;
+        if (!this.cashDisplay || !this.dayDisplay || !this.heatDisplay || !this.credDisplay) {
+            console.warn("[UIManager] HUD elements not fully initialized for updateHUD.");
+            return;
+        }
+        this.cashDisplay.textContent = this.gameState.getCash();
+        this.dayDisplay.textContent = this.gameState.getFiendsLeft();
+        this.heatDisplay.textContent = this.gameState.getHeat();
+        this.credDisplay.textContent = this.gameState.getStreetCred();
     }
 
-    updateInventoryDisplay() {
-        console.log("UIManager: updateInventoryDisplay called (stub)");
-        // Example: if (this.inventoryCountDisplay) this.inventoryCountDisplay.textContent = this.game.inventory.length;
+    updateEventTicker() {
+        if (!this.eventTicker) return;
+        const events = this.gameState.getActiveWorldEvents();
+        if (events.length > 0) {
+            const currentEvent = events[0];
+            this.eventTicker.textContent = `Word on the street: ${currentEvent.name} (${currentEvent.turnsLeft} turns left)`;
+        } else {
+            this.eventTicker.textContent = `Word on the street: All quiet... for now. (${this.gameState.getDayOfWeek()})`;
+        }
     }
 
+    // --- Screen Management ---
+    showScreen(screenToShow) {
+        [this.splashScreen, this.startScreen, this.gameScreen, this.endScreen].forEach(screen => {
+            if (screen) screen.classList.remove('active');
+        });
+        if (screenToShow) screenToShow.classList.add('active');
+    }
+
+    activateMainMenuLights(isActive) {
+        if (this.mainMenuLightContainer) {
+            if (isActive) this.mainMenuLightContainer.classList.add('lights-active');
+            else this.mainMenuLightContainer.classList.remove('lights-active');
+        }
+    }
+
+
+    // --- Phone UI Management (Skeleton) ---
     setPhoneUIState(state) {
-        console.log(`UIManager: setPhoneUIState called with state: ${state} (stub)`);
-    }
+        this.currentPhoneState = state; // Store the state
+        if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppView || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
+            console.warn("[UIManager] Phone UI elements not fully initialized for setPhoneUIState.");
+            return;
+        }
 
-    // Add more stubs as needed
-    displayPhoneMessage(message, speaker) {
-        console.log(`UIManager: displayPhoneMessage for ${speaker}: "${message}" (stub)`);
-    }
+        // Hide all phone content views initially
+        this.rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
+        this.androidHomeScreen.classList.add('hidden');
+        this.gameChatView.classList.add('hidden');
+        this.contactsAppView.classList.add('hidden');
+        this.slotGameView.classList.add('hidden');
+        this.phoneThemeSettingsView.classList.add('hidden');
 
-    displaySystemMessage(message) {
-        console.log(`UIManager: displaySystemMessage: "${message}" (stub)`);
-    }
+        this.phoneScreenArea.classList.remove('screen-off');
+        this.phoneDockedIndicator.classList.add('hidden');
+        if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
+        this.phoneDock.classList.add('hidden');
+        this.phoneHomeIndicator.classList.add('hidden');
 
-    displayChoices(choices) {
-        console.log("UIManager: displayChoices called (stub)", choices);
+        switch (state) {
+            case 'chatting':
+                this.rikkPhoneUI.classList.add('chatting-game');
+                this.gameChatView.classList.remove('hidden');
+                break;
+            case 'home':
+                this.rikkPhoneUI.classList.add('home-screen-active');
+                this.androidHomeScreen.classList.remove('hidden');
+                this.phoneDock.classList.remove('hidden');
+                this.phoneHomeIndicator.classList.remove('hidden');
+                break;
+            case 'contacts':
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                this.contactsAppView.classList.remove('hidden');
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                break;
+            case 'slots':
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                this.slotGameView.classList.remove('hidden');
+                // SlotGameManager.launch() will be called by script.js
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                break;
+            case 'theme-settings':
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                this.phoneThemeSettingsView.classList.remove('hidden');
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                break;
+            case 'docked':
+                this.rikkPhoneUI.classList.add('is-offscreen');
+                this.phoneScreenArea.classList.add('screen-off');
+                this.phoneDockedIndicator.classList.remove('hidden');
+                break;
+            case 'offscreen':
+                this.rikkPhoneUI.classList.add('is-offscreen');
+                this.phoneScreenArea.classList.add('screen-off');
+                break;
+            default:
+                console.warn(`[UIManager] Unknown phone state: ${state}`);
+                this.setPhoneUIState('docked'); // Default to docked
+                break;
+        }
     }
 
     clearChat() {
-        console.log("UIManager: clearChat called (stub)");
-        // Example: if(this.chatContainer) this.chatContainer.innerHTML = '';
+        if (this.chatContainer && this.chatSpacerElement) {
+            this.chatContainer.innerHTML = ''; // Clear all children
+            this.chatContainer.appendChild(this.chatSpacerElement); // Re-add spacer
+        } else if (this.chatContainer) {
+            this.chatContainer.innerHTML = '';
+        }
     }
 
     clearChoices() {
-        console.log("UIManager: clearChoices called (stub)");
-        // Example: if(this.choicesArea) this.choicesArea.innerHTML = '';
+        if (this.choicesArea) {
+            this.choicesArea.innerHTML = '';
+        }
     }
 
-    playSound(soundElement) { // Param might be the element itself or a key to find it
-        console.log("UIManager: playSound called (stub)", soundElement);
-        // Example: if (soundElement && soundElement.play) soundElement.play();
+    setPhoneTitle(title) {
+        if (this.phoneTitleGame) {
+            this.phoneTitleGame.textContent = title;
+        }
     }
 
-    // Style settings related stubs
-    initStyleSettingsControls() { console.log("UIManager: initStyleSettingsControls called (stub)"); }
-    loadStyleSettings() { console.log("UIManager: loadStyleSettings called (stub)"); }
-    applyStyleSetting(variableName, value) { console.log(`UIManager: applyStyleSetting ${variableName}=${value} (stub)`); }
-    saveStyleSettings() { console.log("UIManager: saveStyleSettings called (stub)"); }
-    togglePreviewMode() { console.log("UIManager: togglePreviewMode called (stub)"); }
-    cancelPreview() { console.log("UIManager: cancelPreview called (stub)"); }
-    applyDefaultsToDOMAndPersist() { console.log("UIManager: applyDefaultsToDOMAndPersist called (stub)"); }
-    getCurrentSettingsFromInputs() {
-        console.log("UIManager: getCurrentSettingsFromInputs called (stub)");
-        return {};
+    // --- Modal Management (Inventory - Skeleton) ---
+    openInventoryModal() {
+        if (!this.inventoryModal) return;
+        this.updateInventoryDisplay(); // Needs to be implemented fully
+        this.inventoryModal.classList.add('active');
+        this.setPhoneUIState('offscreen'); // Manage phone state when modal opens
     }
-     addCancelPreviewButton(panelId, referenceButtonId) { console.log("UIManager: addCancelPreviewButton called (stub)");}
-     removeCancelPreviewButtons() { console.log("UIManager: removeCancelPreviewButtons called (stub)");}
 
-    // Add other UI stubs as identified from script.js, e.g., open/close modals, toggle panels
-    openInventoryModal() { console.log("UIManager: openInventoryModal called (stub)"); }
-    closeInventoryModal() { console.log("UIManager: closeInventoryModal called (stub)"); }
-    toggleMainMenuButtons(show) { console.log("UIManager: toggleMainMenuButtons called (stub)", show); }
-    openSubmenuPanel(panelElement) { console.log("UIManager: openSubmenuPanel called (stub)"); }
-    closeSubmenuPanel(panelElement) { console.log("UIManager: closeSubmenuPanel called (stub)"); }
-    updateEventTicker() { console.log("UIManager: updateEventTicker called (stub)"); }
-    showNotification(message, title) { console.log("UIManager: showNotification called (stub)", title, message); }
+    closeInventoryModal() {
+        if (!this.inventoryModal) return;
+        this.inventoryModal.classList.remove('active');
+        // Restore phone state based on game context (e.g., chatting or home)
+        // This logic might need input from the game controller (script.js)
+        const customerActive = this.gameState.getCurrentCustomerInstance() !== null;
+        this.setPhoneUIState(customerActive ? 'chatting' : 'home');
+    }
+
+    updateInventoryDisplay() {
+        if (!this.inventoryList || !this.inventoryCountDisplay || !this.modalInventorySlotsDisplay) {
+            console.warn("[UIManager] Inventory display elements not fully initialized.");
+            return;
+        }
+
+        const inventory = this.gameState.getInventory();
+        const maxSlots = this.gameState.getMaxInventorySlots();
+
+        this.inventoryCountDisplay.textContent = inventory.length;
+        this.modalInventorySlotsDisplay.textContent = `${inventory.length}/${maxSlots}`;
+        this.inventoryList.innerHTML = ''; // Clear existing items
+
+        if (inventory.length > 0) {
+            inventory.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('inventory-item-card');
+                // Basic item display, can be enhanced
+                itemDiv.innerHTML = `<h4>${item.name} (${item.quality || 'N/A'})</h4>
+                                     <p class.item-detail>Copped: $${item.purchasePrice || 'N/A'}<br>
+                                     Heat: +${item.itemTypeObj?.heat || 'N/A'}</p>`;
+                this.inventoryList.appendChild(itemDiv);
+            });
+        } else {
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'empty-stash-message';
+            emptyMsg.textContent = "Your stash is bone dry.";
+            this.inventoryList.appendChild(emptyMsg);
+        }
+    }
+
+
+    // --- Audio ---
+    playSound(soundElement) {
+        if (soundElement && typeof soundElement.play === 'function') {
+            soundElement.currentTime = 0;
+            soundElement.play().catch(e => console.warn(`[UIManager] Audio play failed: ${e.name}`, e));
+        } else {
+            // console.warn("[UIManager] Attempted to play an invalid sound element:", soundElement);
+        }
+    }
+
+    // --- Knock Effect ---
+    displayKnockEffect(dayName) {
+        if (!this.knockEffect) return;
+        this.knockEffect.textContent = `*${dayName} hustle... someone's knockin'.*`;
+        this.knockEffect.classList.remove('hidden');
+        this.knockEffect.style.animation = 'none'; // Reset animation
+        void this.knockEffect.offsetWidth; // Trigger reflow to restart animation
+        this.knockEffect.style.animation = 'knockAnim 0.5s ease-out forwards';
+    }
+
+    hideKnockEffect() {
+        if (this.knockEffect) {
+            this.knockEffect.classList.add('hidden');
+        }
+    }
+
+    // --- Button States ---
+    setNextCustomerButtonDisabled(disabled) {
+        if (this.nextCustomerBtn) {
+            this.nextCustomerBtn.disabled = disabled;
+        }
+    }
+
+    // --- Display Choices (Skeleton) ---
+    // The actual event listener for choice buttons will be attached by script.js,
+    // which will pass the handleChoice callback.
+    displayChoices(choices, handleChoiceCallback) {
+        if (!this.choicesArea) return;
+        this.clearChoices(); // Clear previous choices
+
+        if (!choices || choices.length === 0) {
+            // console.warn("[UIManager] No choices to display.");
+            return;
+        }
+
+        choices.forEach(choice => {
+            const button = document.createElement('button');
+            button.classList.add('choice-button');
+            if (choice.outcome && choice.outcome.type && choice.outcome.type.startsWith('decline')) {
+                button.classList.add('decline');
+            }
+            button.textContent = choice.text;
+            button.disabled = choice.disabled || false;
+
+            if (!choice.disabled && typeof handleChoiceCallback === 'function') {
+                button.addEventListener('click', () => handleChoiceCallback(choice.outcome));
+            } else if (!choice.disabled) {
+                // console.warn("[UIManager] handleChoiceCallback not provided for active choice button:", choice.text);
+            }
+            this.choicesArea.appendChild(button);
+        });
+    }
+
+    // --- Phone Message Display (Skeleton) ---
+    // This will be a complex method. For now, a basic structure.
+    // Assumes currentCustomerInstance is available via this.gameState
+    displayPhoneMessage(messageText, speaker) {
+        if (typeof messageText === 'undefined' || messageText === null) {
+            messageText = "..."; // Default for undefined messages
+        }
+        if (!this.chatContainer || !this.chatSpacerElement) {
+            console.warn("[UIManager] Chat container not ready for messages.");
+            return;
+        }
+
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('chat__conversation-board__message-container');
+
+        if (speaker === 'rikk') {
+            messageContainer.classList.add('reversed');
+        }
+
+        const personDiv = document.createElement('div');
+        personDiv.classList.add('chat__conversation-board__message__person');
+        const avatarDiv = document.createElement('div');
+        avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
+        const avatarImg = document.createElement('img');
+
+        const customerInstance = this.gameState.getCurrentCustomerInstance();
+        const customerAvatars = this.config.customerAvatars || {}; // Get from config
+        const rikkAvatarUrl = this.config.rikkAvatarUrl || '';
+        const systemAvatarUrl = this.config.systemAvatarUrl || '';
+
+
+        if (speaker === 'customer' && customerInstance?.archetypeKey) {
+            avatarImg.src = customerAvatars[customerInstance.archetypeKey] || 'https://via.placeholder.com/56/555555/FFFFFF?text=?';
+            avatarImg.alt = customerInstance.name || 'Customer';
+        } else if (speaker === 'rikk') {
+            avatarImg.src = rikkAvatarUrl;
+            avatarImg.alt = 'Rikk';
+        } else { // system or narration
+            avatarImg.src = systemAvatarUrl;
+            avatarImg.alt = 'System';
+        }
+        avatarDiv.appendChild(avatarImg);
+
+        // Only add avatar if not narration
+        if (speaker !== 'narration') {
+            personDiv.appendChild(avatarDiv);
+            messageContainer.appendChild(personDiv);
+        }
+
+
+        const contextDiv = document.createElement('div');
+        contextDiv.classList.add('chat__conversation-board__message__context');
+        const bubble = document.createElement('div');
+        bubble.classList.add('chat-bubble', speaker); // Add speaker class for styling
+
+        if (speaker === 'customer' || speaker === 'rikk') {
+            const speakerNameElement = document.createElement('span');
+            speakerNameElement.classList.add('speaker-name');
+            speakerNameElement.textContent = (speaker === 'customer') ? (customerInstance?.name || '[Customer]') : 'Rikk';
+            bubble.appendChild(speakerNameElement);
+        }
+
+        // Handle **bold** text
+        const messageParts = messageText.split(/(\*\*.*?\*\*)/g);
+        messageParts.forEach(part => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                const boldEl = document.createElement('strong');
+                boldEl.textContent = part.slice(2, -2);
+                bubble.appendChild(boldEl);
+            } else {
+                bubble.appendChild(document.createTextNode(part));
+            }
+        });
+
+        contextDiv.appendChild(bubble);
+        messageContainer.appendChild(contextDiv);
+
+        this.chatContainer.insertBefore(messageContainer, this.chatSpacerElement);
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight; // Auto-scroll
+
+        // Play sound, but only if not narration (narration sound is handled by game logic before calling this)
+        if (speaker !== 'narration' && this.chatBubbleSound) {
+            this.playSound(this.chatBubbleSound);
+        }
+    }
 }
+
+// Export if using ES modules
+// export { UIManager };
