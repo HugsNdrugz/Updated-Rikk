@@ -1,14 +1,13 @@
+// =================================================================================
+// My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, REFACTORED BUILD
+// =================================================================================
+// This script is the definitive controller for the application. It has been fully
+// refactored to delegate state management to GameState.js and all direct DOM
+// manipulation to UIManager.js. This file coordinates the logic between modules.
+// Compiled by AI Studio Operations Core.
+// =================================================================================
 
-    // =================================================================================
-    // My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, REFACTORED BUILD
-    // =================================================================================
-    // This script is the definitive controller for the application. It has been fully
-    // refactored to delegate state management to GameState.js and all direct DOM
-    // manipulation to UIManager.js. This file coordinates the logic between modules.
-    // Compiled by AI Studio Operations Core.
-    // =================================================================================
-    
-    // --- MODULE IMPORTS ---
+// --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 import { GameState } from './GameState.js';
 import { UIManager } from './UIManager.js';
@@ -58,13 +57,6 @@ const defaultStyleSettings = {
     '--spacing-unit': '8'
 };
 
-// --- TTS Configuration (Added to resolve ReferenceError) ---
-const TTS_ENABLED = false; // Set to true to enable TTS, requires API key
-const ELEVENLABS_API_KEY = null; // Replace with your ElevenLabs API Key if TTS_ENABLED
-const ELEVENLABS_VOICE_ID_CUSTOMER = 'YOUR_CUSTOMER_VOICE_ID'; // Placeholder: replace with actual ElevenLabs voice ID
-const ELEVENLABS_VOICE_ID_RIKK = 'YOUR_RIKK_VOICE_ID'; // Placeholder: replace with actual ElevenLabs voice ID
-const ELEVENLABS_API_ENDPOINT_BASE = 'https://api.elevenlabs.io/v1/text-to-speech/';
-
 // --- Avatars (For chat UI) ---
 const customerAvatars = {
     "DESPERATE_FIEND": "https://randomuser.me/api/portraits/men/32.jpg",
@@ -107,8 +99,6 @@ const uiManager = new UIManager(game, uiManagerConfig);
 const localStorageAvailable = isLocalStorageAvailable();
 let audioQueue = [];
 let isPlayingAudio = false;
-
-// .
 
 // =================================================================================
 // II. HELPER & UTILITY FUNCTIONS

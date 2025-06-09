@@ -181,4 +181,4 @@ class GameState {
 }
 
 // Export if using ES modules in a node environment or with a bundler
-// export { GameState };
+export { GameState };

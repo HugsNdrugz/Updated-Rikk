@@ -1,3 +1,5 @@
+
+
 // UIManager.js
 import { debugLogger } from './utils.js';
 
@@ -82,6 +84,8 @@ class UIManager {
         // These will be populated in initDOMReferences.
         this.previewMainSettingsButton = null;
         this.previewPhoneSettingsButton = null;
+        this.resetMainSettingsButton = null;
+        this.resetPhoneSettingsButton = null;
     }
 
     initDOMReferences() {
@@ -166,6 +170,8 @@ class UIManager {
         // Populate new button references for style settings
         this.previewMainSettingsButton = document.getElementById('preview-style-settings');
         this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
+        this.resetMainSettingsButton = document.getElementById('reset-style-settings');
+        this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
 
         if (this.chatContainer) {
             this.chatSpacerElement = document.createElement('div');
@@ -336,7 +342,7 @@ class UIManager {
                 itemDiv.classList.add('inventory-item-card');
                 // Basic item display, can be enhanced
                 itemDiv.innerHTML = `<h4>${item.name} (${item.quality || 'N/A'})</h4>
-                                     <p class.item-detail>Copped: $${item.purchasePrice || 'N/A'}<br>
+                                     <p class="item-detail">Copped: $${item.purchasePrice || 'N/A'}<br>
                                      Heat: +${item.itemTypeObj?.heat || 'N/A'}</p>`;
                 this.inventoryList.appendChild(itemDiv);
             });
@@ -379,6 +385,18 @@ class UIManager {
     setNextCustomerButtonDisabled(disabled) {
         if (this.nextCustomerBtn) {
             this.nextCustomerBtn.disabled = disabled;
+        }
+    }
+
+    setContinueButtonVisibility(isVisible) {
+        if (this.continueGameBtn) {
+            if (isVisible) {
+                this.continueGameBtn.classList.remove('hidden');
+            } else {
+                this.continueGameBtn.classList.add('hidden');
+            }
+        } else {
+            debugLogger.warn('UIManager', 'Continue game button not found to set visibility.');
         }
     }
 
@@ -736,4 +754,4 @@ class UIManager {
 }
 
 // Export if using ES modules
-// export { UIManager };
+export { UIManager };
