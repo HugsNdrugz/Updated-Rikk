@@ -214,14 +214,27 @@ export class SlotGameManager {
         }
         updateCanvasSize() {
             const gameContainer = this.manager.container.querySelector('.game-container');
-            if (!gameContainer) {
-                debugLogger.warn('SlotGameManager', 'Game container not found for responsive sizing.');
-                // Fallback to original sizing logic if gameContainer is not found
-                this.options.canvas.setAttribute('width', this.getWidth().toString());
-                this.options.canvas.setAttribute('height', this.getHeight().toString());
+
+            // Fallback if gameContainer is not found or its clientWidth is 0
+            if (!gameContainer || gameContainer.clientWidth === 0) {
+                // Optional: Log a warning or use default dimensions if this happens when visible
+                debugLogger.warn('SlotGameManager', 'Game container not found or has zero width for responsive sizing. Using initial/default dimensions.');
+                // Revert to a fixed reasonable size or the initial HTML attribute size.
+                const initialCanvasWidth = parseInt(this.options.canvas.getAttribute('width'), 10) || 440;
+                const initialCanvasHeight = parseInt(this.options.canvas.getAttribute('height'), 10) || 240;
+
+                if (this.options.canvas.width !== initialCanvasWidth || this.options.canvas.height !== initialCanvasHeight) {
+                     this.options.canvas.setAttribute('width', initialCanvasWidth.toString());
+                     this.options.canvas.setAttribute('height', initialCanvasHeight.toString());
+                }
+                // Use original hardcoded block dimensions if canvas is reset to initial.
+                // These are the values from the SlotGameManager.init default options.
+                this.options.block.width = 141;
+                this.options.block.height = 121;
+
                 this.paintBackground();
-                this.reels.forEach(reel => reel.reset()); // Ensure reels are reset even in fallback
-                return;
+                this.reels.forEach(reel => reel.reset()); // Reset reels with these default/initial sizes
+                return; // Exit early, don't use clientWidth if it's zero
             }
 
             const availableWidth = gameContainer.clientWidth;

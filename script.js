@@ -485,6 +485,9 @@ function handlePhoneAppClick(event) {
             break;
         case 'slot-game':
             uiManager.setPhoneUIState('slots');
+            if (game.slotGameManager) {
+                game.slotGameManager.launch();
+            }
             break;
         case 'theme-settings':
             uiManager.setPhoneUIState('theme-settings');
