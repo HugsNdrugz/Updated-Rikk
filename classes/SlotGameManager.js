@@ -28,10 +28,15 @@ export class SlotGameManager {
         if (!this.isInitialized) {
             this.init();
         } else {
-            if (this.slotInstance && this.slotInstance.player) {
-                const currentCash = this.getGameCash();
-                this.slotInstance.player.credits.set(currentCash);
-                this.slotInstance.player.updateUI();
+            if (this.slotInstance) { // Ensure slotInstance exists
+                // Update player cash
+                if (this.slotInstance.player) {
+                    const currentCash = this.getGameCash();
+                    this.slotInstance.player.credits.set(currentCash);
+                    this.slotInstance.player.updateUI();
+                }
+                // Update canvas size on every launch after initialization
+                this.slotInstance.updateCanvasSize();
             }
         }
     }
@@ -85,6 +90,9 @@ export class SlotGameManager {
             });
 
             this.engineInstance = new this.Engine(this, this.slotInstance, { FPS: 60 });
+            // updateCanvasSize is called within slotInstance.reset(), which is called in slotInstance.start()
+            // and slotInstance.start() is called by engineInstance.start().
+            // An explicit call to updateCanvasSize here ensures it uses the container's initial clientWidth.
             this.slotInstance.updateCanvasSize();
             this.slotInstance.subscribeEvents();
             this.engineInstance.start();
@@ -164,7 +172,13 @@ export class SlotGameManager {
         }
         getWidth() { return this.options.block.width * this.options.reel.cols + this.options.reel.padding.x * 2 + this.options.block.lineWidth * (this.options.reel.cols - 1); }
         getHeight() { return this.options.block.height * this.options.reel.rows; }
-        paintBackground() { this.ctx.fillStyle = this.options.color.background; this.ctx.fillRect(0, 0, this.getWidth(), this.getHeight()); }
+        paintBackground() {
+            // Use the new canvas attributes directly for painting
+            const newCanvasWidth = parseInt(this.options.canvas.getAttribute('width'));
+            const newCanvasHeight = parseInt(this.options.canvas.getAttribute('height'));
+            this.ctx.fillStyle = this.options.color.background;
+            this.ctx.fillRect(0, 0, newCanvasWidth, newCanvasHeight);
+        }
         start() { this.reset(); }
         spin() {
             if (!this.player.hasEnoughCredits() || this.isSpinning || this.checking) return;
@@ -195,9 +209,44 @@ export class SlotGameManager {
                 this.reels.push(new this.manager.Reel(this.manager, { ...this.options, index, ctx: this.ctx, height: this.getHeight() }));
             });
             this.reels.forEach((reel) => reel.reset());
-            this.updateCanvasSize();
+            // updateCanvasSize is called in reset, but also needs to be callable independently.
+            // For now, the call within reset will handle initial sizing.
         }
-        updateCanvasSize() { this.options.canvas.setAttribute('width', this.getWidth().toString()); this.options.canvas.setAttribute('height', this.getHeight().toString()); }
+        updateCanvasSize() {
+            const gameContainer = this.manager.container.querySelector('.game-container');
+            if (!gameContainer) {
+                debugLogger.warn('SlotGameManager', 'Game container not found for responsive sizing.');
+                // Fallback to original sizing logic if gameContainer is not found
+                this.options.canvas.setAttribute('width', this.getWidth().toString());
+                this.options.canvas.setAttribute('height', this.getHeight().toString());
+                this.paintBackground();
+                this.reels.forEach(reel => reel.reset()); // Ensure reels are reset even in fallback
+                return;
+            }
+
+            const availableWidth = gameContainer.clientWidth;
+            const targetAspectRatio = 11 / 6; // Original 440/240
+
+            const newCanvasWidth = availableWidth;
+            const newCanvasHeight = newCanvasWidth / targetAspectRatio;
+
+            this.options.canvas.setAttribute('width', newCanvasWidth.toString());
+            this.options.canvas.setAttribute('height', newCanvasHeight.toString());
+
+            // Preserve original block aspect ratio
+            const originalBlockAspectRatio = 141 / 121;
+
+            // Calculate new block dimensions based on new canvas height
+            this.options.block.height = newCanvasHeight / this.options.reel.rows;
+            this.options.block.width = this.options.block.height * originalBlockAspectRatio;
+
+            // It's important that block width is also updated for reel calculations
+            // The xOffset in Reel constructor depends on block.width.
+            // Reel reset will now use new block dimensions.
+
+            this.paintBackground();
+            this.reels.forEach(reel => reel.reset());
+        }
         subscribeEvents() {
             this.options.buttons.spinManual.onclick = () => { this.player.onWin(0); this.spin(); };
             this.options.buttons.spinAuto.onclick = () => {
@@ -254,10 +303,11 @@ export class SlotGameManager {
         drawBlocks() { for (const block of this.blocks) { this.canvas.draw(block); } }
         reset() {
             this.animations.removeAll(); this.isSpinning = false;
+            // Block dimensions might have changed, so use current this.options.block values
             this.blocks = createEmptyArray(this.options.reel.rows + 6).map((_, i) => ({
                 symbol: this.getRandomSymbol(),
-                coords: { yOffset: (i - 3) * this.options.block.height },
-                block: { ...this.options.block }
+                coords: { yOffset: (i - 3) * this.options.block.height }, // Use current block height
+                block: { ...this.options.block } // Use current block options
             }));
             this.drawBlocks();
         }
@@ -276,11 +326,11 @@ export class SlotGameManager {
                         this.blocks = [];
                         for (let i = 0; i < this.options.reel.rows + 6; i++) {
                             const reelIndex = (finalStopIndex + i) % this.reelStrip.length;
-                            const yPos = startCoords.y + (i * this.options.block.height);
+                            const yPos = startCoords.y + (i * this.options.block.height); // Use current block height
                             this.blocks.push({
                                 symbol: this.reelStrip[reelIndex],
-                                coords: { yOffset: yPos % (this.reelStrip.length * this.options.block.height) - this.options.block.height * 3},
-                                block: { ...this.options.block }
+                                coords: { yOffset: yPos % (this.reelStrip.length * this.options.block.height) - this.options.block.height * 3}, // Use current block height
+                                block: { ...this.options.block } // Use current block options
                             });
                         }
                     })
@@ -289,7 +339,11 @@ export class SlotGameManager {
                         const finalBlocks = [];
                         for(let i = 0; i < this.options.reel.rows + 6; i++) {
                              const reelIndex = (finalStopIndex + i) % this.reelStrip.length;
-                             finalBlocks.push({ symbol: this.reelStrip[reelIndex], coords: { yOffset: (i - 3) * this.options.block.height }, block: { ...this.options.block } });
+                             finalBlocks.push({
+                                 symbol: this.reelStrip[reelIndex],
+                                 coords: { yOffset: (i - 3) * this.options.block.height }, // Use current block height
+                                 block: { ...this.options.block } // Use current block options
+                             });
                         }
                         this.blocks = finalBlocks; this.drawBlocks(); resolve();
                     }).start();

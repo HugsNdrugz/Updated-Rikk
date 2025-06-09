@@ -66,8 +66,37 @@
     flex-direction: column;
 }
 #slot-game-view .phone-header { background-color: #111; border-bottom: 1px solid #333; } /* This was already in phone.css, but specific enough to be here too or overridden */
-#slot-game-view .game-container { display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; padding: 10px; flex-grow: 1; transform: scale(0.65); transform-origin: center center; margin-top: -40px; }
-#slot-game-view #slot { border: 4px solid #343a40; max-width: 100%; height: auto; box-sizing: content-box; border-radius: 40px; }
+
+/* Slot Game App Specific Styles */
+#slot-game-view .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center canvas and controls horizontally */
+    justify-content: center; /* Center vertically if there's space */
+    flex-grow: 1; /* Allow it to take available space in the phone view */
+    padding: 5px; /* Small padding around the game area */
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent oversized canvas from breaking layout before JS resizes it */
+}
+
+#slot-game-view .game-container canvas#slot {
+    display: block; /* Remove extra space below inline canvas */
+    max-width: 100%; /* Ensure canvas doesn't overflow its container */
+    height: auto;   /* Maintain aspect ratio if only width is constrained by max-width */
+    object-fit: contain; /* Ensures the content scales nicely if CSS forces a size */
+    /* The border and border-radius from the old #slot rule can be kept or modified as needed */
+    border: 4px solid #343a40;
+    border-radius: 10px; /* Adjusted border-radius for a more modern look, can be reverted to 40px if preferred */
+}
+
+/* Optional: Adjust controls if they look bad on small screens */
+#slot-game-view .controls {
+    /* Add any specific rules here if needed, e.g., flex-wrap for buttons */
+    /* For now, relying on existing d-flex and Bootstrap/custom button styling */
+    /* but ensure they don't prevent the canvas from shrinking. */
+    max-width: 100%; /* Ensure controls don't overflow */
+}
+
 #slot-game-view .winner-display { color: #FFD700; font-size: 28px; border-radius: 20px; border: 0; font-weight: bold; overflow: hidden; padding: 8px 16px; }
 #slot-game-view #spin-manual { background-color: #9a0102; color: wheat; border: 4px solid #dc3545; border-radius: 40px; padding: 16px; font-size: 24px; cursor: pointer; justify-content: center; text-align: center; flex: 1; }
 #slot-game-view .bet-action-btn { border-radius: 50%; border: solid 4px #343a40; background-color: #313030; color: wheat; }
