@@ -275,3 +275,48 @@ p a:hover {
   opacity: 0.2;
   z-index: -1;
 }
+
+/* Rule for hiding phone when modal is open */
+.phone-hidden-by-modal {
+    display: none !important;
+    /* Alternative hiding mechanisms if display:none causes issues with re-initialization:
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+    */
+}
+
+/*
+    App View Visibility Rules
+    - .app-view elements are hidden by default.
+    - .app-view.open elements are visible.
+    - #phone-launcher-container should be visible by default if no app view is .open.
+      This is typically handled by ensuring app views are absolutely positioned
+      to overlay the launcher when open. The launcher itself doesn't need a special rule
+      to be visible if it's part of the normal flow within .content-area.
+*/
+.app-view {
+    display: none; /* Hidden by default */
+    /* Consider absolute positioning for overlay effect if not already handled by app-view specific styles */
+    /* position: absolute; */
+    /* top: 0; */
+    /* left: 0; */
+    /* width: 100%; */
+    /* height: 100%; */
+    /* background-color: var(--phone-bg-color, #fff); */ /* Example background */
+}
+
+.app-view.open {
+    display: block; /* Or flex, grid, depending on the app's internal layout needs */
+}
+
+/*
+    MANUAL REVIEW REQUEST:
+    Please review `assets/css/one_ui_phone.css` and other relevant CSS files
+    (e.g., `layout.css`, `base.css`) to ensure that the main phone container
+    (`#rikk-phone-ui` or `.phone-wrapper` as per index.html) is visible by default
+    when its parent `#game-screen` is active.
+    It should not be hidden by `display: none`, `opacity: 0`, off-screen transforms,
+    or similar mechanisms by default. The phone should only be hidden if a specific
+    class like `.phone-hidden-by-modal` is applied, or if `#game-screen` itself is not visible.
+*/

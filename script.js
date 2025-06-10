@@ -498,42 +498,36 @@ function handleRestartGameClick() {
     startGameFlow();
 }
 
+// This function might still be called by elements not part of the main app launcher
+// (e.g. old dock icons if any were kept and not converted to launcher apps).
+// App icons in the launcher (rendered by UIManager.renderLauncher) have their event listeners
+// directly call uiManager.openApp(app.action).
 function handlePhoneAppClick(event) {
     const action = event.currentTarget.dataset.action;
-    switch (action) {
-        case 'messages': // This action now primarily comes from the launcher
+
+    // Check if this action corresponds to a defined launcher app first
+    const isLauncherAppAction = Object.values(launcherApps).flat().some(app => app.action === action);
+
+    if (isLauncherAppAction) {
+        // Special handling for messages app if it's the target
+        if (action === 'messages') {
             if (uiManager.nextCustomerBtn && !uiManager.nextCustomerBtn.disabled && game.getFiendsLeft() > 0 && game.isGameActive()) {
-                nextFiend(); // This will call startCustomerInteraction, which opens 'messages' app
+                nextFiend(); // This internally opens the 'messages' app via startCustomerInteraction
             } else if (game.getCurrentCustomerInstance()) {
                 uiManager.openApp('messages');
             } else {
                 phoneShowNotification("No new messages.", "Rikk's Inbox");
                 uiManager.openApp('messages'); // Open to show empty state or message list
             }
-            break;
-        case 'inventory-app': // This is likely from an old dock icon, not a launcher app
-            uiManager.openInventoryModal();
-            break;
-        case 'contacts': // Matches launcherApps action
-            uiManager.openApp('contacts');
-            break;
-        case 'slots': // Matches launcherApps action
-            uiManager.openApp('slots');
-            // game.slotGameManager.launch() is now called by UIManager.openApp
-            break;
-        case 'settings': // Matches launcherApps action
-            uiManager.openApp('settings');
-            break;
-        // 'back-to-home' case is removed as it's handled by new nav buttons or UIManager.closeCurrentApp()
-        default:
-            // This function might still be called by elements not part of the main app launcher (e.g. old dock icons if any)
-            // If the action is for a known app, open it. Otherwise, show not implemented.
-            if (launcherApps.page1.find(app => app.action === action)) {
-                 uiManager.openApp(action);
-            } else {
-                phoneShowNotification(`App "${action}" not implemented.`, "System");
-            }
-            break;
+        } else {
+            // For other launcher apps (contacts, slots, settings), directly open them.
+            uiManager.openApp(action);
+        }
+    } else if (action === 'inventory-app') {
+        // Handle non-launcher actions like the inventory modal (if triggered by an old dock icon for example)
+        uiManager.openInventoryModal();
+    } else {
+        phoneShowNotification(`Action or App "${action}" not implemented or is obsolete.`, "System");
     }
 }
 

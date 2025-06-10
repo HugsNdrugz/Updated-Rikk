@@ -113,9 +113,9 @@ class UIManager {
         // Add references for preview/reset buttons if UIManager will manage their text.
         // These will be populated in initDOMReferences.
         this.previewMainSettingsButton = null;
-        this.previewPhoneSettingsButton = null;
+        // this.previewPhoneSettingsButton = null; // Removed
         this.resetMainSettingsButton = null;
-        this.resetPhoneSettingsButton = null;
+        // this.resetPhoneSettingsButton = null; // Removed
     }
 
     initDOMReferences() {
@@ -229,9 +229,9 @@ class UIManager {
 
         // Populate new button references for style settings
         this.previewMainSettingsButton = document.getElementById('preview-style-settings');
-        this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
+        // this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings'); // Removed
         this.resetMainSettingsButton = document.getElementById('reset-style-settings');
-        this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
+        // this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings'); // Removed
 
         // Settings App specific DOM refs
         this.settingAppGridSize = document.getElementById('setting-app-grid-size');
@@ -609,16 +609,23 @@ class UIManager {
         if (!this.inventoryModal) return;
         this.updateInventoryDisplay(); // Needs to be implemented fully
         this.inventoryModal.classList.add('active');
-        this.setPhoneUIState('offscreen'); // Manage phone state when modal opens
+        if (this.rikkPhoneUI) {
+            this.rikkPhoneUI.classList.add('phone-hidden-by-modal');
+        }
     }
 
     closeInventoryModal() {
         if (!this.inventoryModal) return;
         this.inventoryModal.classList.remove('active');
-        // Restore phone state based on game context (e.g., chatting or home)
-        // This logic might need input from the game controller (script.js)
+        if (this.rikkPhoneUI) {
+            this.rikkPhoneUI.classList.remove('phone-hidden-by-modal');
+        }
         const customerActive = this.gameState.getCurrentCustomerInstance() !== null;
-        this.setPhoneUIState(customerActive ? 'chatting' : 'home');
+        if (customerActive) {
+            this.openApp('messages');
+        } else {
+            this.closeCurrentApp(); // Show launcher
+        }
     }
 
     updateInventoryDisplay() {
