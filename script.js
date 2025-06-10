@@ -1,14 +1,13 @@
+// =================================================================================
+// My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, REFACTORED BUILD
+// =================================================================================
+// This script is the definitive controller for the application. It has been fully
+// refactored to delegate state management to GameState.js and all direct DOM
+// manipulation to UIManager.js. This file coordinates the logic between modules.
+// Compiled by AI Studio Operations Core.
+// =================================================================================
 
-    // =================================================================================
-    // My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, REFACTORED BUILD
-    // =================================================================================
-    // This script is the definitive controller for the application. It has been fully
-    // refactored to delegate state management to GameState.js and all direct DOM
-    // manipulation to UIManager.js. This file coordinates the logic between modules.
-    // Compiled by AI Studio Operations Core.
-    // =================================================================================
-    
-    // --- MODULE IMPORTS ---
+// --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 import { GameState } from './GameState.js';
 import { UIManager } from './UIManager.js';
@@ -108,8 +107,6 @@ const localStorageAvailable = isLocalStorageAvailable();
 let audioQueue = [];
 let isPlayingAudio = false;
 
-// .
-
 // =================================================================================
 // II. HELPER & UTILITY FUNCTIONS
 // =================================================================================
@@ -200,7 +197,7 @@ function initializeManagers() {
     game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates);
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
-        () => game.getCash(),
+        () => game.getCash(), 
         (newCash) => {
             game.setCash(newCash);
             uiManager.updateHUD();
@@ -485,12 +482,14 @@ function handlePhoneAppClick(event) {
             break;
         case 'slot-game':
             uiManager.setPhoneUIState('slots');
+            game.slotGameManager.launch(); 
             break;
         case 'theme-settings':
             uiManager.setPhoneUIState('theme-settings');
             break;
         case 'back-to-home':
             uiManager.setPhoneUIState('home');
+            game.slotGameManager.stop(); // Stop slot game when returning to home screen
             break;
         default:
             phoneShowNotification(`App "${action}" not implemented.`, "System");
@@ -802,9 +801,10 @@ function loadGameState() {
             uiManager.updateEventTicker();
             uiManager.updateHUD();
             return true;
-        } catch (e) {
+        }
+        catch (e) { // Catch parsing or other loading errors
             console.error("Error loading game state:", e);
-            clearSavedGameState();
+            clearSavedGameState(); // Clear corrupted save
             return false;
         }
     }
