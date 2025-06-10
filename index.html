@@ -242,13 +242,123 @@
                                     <!-- ContactsAppManager will render into a .scroll-content div here -->
                                 </div>
                                 <div id="messages-app-view" class="app-view messages-wrapper">
-                                    <!-- UIManager will render the message list here -->
+<div class="one-ui-header">
+    <h2 class="one-ui-header-title">Street Talk</h2> <!-- Title changed to Street Talk -->
+</div>
+<div class="scroll-content">
+    <div id="chat-container-game" class="phone-chat-body" role="log" aria-live="polite" style="height: calc(100% - 60px); overflow-y: auto;">
+        <!-- Messages will be added here by UIManager.displayPhoneMessage -->
+        <!-- Style added to make scroll-content take available height minus footer -->
+    </div>
+    <footer id="choices-area-game" class="phone-footer-choices" role="toolbar" style="height: 60px; background: var(--color-surface, #eee); border-top: 1px solid var(--color-border, #ccc); padding: 5px; box-sizing: border-box;">
+        <!-- Choices will be added here by UIManager.displayChoices -->
+        <!-- Basic styling for choices area -->
+    </footer>
+</div>
                                 </div>
                                 <div id="slot-game-view" class="app-view slot-game-wrapper">
-                                     <!-- SlotGameManager will be initialized inside this view -->
+<div class="one-ui-header">
+    <h2 class="one-ui-header-title">Slots</h2>
+</div>
+<div class="scroll-content">
+    <div class="game-container" style="padding: 10px;"> <!-- Added some padding for better appearance -->
+        <div class="winner-display mb-3" style="text-align: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px;">
+            <span>WIN: <span id="win-amount">$0</span></span>
+        </div>
+        <canvas id="slot" width="440" height="240" style="display: block; margin: 0 auto; max-width: 100%;"></canvas> <!-- Centered and made responsive -->
+        <div class="controls d-flex flex-column align-items-center px-1 mt-3"> <!-- Changed to flex-column for better fit -->
+            <div class="d-flex justify-content-around w-100 mb-2"> <!-- Bet controls row -->
+                <button id="minus-bet" class="btn btn-secondary btn-sm"><i class="fas fa-minus"></i> Bet</button>
+                <span style="font-size: 1.2em;">Bet: <span id="bet" class="bet text-white">$0</span></span>
+                <button id="plus-bet" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> Bet</button>
+            </div>
+            <div class="d-flex justify-content-around w-100 mb-2"> <!-- Spin controls row -->
+                <button id="spin-manual" class="btn btn-primary btn-lg"><i class="fas fa-sync-alt"></i> SPIN</button>
+                <button id="spin-auto" class="btn btn-info btn-sm"><i class="fas fa-play"></i> AUTO | OFF</button>
+            </div>
+            <div class="d-flex justify-content-between w-100 align-items-center"> <!-- Status and paytable row -->
+                <span style="font-size: 1.1em;">Credit: <span id="credits" class="credit text-white">$0</span></span>
+                <button id="pay-table" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#pay-table-modal">
+                    <i class="fas fa-table"></i> Pay Table
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal structure for pay-table, ensure it's correctly placed if it's part of the slot game's specific view -->
+    <div class="modal fade modal-fullscreen-sm-down modal-lg" id="pay-table-modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light"> <!-- Assuming dark theme for modal -->
+                <div class="modal-header">
+                    <h5 class="modal-title">Pay Table</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- SlotGameManager's createPayTable will populate this -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                                 </div>
                                 <div id="settings-app-view" class="app-view settings-wrapper">
-                                    <!-- Settings UI will be rendered here -->
+<div class="one-ui-header">
+    <h2 class="one-ui-header-title">Settings</h2>
+</div>
+<div class="scroll-content">
+    <ul class="settings-list">
+        <li class="settings-item">
+            <div class="setting-text">
+                <span class="setting-label">App Grid Size</span>
+                <span class="setting-description">Adjust the number of columns in the app grid.</span>
+            </div>
+            <div class="setting-control">
+                <select id="setting-app-grid-size">
+                    <option value="small">Small (4 cols)</option>
+                    <option value="medium" selected>Medium (3 cols)</option>
+                    <option value="large">Large (2 cols)</option>
+                </select>
+            </div>
+        </li>
+        <li class="settings-item">
+            <div class="setting-text">
+                <span class="setting-label">Icon Size</span>
+                <span class="setting-description">Change the size of app icons on the launcher.</span>
+            </div>
+            <div class="setting-control">
+                <select id="setting-icon-size">
+                    <option value="small">Small</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="large">Large</option>
+                </select>
+            </div>
+        </li>
+        <li class="settings-item">
+            <div class="setting-text">
+                <span class="setting-label">Phone Theme</span>
+                <span class="setting-description">Select a theme for the phone UI.</span>
+            </div>
+            <div class="setting-control">
+                <select id="setting-phone-theme">
+                    <option value="default" selected>Default</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+        </li>
+        <!-- Add more settings as toggles or other controls if needed -->
+        <li class="settings-item">
+            <div class="setting-text">
+                <span class="setting-label">Haptic Feedback</span>
+            </div>
+            <div class="setting-control">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-haptic-feedback" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </li>
+    </ul>
+</div>
                                 </div>
                                 <!-- Add other app views like 'call', 'twitter' etc. here if needed -->
                             </div>

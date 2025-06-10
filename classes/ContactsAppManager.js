@@ -61,45 +61,81 @@ export class ContactsAppManager {
 
     init() {
         this.container.innerHTML = `
-            <div id="app-header-contacts" class="app-header-contacts">
-                <h1 id="app-title-contacts">Contacts</h1>
-                <div class="header-icons-contacts">
-                    <button class="icon-btn" id="add-contact-btn-contacts"><i class="fas fa-plus"></i></button>
-                    <button class="icon-btn"><i class="fas fa-search"></i></button>
-                    <button class="icon-btn"><i class="fas fa-ellipsis-v"></i></button>
-                </div>
+        <div class="one-ui-header">
+            <button class="one-ui-header-back-btn" id="contacts-app-back-btn"><i class="material-icons">arrow_back_ios</i></button>
+            <h2 class="one-ui-header-title" id="contacts-app-title">Contacts</h2>
+            <div class="header-icons-contacts">
+                <button class="icon-btn" id="add-contact-btn-contacts"><i class="material-icons">add</i></button>
+                <button class="icon-btn" id="search-contact-btn-contacts"><i class="material-icons">search</i></button>
+                <button class="icon-btn" id="more-contact-btn-contacts"><i class="material-icons">more_vert</i></button>
             </div>
-            <div id="main-app-content-contacts" class="main-app-content-contacts">
-                <div id="contacts-panel-contacts"></div>
-                <div id="details-panel-contacts">
-                    <div class="details-panel-header">
-                        <button id="back-to-contacts-btn" class="icon-btn"><i class="fas fa-arrow-left"></i></button>
-                        <h2 id="details-panel-title"></h2>
-                    </div>
-                    <div id="details-panel-content"></div>
-                </div>
-            </div>`;
+        </div>
+        <div class="scroll-content" id="contacts-scroll-content">
+            <div id="contacts-panel-contacts"></div> <!-- Existing element for list -->
+            <div id="details-panel-contacts"> <!-- Existing element for details -->
+                <!-- The details panel header and content will be rendered by renderAppViews/renderCustomerEditor -->
+            </div>
+        </div>`;
 
         this.dom = {
-            addContactBtn: this.container.querySelector('#add-contact-btn-contacts'),
-            contactsPanel: this.container.querySelector('#contacts-panel-contacts'),
-            detailsPanel: this.container.querySelector('#details-panel-contacts'),
-            backToContactsBtn: this.container.querySelector('#back-to-contacts-btn'),
-            detailsPanelTitle: this.container.querySelector('#details-panel-title'),
-            detailsPanelContent: this.container.querySelector('#details-panel-content')
+            appHeader: this.container.querySelector('.one-ui-header'),
+            appTitle: this.container.querySelector('#contacts-app-title'),
+            appBackButton: this.container.querySelector('#contacts-app-back-btn'),
+            scrollContent: this.container.querySelector('#contacts-scroll-content'),
+
+            addContactBtn: this.container.querySelector('#add-contact-btn-contacts'), // Still relevant
+            contactsPanel: this.container.querySelector('#contacts-panel-contacts'), // Still relevant
+            detailsPanel: this.container.querySelector('#details-panel-contacts'),   // Still relevant
+
+            // These are part of the dynamically rendered details view header in renderCustomerEditor/renderNewCustomerFlow
+            // So, they will be queried when that part of the DOM is built.
+            // For initial setup, they might not be present.
+            // backToContactsBtn: this.container.querySelector('#back-to-contacts-btn'), // This ID is specific to details view's own header
+            // detailsPanelTitle: this.container.querySelector('#details-panel-title'), // Also specific to details view's own header
+            detailsPanelContent: this.container.querySelector('#details-panel-content') // This ID is within detailsPanel, but not directly.
+                                                                                       // renderCustomerEditor should target detailsPanel.
         };
         
+        // detailsPanelContent is not a direct child of container anymore for this.dom initialization.
+        // It's created by renderCustomerEditor inside this.dom.detailsPanel.
+        // So, we will ensure renderCustomerEditor correctly targets this.dom.detailsPanel.
+        // Let's adjust detailsPanelContent assignment after detailsPanel is confirmed.
+        if (this.dom.detailsPanel) {
+             // The #details-panel-content div is created by renderCustomerEditor, so it's not available here.
+             // We'll make sure renderCustomerEditor appends its content to this.dom.detailsPanel.
+             // For now, let's remove the direct assignment of detailsPanelContent from here,
+             // as it's contextually created.
+        } else {
+            // console.error("ContactsAppManager CRITICAL: detailsPanel not found after init render.");
+        }
+
         this.renderAppViews();
         this.addEventListeners();
     }
     
     addEventListeners() {
-        this.dom.addContactBtn.addEventListener('click', () => this.handleCreateCustomerClick());
-        this.dom.backToContactsBtn.addEventListener('click', () => {
-            this.appState.activeCustomerKey = null;
-            this.appState.creatingNewCustomer = false;
-            this.renderAppViews();
-        });
+        if (this.dom.addContactBtn) {
+            this.dom.addContactBtn.addEventListener('click', () => this.handleCreateCustomerClick());
+        }
+        // The app-level back button. UIManager will handle its own back button for closing the app.
+        // This button is for internal navigation within the Contacts app (e.g., from details to list).
+        if (this.dom.appBackButton) {
+            this.dom.appBackButton.addEventListener('click', () => {
+                // If viewing details or creating new, go back to list view.
+                if (this.appState.activeCustomerKey || this.appState.creatingNewCustomer) {
+                    this.appState.activeCustomerKey = null;
+                    this.appState.creatingNewCustomer = false;
+                    this.renderAppViews();
+                } else {
+                    // If already on list view, this button should ideally do nothing or be hidden,
+                    // or UIManager's main back button would take over to close the app.
+                    // For now, let's log or do nothing specific if on list view.
+                    debugLogger.log("ContactsAppManager: App back button clicked on list view.");
+                }
+            });
+        }
+        // Listeners for dynamically created back buttons (e.g., inside details panel)
+        // are added when those views are rendered (see renderCustomerEditor, renderNewCustomerFlow).
     }
     
     getRandomColorForInitial(key) {
@@ -111,19 +147,22 @@ export class ContactsAppManager {
     // --- View Rendering ---
     renderAppViews() {
         if (this.appState.activeCustomerKey || this.appState.creatingNewCustomer) {
-            this.dom.detailsPanel.classList.add('active');
+            this.dom.detailsPanel.classList.add('active'); // Show details panel area
+            this.dom.contactsPanel.classList.add('hidden'); // Hide contacts list
             if (this.appState.creatingNewCustomer) {
-                this.dom.detailsPanelTitle.textContent = `New: Step ${this.newCustomerFlowState.step + 1}`;
-                this.renderNewCustomerFlow();
+                if(this.dom.appTitle) this.dom.appTitle.textContent = `New Contact`; // Main app title
+                this.renderNewCustomerFlow(); // Renders into this.dom.detailsPanel
             } else {
                 const customer = this.appState.customers[this.appState.activeCustomerKey];
-                this.dom.detailsPanelTitle.textContent = customer.baseName;
-                this.renderCustomerEditor(this.appState.activeCustomerKey);
+                if(this.dom.appTitle) this.dom.appTitle.textContent = customer.baseName; // Main app title
+                this.renderCustomerEditor(this.appState.activeCustomerKey); // Renders into this.dom.detailsPanel
             }
         } else {
-            this.dom.detailsPanel.classList.remove('active');
+            this.dom.detailsPanel.classList.remove('active'); // Hide details panel area
+            this.dom.contactsPanel.classList.remove('hidden'); // Show contacts list
+            if(this.dom.appTitle) this.dom.appTitle.textContent = 'Contacts'; // Main app title
         }
-        this.renderCustomerList();
+        this.renderCustomerList(); // Always render or re-render list (it might be hidden)
     }
 
     renderCustomerList() {
@@ -172,8 +211,25 @@ export class ContactsAppManager {
 
         const createSelectOptions = (options, selectedValue) => options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('');
 
-        this.dom.detailsPanelContent.innerHTML = `
-            <div class="editor-pane">
+        // The details-panel-content div is created dynamically by renderCustomerEditor / renderNewCustomerFlow
+        // Ensure it's cleared if it exists, or that renderCustomerEditor/renderNewCustomerFlow correctly targets this.dom.detailsPanel
+        if (!this.dom.detailsPanel) return; // Should not happen if init was successful
+
+        const customer = this.appState.customers[key];
+        if (!customer) {
+            this.dom.detailsPanel.innerHTML = `<p>Error: Customer not found.</p>`; // Render error directly into detailsPanel
+            return;
+        }
+
+        const createSelectOptions = (options, selectedValue) => options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('');
+
+        // This is the details view's own header, different from the main app header
+        this.dom.detailsPanel.innerHTML = `
+            <div class="details-panel-header">
+                <button id="back-to-contacts-btn-details" class="icon-btn"><i class="material-icons">arrow_back</i></button>
+                <h2 id="details-panel-title-details">${customer.baseName}</h2>
+            </div>
+            <div id="details-panel-content-editor" class="editor-pane">
                 <div class="editor-section">
                     <h3>Basic Info</h3>
                     <div class="form-group"><label>Key (ID)</label><input type="text" value="${customer.key}" readonly></div>
@@ -196,13 +252,34 @@ export class ContactsAppManager {
                     <pre>${JSON.stringify(customer, null, 2)}</pre>
                 </div>
             </div>`;
-        this.dom.detailsPanelContent.querySelectorAll('input, select').forEach(el => el.addEventListener('change', e => this.handleInputChange(e)));
+        // Query for the specific content area within the newly rendered detailsPanel
+        const editorContentArea = this.dom.detailsPanel.querySelector('#details-panel-content-editor');
+        if (editorContentArea) { // Check if querySelector found the element
+            editorContentArea.querySelectorAll('input, select').forEach(el => el.addEventListener('change', e => this.handleInputChange(e)));
+        }
+
+        // Add event listener for the details-specific back button
+        const detailsBackBtn = this.dom.detailsPanel.querySelector('#back-to-contacts-btn-details');
+        if (detailsBackBtn) {
+            detailsBackBtn.addEventListener('click', () => {
+                this.appState.activeCustomerKey = null;
+                this.appState.creatingNewCustomer = false;
+                this.renderAppViews();
+            });
+        }
     }
     
     // --- New Customer Flow ---
     renderNewCustomerFlow() {
+        if (!this.dom.detailsPanel) return; // Should not happen
+
         const currentStep = this.NEW_CUSTOMER_FLOW_STEPS[this.newCustomerFlowState.step];
-        this.dom.detailsPanelContent.innerHTML = `
+        // This is the details view's own header, different from the main app header
+        this.dom.detailsPanel.innerHTML = `
+            <div class="details-panel-header">
+                 <button id="back-to-contacts-btn-newflow" class="icon-btn"><i class="material-icons">arrow_back</i></button>
+                 <h2 id="details-panel-title-newflow">New: Step ${this.newCustomerFlowState.step + 1}</h2>
+            </div>
             <div id="new-customer-flow-content" class="editor-pane">
                 <div class="new-customer-step-content">${currentStep.render(this.newCustomerFlowState.data)}</div>
                 <div class="modal-actions" style="display: flex; justify-content: space-between; margin-top: 20px;">
@@ -252,9 +329,11 @@ export class ContactsAppManager {
     }
 
     _displayValidationMessage(messageContainerId, message) {
-        // Ensure this runs in the context where 'this.dom.detailsPanelContent' is available,
-        // or query document if the ID is globally unique and rendered.
-        const container = this.dom.detailsPanelContent.querySelector(`#${messageContainerId}`);
+        // Ensure this runs in the context where '#new-customer-flow-content' is available,
+        // which is inside this.dom.detailsPanel
+        const flowContentContainer = this.dom.detailsPanel.querySelector('#new-customer-flow-content');
+        if (!flowContentContainer) return;
+        const container = flowContentContainer.querySelector(`#${messageContainerId}`);
         if (container) {
             container.innerHTML = message ? `<p style="margin:0;">${message}</p>` : ''; // Clear if message is empty, added p style
         }

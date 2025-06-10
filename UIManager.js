@@ -2,6 +2,7 @@
 
 // UIManager.js
 import { debugLogger } from './utils.js';
+import { initDraggableGrid, handleDragStart, handleDragOver, handleDrop, handleDragEnd } from './phone_launcher_drag.js';
 
 class UIManager {
     constructor(gameStateInstance, config = {}) {
@@ -87,6 +88,21 @@ class UIManager {
         this.currentPhoneState = 'docked'; // Example initial state
         this.activeApp = null;
         this.appViews = {};
+        // this.launcherAppData = null; // launcherAppData is not stored on 'this' based on revised plan
+        this.currentPage = 0;
+        this.numPages = 0;
+
+        // Phone Settings App DOM References
+        this.settingAppGridSize = null;
+        this.settingIconSize = null;
+        this.settingDarkMode = null; // Retained from previous structure, maps to phone theme
+        this.gridSizeSummary = null; // Retained if still used by settings HTML
+        this.iconSizeSummary = null; // Retained if still used by settings HTML
+        this.darkModeSummary = null; // Retained if still used by settings HTML
+        this.settingsBackBtn = null; // Retained if still used by settings HTML
+
+        this.settingPhoneTheme = null;
+        this.settingHapticFeedback = null;
 
         // Style Settings Properties
         this.isPreviewModeActive = false;
@@ -217,12 +233,29 @@ class UIManager {
         this.resetMainSettingsButton = document.getElementById('reset-style-settings');
         this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
 
+        // Settings App specific DOM refs
+        this.settingAppGridSize = document.getElementById('setting-app-grid-size');
+        this.settingIconSize = document.getElementById('setting-icon-size');
+        this.settingDarkMode = document.getElementById('setting-dark-mode'); // Maps to phone theme in new UI
+        this.gridSizeSummary = document.getElementById('grid-size-summary'); // May not exist with new HTML
+        this.iconSizeSummary = document.getElementById('icon-size-summary'); // May not exist with new HTML
+        this.darkModeSummary = document.getElementById('dark-mode-summary'); // May not exist with new HTML
+        this.settingsBackBtn = this.settingsAppView ? this.settingsAppView.querySelector('[data-action="close-settings"]') : null; // May not exist
+
+        // New settings controls from the updated HTML
+        this.settingPhoneTheme = document.getElementById('setting-phone-theme');
+        this.settingHapticFeedback = document.getElementById('setting-haptic-feedback');
+
         if (this.chatContainer) {
             this.chatSpacerElement = document.createElement('div');
             this.chatSpacerElement.className = 'chat-spacer';
             this.chatContainer.appendChild(this.chatSpacerElement);
         }
         debugLogger.log('UIManager', 'DOM references initialized.');
+        this.initSettingsListeners();
+        this.applyCurrentSettings();
+        this.initLauncherGestures();
+        initDraggableGrid(this.handleAppOrderChange.bind(this)); // Initialize draggable grid with callback
     }
 
     // --- HUD Updates ---
@@ -302,6 +335,115 @@ class UIManager {
 
     // --- End New Phone App Management ---
 
+    // --- Launcher Methods ---
+    renderLauncher(appData) {
+        // this.launcherAppData = appData; // Not storing on this as per revised plan if only numPages is needed by gestures
+        if (!this.phoneLauncherWrapper || !this.phonePaginationDots) {
+            debugLogger.error('UIManager', 'Launcher wrapper or pagination dots not found for renderLauncher.');
+            return;
+        }
+
+        this.phoneLauncherWrapper.innerHTML = '';
+        this.phonePaginationDots.innerHTML = '';
+
+        const pageKeys = Object.keys(appData);
+        this.numPages = pageKeys.length;
+        this.currentPage = 0; // Reset to first page
+
+        pageKeys.forEach((pageKey, pageIndex) => {
+            const pageApps = appData[pageKey];
+            const launcherPageElement = document.createElement('div');
+            launcherPageElement.className = 'launcher-page';
+            launcherPageElement.dataset.pageId = pageKey; // Set pageId for drag persistence
+
+            const appGridElement = document.createElement('div');
+            appGridElement.className = 'app-grid';
+
+            // Add dragover and drop listeners to the grid itself for empty space drops
+            appGridElement.addEventListener('dragover', (event) => handleDragOver(event, appGridElement));
+            appGridElement.addEventListener('drop', (event) => handleDrop(event, appGridElement));
+
+            pageApps.forEach(app => {
+                const appIconElement = document.createElement('button');
+                appIconElement.className = 'app-icon';
+                appIconElement.dataset.action = app.action;
+                appIconElement.dataset.appId = app.id; // Required for persisting order
+                appIconElement.draggable = true;
+
+                appIconElement.innerHTML = `
+                    <i class="material-icons ${app.colorClass || ''}">${app.iconName || 'apps'}</i>
+                    <div class="app-label">${app.name}</div>
+                `;
+
+                appIconElement.addEventListener('click', () => this.openApp(app.action));
+
+                // Draggable event listeners
+                appIconElement.addEventListener('dragstart', (event) => handleDragStart(event, appIconElement));
+                appIconElement.addEventListener('dragend', (event) => handleDragEnd(event, appIconElement));
+                appIconElement.addEventListener('dragover', (event) => handleDragOver(event, appIconElement));
+                appIconElement.addEventListener('drop', (event) => handleDrop(event, appIconElement));
+
+                appGridElement.appendChild(appIconElement);
+            });
+
+            launcherPageElement.appendChild(appGridElement);
+            this.phoneLauncherWrapper.appendChild(launcherPageElement);
+
+            // Pagination Dot
+            const dotDiv = document.createElement('div');
+            dotDiv.className = 'dot';
+            // Active state handled by updateLauncherPage
+            this.phonePaginationDots.appendChild(dotDiv);
+        });
+        this.updateLauncherPage();
+    }
+
+    initLauncherGestures() {
+        if (!this.phoneLauncherContainer || typeof Hammer === 'undefined') { // Check for Hammer
+            debugLogger.warn('UIManager', 'Launcher container or Hammer library not available for gestures.');
+            return;
+        }
+        // numPages should be set by renderLauncher
+        if (this.numPages <= 1) return; // No need for gestures if only one page
+
+        const hammer = new Hammer(this.phoneLauncherContainer); // Gestures on the container
+
+        hammer.on('swipeleft', () => {
+            if (this.activeApp === null && this.currentPage < this.numPages - 1) {
+                this.currentPage++;
+                this.updateLauncherPage();
+            }
+        });
+
+        hammer.on('swiperight', () => {
+            if (this.activeApp === null && this.currentPage > 0) {
+                this.currentPage--;
+                this.updateLauncherPage();
+            }
+        });
+        debugLogger.log('UIManager', 'Launcher gestures initialized.');
+    }
+
+    updateLauncherPage() {
+        if (this.phoneLauncherWrapper) {
+            this.phoneLauncherWrapper.style.transform = `translateX(-${this.currentPage * 100}%)`;
+        }
+        if (this.phonePaginationDots) {
+            const dots = this.phonePaginationDots.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === this.currentPage);
+            });
+        }
+    }
+    // --- End Launcher Methods ---
+
+    handleAppOrderChange(pageId, newOrder) {
+        console.log(`UIManager: App order changed on page ${pageId}:`, newOrder);
+        // TODO: Update the actual launcherApps data structure in GameState or script.js
+        // This might involve calling another function passed from script.js,
+        // or dispatching a custom event to be handled by script.js.
+    }
+
     initAppScrollListeners() {
         Object.keys(this.appViews).forEach(appName => {
             const appView = this.appViews[appName];
@@ -317,6 +459,128 @@ class UIManager {
                 }
             }
         });
+    }
+
+    // --- Settings App Methods ---
+    applyCurrentSettings() {
+        if (this.settingAppGridSize && this.gridSizeSummary && this.phoneLauncherContainer) {
+            this.gridSizeSummary.textContent = this.settingAppGridSize.options[this.settingAppGridSize.selectedIndex].text;
+            // Remove any existing grid size classes before adding the new one
+            this.phoneLauncherContainer.classList.remove('grid-small', 'grid-medium', 'grid-large');
+            this.phoneLauncherContainer.classList.add('grid-' + this.settingAppGridSize.value);
+        }
+        if (this.settingIconSize && this.iconSizeSummary && this.phoneLauncherContainer) {
+            this.iconSizeSummary.textContent = this.settingIconSize.options[this.settingIconSize.selectedIndex].text;
+            // Remove any existing icon size classes
+            this.phoneLauncherContainer.classList.remove('icons-small', 'icons-standard', 'icons-large');
+            this.phoneLauncherContainer.classList.add('icons-' + this.settingIconSize.value);
+        }
+        if (this.settingDarkMode && this.darkModeSummary && this.rikkPhoneUI) {
+            this.darkModeSummary.textContent = this.settingDarkMode.checked ? 'On' : 'Off';
+            this.rikkPhoneUI.classList.toggle('phone-dark-mode', this.settingDarkMode.checked);
+        }
+    }
+
+    initSettingsListeners() {
+        if (this.settingAppGridSize) {
+            this.settingAppGridSize.addEventListener('change', (event) => {
+                if (this.gridSizeSummary) this.gridSizeSummary.textContent = event.target.options[event.target.selectedIndex].text;
+                if (this.phoneLauncherContainer) {
+                    this.phoneLauncherContainer.classList.remove('grid-small', 'grid-medium', 'grid-large');
+                    this.phoneLauncherContainer.classList.add('grid-' + event.target.value);
+                }
+                // console.log('Grid size changed to:', event.target.value);
+                // this.gameState.setSetting('phoneGridSize', event.target.value);
+            });
+        }
+
+        if (this.settingIconSize) {
+            this.settingIconSize.addEventListener('change', (event) => {
+                if (this.iconSizeSummary) this.iconSizeSummary.textContent = event.target.options[event.target.selectedIndex].text;
+                if (this.phoneLauncherContainer) {
+                    this.phoneLauncherContainer.classList.remove('icons-small', 'icons-standard', 'icons-large');
+                    this.phoneLauncherContainer.classList.add('icons-' + event.target.value);
+                }
+                // console.log('Icon size changed to:', event.target.value);
+                // this.gameState.setSetting('phoneIconSize', event.target.value);
+            });
+        }
+
+        if (this.settingDarkMode) {
+            this.settingDarkMode.addEventListener('change', (event) => {
+                if (this.darkModeSummary) this.darkModeSummary.textContent = event.target.checked ? 'On' : 'Off';
+                if (this.rikkPhoneUI) {
+                    this.rikkPhoneUI.classList.toggle('phone-dark-mode', event.target.checked);
+                }
+                // console.log('Dark mode changed to:', event.target.checked);
+                // this.gameState.setSetting('phoneDarkMode', event.target.checked);
+            });
+        }
+
+        if (this.settingsBackBtn) {
+            this.settingsBackBtn.addEventListener('click', () => this.closeCurrentApp());
+        }
+    }
+    // --- End Settings App Methods ---
+
+    initSettingsListeners() {
+        if (this.settingAppGridSize) {
+            this.settingAppGridSize.addEventListener('change', (event) => this.applyAppGridSize(event.target.value));
+        }
+        if (this.settingIconSize) {
+            this.settingIconSize.addEventListener('change', (event) => this.applyIconSize(event.target.value));
+        }
+        if (this.settingPhoneTheme) { // Changed from settingDarkMode
+            this.settingPhoneTheme.addEventListener('change', (event) => this.applyPhoneTheme(event.target.value));
+        }
+        if (this.settingHapticFeedback) {
+            this.settingHapticFeedback.addEventListener('change', (event) => this.applyHapticFeedback(event.target.checked));
+        }
+        // Note: this.settingDarkMode listener might be redundant if it maps to phone theme now, or needs adjustment.
+        // For now, if this.settingDarkMode still exists and is a separate control (e.g. for main UI theme vs phone theme):
+        if (this.settingDarkMode && !this.settingPhoneTheme) { // Only if a separate dark mode toggle exists and not handled by phone theme
+             this.settingDarkMode.addEventListener('change', (event) => {
+                // Assuming this controls a general dark mode, not the phone-specific one
+                console.log("General Dark Mode Toggled (implementation pending):", event.target.checked);
+                // this.applyGeneralDarkMode(event.target.checked);
+             });
+        }
+    }
+
+    applyAppGridSize(size) {
+        console.log('Applying app grid size:', size);
+        if (this.phoneLauncherWrapper) { // Target launcher wrapper or specific grid container
+            this.phoneLauncherWrapper.classList.remove('grid-small', 'grid-medium', 'grid-large');
+            this.phoneLauncherWrapper.classList.add(`grid-${size}`);
+        }
+        // TODO: Save setting to GameState.
+    }
+
+    applyIconSize(size) {
+        console.log('Applying icon size:', size);
+        if (this.phoneLauncherWrapper) { // Target launcher wrapper or specific grid container
+            this.phoneLauncherWrapper.classList.remove('icons-small', 'icons-medium', 'icons-large');
+            this.phoneLauncherWrapper.classList.add(`icons-${size}`);
+        }
+        // TODO: Save setting to GameState.
+        // TODO: May need to re-render launcher if icon size change is complex.
+    }
+
+    applyPhoneTheme(themeName) {
+        console.log('Applying phone theme:', themeName);
+        if (this.rikkPhoneUI) {
+            this.rikkPhoneUI.classList.remove('theme-default', 'theme-dark', 'theme-light'); // Remove old theme classes
+            this.rikkPhoneUI.classList.add(`theme-${themeName}`);
+        }
+        // TODO: Save setting to GameState.
+    }
+
+    applyHapticFeedback(isEnabled) {
+        console.log('Applying haptic feedback:', isEnabled);
+        // TODO: Implement actual haptic feedback logic if possible/desired.
+        // This might involve a global state or interacting with a device API if available.
+        // For now, this is a placeholder.
+        // TODO: Save setting to GameState.
     }
 
     clearChat() {

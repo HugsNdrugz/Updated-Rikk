@@ -24,6 +24,16 @@ import { getRandomElement, isLocalStorageAvailable, debugLogger, DEBUG_MODE } fr
 // I. CONFIGURATION & INITIALIZATION
 // =================================================================================
 
+const launcherApps = {
+    page1: [
+        { id: 'messages_app', name: 'Messages', iconName: 'chat', action: 'messages', colorClass: 'app-icon-blue' },
+        { id: 'contacts_app', name: 'Contacts', iconName: 'contacts', action: 'contacts', colorClass: 'app-icon-green' },
+        { id: 'slots_app', name: 'Slots', iconName: 'casino', action: 'slots', colorClass: 'app-icon-purple' },
+        { id: 'settings_app', name: 'Settings', iconName: 'settings', action: 'settings', colorClass: 'app-icon-gray' }
+    ]
+    // page2: [ { id: 'some_other_app', name: 'Another', iconName: 'help', action: 'another', colorClass: 'app-icon-orange' } ]
+};
+
 // --- Global Constants & Game Configuration ---
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const CUSTOMER_WAIT_TIME = 1100;
@@ -229,12 +239,34 @@ function setupEventListeners() {
     if (uiManager.inventoryModal) uiManager.inventoryModal.addEventListener('click', (e) => {
         if (e.target === uiManager.inventoryModal) uiManager.closeInventoryModal();
     });
-    if (uiManager.rikkPhoneUI) {
-        uiManager.rikkPhoneUI.querySelectorAll('.app-icon, .dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
+    // App icon clicks are handled by UIManager.renderLauncher attaching listeners directly.
+    // Dock icons specific logic might be needed if they are still part of the new design.
+    // if (uiManager.rikkPhoneUI) {
+    //     uiManager.rikkPhoneUI.querySelectorAll('.dock-icon').forEach(icon => icon.addEventListener('click', handlePhoneAppClick));
+    // }
+
+    // Old phoneBackButtons are likely specific to old phone UI views, new apps should manage their own back if needed,
+    // or use the main phoneBackBtn.
+    // if (uiManager.phoneBackButtons) uiManager.phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
+
+    // New Navigation Bar Listeners
+    if (uiManager.phoneHomeBtn) {
+        uiManager.phoneHomeBtn.addEventListener('click', () => uiManager.closeCurrentApp());
     }
-    if (uiManager.phoneBackButtons) uiManager.phoneBackButtons.forEach(btn => btn.addEventListener('click', handlePhoneAppClick));
-    if (uiManager.phoneDockedIndicator) uiManager.phoneDockedIndicator.addEventListener('click', () => uiManager.setPhoneUIState('home'));
-    if (uiManager.dockPhoneBtn) uiManager.dockPhoneBtn.addEventListener('click', () => uiManager.setPhoneUIState('docked'));
+    if (uiManager.phoneBackBtn) { // Main phone back button in the new nav bar
+        uiManager.phoneBackBtn.addEventListener('click', () => {
+            // For now, simple close. Later, could check uiManager.activeApp for app-specific back handling
+            // e.g. if (uiManager.activeApp === 'contacts' && game.contactsAppManager && game.contactsAppManager.isDetailsViewActive()) {
+            //    game.contactsAppManager.handleBackPress(); // App handles its internal back navigation
+            // } else {
+            uiManager.closeCurrentApp(); // Default to closing the app / going to launcher
+            // }
+        });
+    }
+
+    if (uiManager.phoneDockedIndicator) uiManager.phoneDockedIndicator.addEventListener('click', () => uiManager.closeCurrentApp()); // Shows launcher
+    if (uiManager.dockPhoneBtn) uiManager.dockPhoneBtn.addEventListener('click', () => uiManager.closeCurrentApp()); // Shows launcher
+
     if (uiManager.settingsMenuBtn) {
         uiManager.settingsMenuBtn.addEventListener('click', () => uiManager.openSubmenuPanel(uiManager.settingsMenuPanel));
     }
@@ -260,6 +292,7 @@ function initializeUIAndSettings() {
     if (uiManager.rikkPhoneUI) {
         initPhoneAmbientUI(uiManager.rikkPhoneUI);
     }
+    uiManager.renderLauncher(launcherApps); // Render the launcher apps
 }
 
 function initGame() {
@@ -284,7 +317,7 @@ function startGameFlow() {
     uiManager.activateMainMenuLights(false);
     game.setGameActive(true);
     uiManager.showScreen(uiManager.gameScreen);
-    uiManager.setPhoneUIState('home');
+    uiManager.closeCurrentApp(); // Show launcher (home screen)
     uiManager.updateHUD();
     uiManager.updateInventoryDisplay();
     uiManager.clearChat();
@@ -317,7 +350,7 @@ function endGame(reason) {
         uiManager.finalVerdictText.textContent = verdict;
         uiManager.finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (game.getCash() > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)");
     }
-    uiManager.setPhoneUIState('offscreen');
+    uiManager.closeCurrentApp(); // Show launcher, or consider uiManager.hidePhone() if needed
     clearSavedGameState();
 }
 
@@ -355,7 +388,7 @@ function setupUIForNewInteraction() {
     uiManager.clearChat();
     uiManager.clearChoices();
     uiManager.setNextCustomerButtonDisabled(true);
-    uiManager.setPhoneUIState('docked');
+    uiManager.closeCurrentApp(); // Show launcher, or specific hide state if phone should be fully off-screen
     uiManager.playSound(uiManager.doorKnockSound);
     uiManager.displayKnockEffect(game.getDayOfWeek());
 }
@@ -402,8 +435,8 @@ function nextFiend() {
 }
 
 function startCustomerInteraction(interaction) {
-    uiManager.setPhoneUIState('chatting');
-    uiManager.setPhoneTitle(interaction.name);
+    uiManager.openApp('messages');
+    // uiManager.setPhoneTitle(interaction.name); // TODO: UIManager needs a way to set active app title
     phoneShowNotification(`Incoming message from: ${interaction.name}`, "New Customer");
     uiManager.clearChat();
     let dialogueIndex = 0;
@@ -423,9 +456,9 @@ function startCustomerInteraction(interaction) {
 
 function endCustomerInteraction() {
     uiManager.clearChoices();
-    uiManager.setPhoneTitle('Street Talk');
+    // uiManager.setPhoneTitle('Street Talk'); // TODO: UIManager needs a way to set active app title / reset
     game.clearCurrentCustomerInstance();
-    uiManager.setPhoneUIState('home');
+    uiManager.closeCurrentApp(); // Show launcher
     if (game.isGameActive() && game.getFiendsLeft() > 0 && game.getHeat() < game.getMaxHeat() && (game.getCash() > 0 || game.getInventory().length > 0)) {
         uiManager.setNextCustomerButtonDisabled(false);
     } else if (game.isGameActive()) {
@@ -468,35 +501,38 @@ function handleRestartGameClick() {
 function handlePhoneAppClick(event) {
     const action = event.currentTarget.dataset.action;
     switch (action) {
-        case 'messages':
+        case 'messages': // This action now primarily comes from the launcher
             if (uiManager.nextCustomerBtn && !uiManager.nextCustomerBtn.disabled && game.getFiendsLeft() > 0 && game.isGameActive()) {
-                nextFiend();
+                nextFiend(); // This will call startCustomerInteraction, which opens 'messages' app
             } else if (game.getCurrentCustomerInstance()) {
-                uiManager.setPhoneUIState('chatting');
+                uiManager.openApp('messages');
             } else {
                 phoneShowNotification("No new messages.", "Rikk's Inbox");
+                uiManager.openApp('messages'); // Open to show empty state or message list
             }
             break;
-        case 'inventory-app':
+        case 'inventory-app': // This is likely from an old dock icon, not a launcher app
             uiManager.openInventoryModal();
             break;
-        case 'contacts-app':
-            uiManager.setPhoneUIState('contacts');
+        case 'contacts': // Matches launcherApps action
+            uiManager.openApp('contacts');
             break;
-        case 'slot-game':
-            uiManager.setPhoneUIState('slots');
-            if (game.slotGameManager) {
-                game.slotGameManager.launch();
-            }
+        case 'slots': // Matches launcherApps action
+            uiManager.openApp('slots');
+            // game.slotGameManager.launch() is now called by UIManager.openApp
             break;
-        case 'theme-settings':
-            uiManager.setPhoneUIState('theme-settings');
+        case 'settings': // Matches launcherApps action
+            uiManager.openApp('settings');
             break;
-        case 'back-to-home':
-            uiManager.setPhoneUIState('home');
-            break;
+        // 'back-to-home' case is removed as it's handled by new nav buttons or UIManager.closeCurrentApp()
         default:
-            phoneShowNotification(`App "${action}" not implemented.`, "System");
+            // This function might still be called by elements not part of the main app launcher (e.g. old dock icons if any)
+            // If the action is for a known app, open it. Otherwise, show not implemented.
+            if (launcherApps.page1.find(app => app.action === action)) {
+                 uiManager.openApp(action);
+            } else {
+                phoneShowNotification(`App "${action}" not implemented.`, "System");
+            }
             break;
     }
 }
