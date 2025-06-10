@@ -215,13 +215,9 @@ export class ContactsAppManager {
         // Ensure it's cleared if it exists, or that renderCustomerEditor/renderNewCustomerFlow correctly targets this.dom.detailsPanel
         if (!this.dom.detailsPanel) return; // Should not happen if init was successful
 
-        const customer = this.appState.customers[key];
-        if (!customer) {
-            this.dom.detailsPanel.innerHTML = `<p>Error: Customer not found.</p>`; // Render error directly into detailsPanel
-            return;
-        }
-
-        const createSelectOptions = (options, selectedValue) => options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('');
+        // Note: The 'customer' and 'createSelectOptions' variables are already declared at the top of this method.
+        // The duplicate declarations and the immediately following null check for 'customer' are removed.
+        // The first null check for 'customer' at the method's start is sufficient.
 
         // This is the details view's own header, different from the main app header
         this.dom.detailsPanel.innerHTML = `
