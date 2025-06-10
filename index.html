@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="assets/css/variables.css">
         <link rel="stylesheet" href="assets/css/base.css">
         <link rel="stylesheet" href="assets/css/layout.css">
-        <link rel="stylesheet" href="assets/css/phone.css">
+        <link rel="stylesheet" href="assets/css/one_ui_phone.css">
         <link rel="stylesheet" href="assets/css/components.css">
         <link rel="stylesheet" href="assets/css/main_menu.css">
         <link rel="stylesheet" href="assets/css/settings_ui.css">
@@ -207,154 +207,59 @@
                 <div id="game-scene" class="main-content">
                     <div id="knock-effect" class="hidden" aria-live="assertive">KNOCK! KNOCK!</div>
                     
-                    <!-- Rikk's Phone -->
-                    <aside id="rikk-phone-ui" class="phone-container" role="complementary" aria-label="Customer Interaction Terminal">
-                        <div class="volume-btn"></div>
-                        <div class="power-btn"></div>
-                        
-                        <div id="phone-screen-area" class="phone-screen-area">
-                            <div class="wallpaper"></div>
-                            <div class="notch">
-                                <div class="camera"></div>
-                                <div class="speaker"></div>
+                    <!-- START: New One UI Phone Structure -->
+                    <aside id="rikk-phone-ui" class="phone-wrapper" role="complementary" aria-label="Customer Interaction Terminal">
+                        <div class="screen" id="phone-screen-area">
+                            <!-- Notch and Cell Icons -->
+                            <div class="notch"></div>
+                            <div class="phone-stats">
+                                <i class="material-icons" id="phone-signal-icon">network_cell</i>
+                                <i class="material-icons" id="phone-wifi-icon">wifi</i>
+                                <i class="material-icons" id="phone-battery-icon">battery_full</i>
                             </div>
-                            
-                            <div class="status-bar">
-                                <div id="current-time-small">12:34</div>
-                                <div class="status-icons">
-                                    <i class="fas fa-signal"></i>
-                                    <i class="fas fa-wifi"></i>
-                                    <i class="fas fa-battery-three-quarters"></i>
-                                </div>
+
+                            <!-- Android Navigation Bar (at the bottom) -->
+                            <div class="android-nav-bar" id="phone-nav-bar">
+                                <div class="nav-btn back" id="phone-back-btn"><i class="material-icons">arrow_back_ios</i></div>
+                                <div class="nav-btn home" id="phone-home-btn"><i class="material-icons">radio_button_unchecked</i></div>
+                                <div class="nav-btn recents" id="phone-recents-btn"><i class="material-icons">reorder</i></div>
                             </div>
-                            
-                            <!-- Phone Content Layers -->
-                            <div id="android-home-screen" class="phone-content-view">
-                                <div class="time-display" id="current-time">00:00</div>
-                                <div class="date-display" id="current-date">Monday, January 1</div>
-                                <div class="notification" id="notification">
-                                    <div class="notification-title">Notification</div>
-                                    <div class="notification-content">System Message</div>
-                                </div>
-                                <div class="app-grid">
-                                    <button type="button" class="app-icon" data-action="messages"><i class="fas fa-comment-dots"></i>
-                                        <div class="app-label">Messages</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="inventory-app"><i class="fas fa-briefcase"></i>
-                                        <div class="app-label">Inventory</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="contacts-app"><i class="fas fa-address-book"></i>
-                                        <div class="app-label">Contacts</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="slot-game"><i class="fas fa-dice-five"></i>
-                                        <div class="app-label">Slots</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="music"><i class="fas fa-music"></i>
-                                        <div class="app-label">Music</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="clock"><i class="fas fa-clock"></i>
-                                        <div class="app-label">Clock</div>
-                                    </button>
-                                    <button type="button" class="app-icon" data-action="theme-settings"><i class="fas fa-palette"></i>
-                                        <div class="app-label">Theme</div>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div id="game-chat-view" class="phone-content-view hidden mockchat">
-                                <header class="phone-header">
-                                    <button class="phone-back-button hidden" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
-                                    <h3 id="phone-title-game">Street Talk</h3>
-                                </header>
-                                <div id="chat-container-game" class="phone-chat-body" role="log" aria-live="polite"></div>
-                                <footer id="choices-area-game" class="phone-footer-choices" role="toolbar"></footer>
-                            </div>
-                            
-                            <div id="contacts-app-view" class="phone-content-view hidden">
-                                <!-- The ContactsAppManager will render its UI content here -->
-                            </div>
-                            
-                            <!-- NEW: Container for the Slot Game App -->
-                            <div id="slot-game-view" class="phone-content-view hidden">
-                                <header class="phone-header">
-                                    <button class="phone-back-button" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
-                                    <h3 id="phone-title-slot-game">Slots</h3>
-                                </header>
-                                <!-- Slot Game HTML structure injected here -->
-                                <div class="game-container">
-                                    <div class="winner-display mb-3">
-                                        <span>WIN: <span id="win-amount">$0</span></span>
+
+                            <!-- Main Content Area (Launcher & Apps) -->
+                            <div class="content-area">
+                                <!-- Launcher Container -->
+                                <div id="phone-launcher-container" class="launcher-container">
+                                    <div id="phone-launcher-wrapper" class="launcher-wrapper">
+                                        <!-- Launcher Pages will be dynamically generated by UIManager -->
                                     </div>
-                                    <canvas id="slot" width="440" height="240"></canvas>
-                                    <div class="controls d-flex align-items-end px-1 mt-3">
-                                        <div class="text-warning left d-flex flex-column align-items-start justify-content-between h-100">
-                                            <span>Credit: <span id="credits" class="credit text-white">$0</span></span>
-                                            <span>Bet: <span id="bet" class="bet text-white">$0</span></span>
-                                        </div>
-                                        <div class="mx-4 middle d-flex align-items-end justify-content-between">
-                                            <button id="minus-bet" class="bet-action-btn"><i class="fas fa-minus"></i></button>
-                                            <button class="align-items-center d-flex gap-2" id="spin-manual"><i class="fas fa-sync-alt"></i><b>SPIN</b></button>
-                                            <button id="plus-bet" class="bet-action-btn"><i class="fas fa-plus"></i></button>
-                                        </div>
-                                        <div class="right d-flex flex-column align-items-end justify-content-between gap-1">
-                                            <button class="align-items-center d-flex gap-1" id="pay-table" data-bs-toggle="modal"
-                                                data-bs-target="#pay-table-modal"><i class="fas fa-table"></i><b>Pay Table</b></button>
-                                            <button class="align-items-center control-btn d-flex gap-1" id="spin-auto"><i class="fas fa-play"></i><b>AUTO |
-                                                    OFF</b></button>
-                                        </div>
+                                    <div id="phone-pagination-dots" class="pagination-dots">
+                                        <!-- Dots will be dynamically generated by UIManager -->
                                     </div>
                                 </div>
-                                <div class="modal fade modal-fullscreen-sm-down modal-lg" id="pay-table-modal">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Pay Table</h5><button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body"></div>
-                                        </div>
-                                    </div>
+
+                                <!-- App Views (Initially Hidden) -->
+                                <div id="contacts-app-view" class="app-view contacts-wrapper">
+                                    <!-- ContactsAppManager will render into a .scroll-content div here -->
                                 </div>
-                            </div>
-                            
-                            <div id="phone-theme-settings-view" class="phone-view hidden">
-                                <h2>Theme Settings</h2>
-                                <!-- Mirror main menu settings but with phone-specific styling -->
-                                <div class="settings-group" data-setting-group="colors-phone">
-                                    <h3>Colors</h3>
-                                    <div class="setting-row">
-                                        <label for="color-phone-bg">Phone Background</label>
-                                        <input type="color" id="color-phone-bg" data-variable="--color-phone-bg">
-                                    </div>
-                                    <div class="setting-row">
-                                        <label for="color-phone-text">Phone Text</label>
-                                        <input type="color" id="color-phone-text" data-variable="--color-phone-text">
-                                    </div>
+                                <div id="messages-app-view" class="app-view messages-wrapper">
+                                    <!-- UIManager will render the message list here -->
                                 </div>
-                                <div class="settings-group" data-setting-group="dimensions-phone">
-                                    <h3>Sizing</h3>
-                                    <div class="setting-row">
-                                        <label for="phone-border-radius-slider">Phone Border Radius</label>
-                                        <input type="range" id="phone-border-radius-slider" data-variable="--phone-border-radius" min="0" max="50" step="1">
-                                        <span class="value-display" data-target="phone-border-radius-slider"></span>
-                                    </div>
+                                <div id="slot-game-view" class="app-view slot-game-wrapper">
+                                     <!-- SlotGameManager will be initialized inside this view -->
                                 </div>
-                                <button id="reset-phone-style-settings">Reset to Defaults</button>
-                                <button id="preview-phone-style-settings">Preview</button>
+                                <div id="settings-app-view" class="app-view settings-wrapper">
+                                    <!-- Settings UI will be rendered here -->
+                                </div>
+                                <!-- Add other app views like 'call', 'twitter' etc. here if needed -->
                             </div>
-                            
-                            <div class="dock">
-                                <button type="button" class="dock-icon" data-action="phone"><i class="fas fa-phone"></i></button>
-                                <button type="button" class="dock-icon" data-action="messages"><i class="fas fa-comment"></i></button>
-                                <button type="button" class="dock-icon" data-action="user"><i class="fas fa-user"></i></button>
-                                <button type="button" class="dock-icon" data-action="compass"><i class="fas fa-compass"></i></button>
+
+                            <!-- Error Toast -->
+                            <div id="phone-error-toast" class="error-wrapper">
+                                <p id="phone-error-message">Error Message</p>
                             </div>
-                            
-                            <div class="home-indicator"></div>
-                            
-                            <button id="dock-phone-btn" aria-label="Dock Phone"><i class="fas fa-arrow-down"></i></button>
                         </div>
                     </aside>
+                    <!-- END: New One UI Phone Structure -->
                     
                     <div id="phone-docked-indicator" class="hidden">
                         <i class="fas fa-mobile-alt"></i>
@@ -417,6 +322,7 @@
         <audio id="cash-sound" src="assets/audio/cash-register.mp3" preload="auto"></audio>
         <audio id="denied-sound" src="assets/audio/denied.mp3" preload="auto"></audio>
         <audio id="chat-bubble-sound" src="assets/audio/chat-pop.mp3" preload="auto"></audio>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
         
         <!-- NEW: Slot Game Dependencies (Scripts) -->
         <script src="https://unpkg.com/@tweenjs/tween.js@23.1.3/dist/tween.umd.js"></script>

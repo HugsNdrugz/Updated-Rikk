@@ -32,12 +32,24 @@ class UIManager {
         this.knockEffect = null;
         this.rikkPhoneUI = null;
         this.phoneScreenArea = null;
-        this.androidHomeScreen = null;
-        this.gameChatView = null;
-        this.contactsAppView = null;
-        this.slotGameView = null;
-        this.phoneThemeSettingsView = null;
-        this.chatContainer = null;
+        this.androidHomeScreen = null; // This might be removed later if not used by new UI
+        this.gameChatView = null; // This might be removed later if not used by new UI
+        this.contactsAppView = null; // Reused
+        this.slotGameView = null; // Reused
+        this.phoneThemeSettingsView = null; // This might be removed later if not used by new UI
+        this.chatContainer = null; // This might be removed later if not used by new UI
+
+        // New One UI Phone Elements
+        this.phoneNavBar = null;
+        this.phoneHomeBtn = null;
+        this.phoneBackBtn = null;
+        this.phoneLauncherContainer = null;
+        this.phoneLauncherWrapper = null;
+        this.phonePaginationDots = null;
+        this.messagesAppView = null;
+        this.settingsAppView = null;
+        this.phoneErrorToast = null;
+        this.phoneErrorMessage = null;
         this.choicesArea = null;
         this.phoneTitleGame = null;
         this.phoneBackButtons = null;
@@ -73,6 +85,8 @@ class UIManager {
 
         // UI State specific to UIManager
         this.currentPhoneState = 'docked'; // Example initial state
+        this.activeApp = null;
+        this.appViews = {};
 
         // Style Settings Properties
         this.isPreviewModeActive = false;
@@ -108,25 +122,55 @@ class UIManager {
         this.gameScene = document.getElementById('game-scene');
         this.knockEffect = document.getElementById('knock-effect');
 
-        this.rikkPhoneUI = document.getElementById('rikk-phone-ui');
-        this.phoneScreenArea = document.getElementById('phone-screen-area');
-        this.androidHomeScreen = document.getElementById('android-home-screen');
-        this.gameChatView = document.getElementById('game-chat-view');
-        this.contactsAppView = document.getElementById('contacts-app-view'); // Passed to ContactsAppManager
-        this.slotGameView = document.getElementById('slot-game-view');       // Passed to SlotGameManager
-        this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
+        this.rikkPhoneUI = document.getElementById('rikk-phone-ui'); // Reused (wrapper)
+        this.phoneScreenArea = document.getElementById('phone-screen-area'); // Reused (main screen div)
+        this.androidHomeScreen = document.getElementById('android-home-screen'); // Might be null if old element removed
+        this.gameChatView = document.getElementById('game-chat-view'); // Might be null if old element removed
+        this.contactsAppView = document.getElementById('contacts-app-view'); // Reused
+        this.slotGameView = document.getElementById('slot-game-view');       // Reused
+        this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view'); // Might be null if old element removed
 
-        this.chatContainer = document.getElementById('chat-container-game');
-        this.choicesArea = document.getElementById('choices-area-game');
-        this.phoneTitleGame = document.getElementById('phone-title-game');
-        this.phoneBackButtons = document.querySelectorAll('.phone-back-button');
+        this.chatContainer = document.getElementById('chat-container-game'); // Might be null if old element removed
+        this.choicesArea = document.getElementById('choices-area-game'); // Might be null if old element removed
+        this.phoneTitleGame = document.getElementById('phone-title-game'); // Might be null if old element removed
+        this.phoneBackButtons = document.querySelectorAll('.phone-back-button'); // Might be empty if old buttons removed
 
-        if (this.rikkPhoneUI) {
+        // Assignments for new One UI phone elements
+        this.phoneNavBar = document.getElementById('phone-nav-bar');
+        this.phoneHomeBtn = document.getElementById('phone-home-btn');
+        this.phoneBackBtn = document.getElementById('phone-back-btn'); // Note: This is a specific button, not a NodeList like the old phoneBackButtons
+        this.phoneLauncherContainer = document.getElementById('phone-launcher-container');
+        this.phoneLauncherWrapper = document.getElementById('phone-launcher-wrapper');
+        this.phonePaginationDots = document.getElementById('phone-pagination-dots');
+        this.messagesAppView = document.getElementById('messages-app-view');
+        this.settingsAppView = document.getElementById('settings-app-view');
+        this.phoneErrorToast = document.getElementById('phone-error-toast');
+        this.phoneErrorMessage = document.getElementById('phone-error-message');
+
+        this.appViews = {
+            contacts: this.contactsAppView,
+            messages: this.messagesAppView,
+            slots: this.slotGameView,
+            settings: this.settingsAppView
+            // Add other apps here if they get corresponding views
+        };
+
+        // Old phone dock elements - these will likely be null or error if not handled,
+        // as the old .dock and .home-indicator are removed in the new HTML.
+        // Consider removing or conditionally assigning these if they are no longer part of the new UI.
+        if (this.rikkPhoneUI && this.rikkPhoneUI.querySelector('.dock')) { // Check if old dock exists
             this.phoneDock = this.rikkPhoneUI.querySelector('.dock');
-            this.phoneHomeIndicator = this.rikkPhoneUI.querySelector('.home-indicator');
+        } else {
+            this.phoneDock = null;
         }
-        this.phoneDockedIndicator = document.getElementById('phone-docked-indicator');
-        this.dockPhoneBtn = document.getElementById('dock-phone-btn');
+        if (this.rikkPhoneUI && this.rikkPhoneUI.querySelector('.home-indicator')) { // Check if old home indicator exists
+            this.phoneHomeIndicator = this.rikkPhoneUI.querySelector('.home-indicator');
+        } else {
+            this.phoneHomeIndicator = null;
+        }
+
+        this.phoneDockedIndicator = document.getElementById('phone-docked-indicator'); // This ID seems to be kept outside the phone
+        this.dockPhoneBtn = document.getElementById('dock-phone-btn'); // This ID seems to be kept outside the phone
 
         this.openInventoryBtn = document.getElementById('open-inventory-btn');
         this.inventoryCountDisplay = document.getElementById('inventory-count-display');
@@ -220,69 +264,59 @@ class UIManager {
     }
 
 
-    // --- Phone UI Management (Skeleton) ---
-    setPhoneUIState(state) {
-        this.currentPhoneState = state; // Store the state
-        if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppView || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
-            debugLogger.warn('UIManager', "Phone UI elements not fully initialized for setPhoneUIState.");
-            return;
+    // --- New Phone App Management ---
+    openApp(appName) {
+        this.closeCurrentApp(); // Close any currently open app
+
+        const appView = this.appViews[appName];
+        if (appView) {
+            appView.classList.add('open');
+            this.activeApp = appName;
+            debugLogger.log('UIManager', `Opened app: ${appName}`);
+
+            // Special handling for slots app
+            if (appName === 'slots' && this.slotGameManager) {
+                this.slotGameManager.launch(); // Assuming slotGameManager is set on UIManager instance
+            }
+
+            // Expand header if it exists and is collapsed
+            const header = appView.querySelector('.one-ui-header');
+            if (header) {
+                header.classList.remove('collapsed');
+            }
+        } else {
+            debugLogger.warn('UIManager', `App view not found for: ${appName}`);
         }
+    }
 
-        // Hide all phone content views initially
-        this.rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
-        this.androidHomeScreen.classList.add('hidden');
-        this.gameChatView.classList.add('hidden');
-        this.contactsAppView.classList.add('hidden');
-        this.slotGameView.classList.add('hidden');
-        this.phoneThemeSettingsView.classList.add('hidden');
-
-        this.phoneScreenArea.classList.remove('screen-off');
-        this.phoneDockedIndicator.classList.add('hidden');
-        if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.add('hidden'));
-        this.phoneDock.classList.add('hidden');
-        this.phoneHomeIndicator.classList.add('hidden');
-
-        switch (state) {
-            case 'chatting':
-                this.rikkPhoneUI.classList.add('chatting-game');
-                this.gameChatView.classList.remove('hidden');
-                break;
-            case 'home':
-                this.rikkPhoneUI.classList.add('home-screen-active');
-                this.androidHomeScreen.classList.remove('hidden');
-                this.phoneDock.classList.remove('hidden');
-                this.phoneHomeIndicator.classList.remove('hidden');
-                break;
-            case 'contacts':
-                this.rikkPhoneUI.classList.add('app-menu-game');
-                this.contactsAppView.classList.remove('hidden');
-                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-                break;
-            case 'slots':
-                this.rikkPhoneUI.classList.add('app-menu-game');
-                this.slotGameView.classList.remove('hidden');
-                // SlotGameManager.launch() will be called by script.js
-                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-                break;
-            case 'theme-settings':
-                this.rikkPhoneUI.classList.add('app-menu-game');
-                this.phoneThemeSettingsView.classList.remove('hidden');
-                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
-                break;
-            case 'docked':
-                this.rikkPhoneUI.classList.add('is-offscreen');
-                this.phoneScreenArea.classList.add('screen-off');
-                this.phoneDockedIndicator.classList.remove('hidden');
-                break;
-            case 'offscreen':
-                this.rikkPhoneUI.classList.add('is-offscreen');
-                this.phoneScreenArea.classList.add('screen-off');
-                break;
-            default:
-                debugLogger.warn('UIManager', `Unknown phone state: ${state}`);
-                this.setPhoneUIState('docked'); // Default to docked
-                break;
+    closeCurrentApp() {
+        if (this.activeApp) {
+            const appView = this.appViews[this.activeApp];
+            if (appView) {
+                appView.classList.remove('open');
+                debugLogger.log('UIManager', `Closed app: ${this.activeApp}`);
+            }
+            this.activeApp = null;
         }
+    }
+
+    // --- End New Phone App Management ---
+
+    initAppScrollListeners() {
+        Object.keys(this.appViews).forEach(appName => {
+            const appView = this.appViews[appName];
+            if (appView) {
+                const scrollContent = appView.querySelector('.scroll-content');
+                const header = appView.querySelector('.one-ui-header');
+
+                if (scrollContent && header) {
+                    scrollContent.addEventListener('scroll', () => {
+                        const isCollapsed = scrollContent.scrollTop > 10; // Threshold of 10px
+                        header.classList.toggle('collapsed', isCollapsed);
+                    });
+                }
+            }
+        });
     }
 
     clearChat() {
