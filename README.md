@@ -1,4 +1,4 @@
-# [PROJECT TITLE - REAL ONES KNOW THE NAME]
+# [my nigha ricc]
 
 Yo, listen up. This ain't no fairytale. This is 'bout that life. The grit, the grind, the come-up. You're out here navigatin' a world of hustlers, fiends, and every shade in between. They ain't just 'customers'; they're your network, your headaches, your bread and butter. It's 'bout trustin' your gut, movin' your product, and makin' sure you ain't the one gettin' played. 'Cause out here, every move is a gamble, and the streets? They don't pick favorites.
 
