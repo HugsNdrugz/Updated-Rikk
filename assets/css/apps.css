@@ -7,7 +7,6 @@
     color: var(--text-primary); /* Assuming --text-color is defined in variables.css or is a general variable */
     display: flex;
     flex-direction: column;
-    padding-top: 0; /* Was already there, kept for consistency */
 }
 
 #contacts-app-view #details-panel-contacts {
