@@ -23,7 +23,8 @@ const CONFIG = {
     RETURNING_CUSTOMER_CASH_RANGE: 90,
     RETURNING_CUSTOMER_CASH_BASE: 25,
     MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER: 5,
-    CHANCE_SELL_WEIRD_ITEM: 0.05,
+    CHANCE_SELL_WEIRD_ITEM: 0.05, // This will be primarily superseded by new logic but kept for addicted state
+    CHANCE_CUSTOMER_BUYS_RANDOM_ITEM: 0.10
 };
 
 export class CustomerManager {
@@ -93,7 +94,7 @@ export class CustomerManager {
         }
 
         if (customerWillOfferItemToRikk) {
-            itemContext = this._generateRandomItem(template, combinedWorldEffects);
+            itemContext = this._generateRandomItem(customerInstance, template, combinedWorldEffects); // Pass customerInstance
 
             if (!itemContext) {
                 const noItemDialogue = this._getDialogue(customerInstance, 'customerHasNothingToSell') || { line: `${customerInstance.name} shrugs. "Ain't got nothin' for ya today, chief."`, payload: null };
@@ -182,7 +183,15 @@ export class CustomerManager {
                 }
 
                 if (!chosenItem && potentialItemsToBuy.length > 0) {
-                    chosenItem = this._getRandomElement(potentialItemsToBuy);
+                    if (Math.random() < CONFIG.CHANCE_CUSTOMER_BUYS_RANDOM_ITEM) {
+                        chosenItem = this._getRandomElement(potentialItemsToBuy);
+                        if (chosenItem) {
+                             debugLogger.log('CustomerManager', `Customer ${customerInstance.name} buying purely random item: ${chosenItem.name}`);
+                        }
+                    } else {
+                        debugLogger.log('CustomerManager', `Customer ${customerInstance.name} decided against buying a random item.`);
+                        chosenItem = null;
+                    }
                 }
             }
             itemContext = chosenItem;
@@ -378,27 +387,46 @@ export class CustomerManager {
         return true;
     }
 
-    _generateRandomItem(template = null, combinedWorldEffects = {}) {
+    _generateRandomItem(customerInstance, template = null, combinedWorldEffects = {}) { // Added customerInstance
         if (combinedWorldEffects && combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
             debugLogger.log('CustomerManager', `Item generation stopped by itemScarcity world effect.`);
             return null;
         }
         if (template && template.gameplayConfig && template.gameplayConfig.sellPreference && template.gameplayConfig.sellPreference.any === false) {
-            debugLogger.log('CustomerManager', `Customer ${template.key} has sellPreference.any === false, will not sell.`);
+            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} has sellPreference.any === false, will not sell.`);
             return null;
         }
         let itemToSell = null;
-        const weirdItemChance = (template && typeof template.chanceSellWeirdItem === 'number')
-                                ? template.chanceSellWeirdItem
-                                : CONFIG.CHANCE_SELL_WEIRD_ITEM;
 
-        if (Math.random() < weirdItemChance) {
+        // --- Start of Modified Weird Item Generation Section ---
+        let proceedWithWeirdItemGeneration = false;
+        const CRAVING_THRESHOLD_FOR_ODDITIES = 4; // Define "very addicted" threshold
+
+        if (customerInstance &&
+            customerInstance.addictionStatus &&
+            customerInstance.addictionStatus.isAddicted &&
+            customerInstance.addictionStatus.cravingLevel >= CRAVING_THRESHOLD_FOR_ODDITIES) {
+
+            // Use CONFIG.CHANCE_SELL_WEIRD_ITEM for very addicted customers (e.g., 5%)
+            if (Math.random() < CONFIG.CHANCE_SELL_WEIRD_ITEM) {
+                proceedWithWeirdItemGeneration = true;
+                debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is very addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) and rolled to sell an oddity.`);
+            } else {
+                debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is very addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) but did NOT roll to sell an oddity.`);
+            }
+        } else {
+            // Not very addicted, zero chance of selling oddity through this general random path.
+            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} (Addiction status: ${JSON.stringify(customerInstance.addictionStatus)}) is not "very addicted" enough or at all, no random oddity generation path taken here.`);
+        }
+
+        if (proceedWithWeirdItemGeneration) {
             let weirdItemPool = [];
             if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
                 weirdItemPool = template.itemPoolWeird;
             } else {
                 weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
             }
+
             if (weirdItemPool.length > 0) {
                 const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
                 const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
@@ -406,14 +434,7 @@ export class CustomerManager {
                     const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
                     const qualityIndex = 0;
                     const quality = qualityLevelsForType[qualityIndex];
-                    const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-                    // Weird items have special pricing, so we can calculate it here directly.
-                    // Or, ensure their itemTypeObj.baseValue and range reflect this.
-                    // For now, let's keep their special pricing logic within _generateRandomItem
-                    // as they are not standard items passing through _calculateItemValue in the same way.
-                    // However, to align with making _calculateItemValue the source of truth,
-                    // ideally, weird items would also have their price determined there based on some properties.
-                    // This is a larger refactor for weird items. For now, let their specific logic stand.
+
                     itemToSell = {
                         id: selectedType.id,
                         name: selectedType.name,
@@ -421,14 +442,14 @@ export class CustomerManager {
                         quality,
                         qualityIndex,
                         description: selectedType.description,
-                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.2 + Math.random() * 0.2))),
+                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * (this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0) * (0.2 + Math.random() * 0.2))),
                     };
-                    // estimatedResaleValue will be determined by _calculateItemValue if Rikk tries to sell it.
-                    debugLogger.log('CustomerManager', `Generated weird item: ${itemToSell.name} for ${template.key}`);
+                    debugLogger.log('CustomerManager', `Generated weird item for addicted customer: ${itemToSell.name}`);
                     return itemToSell;
                 }
             }
         }
+        // --- End of Modified Weird Item Generation Section ---
 
         if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
@@ -459,12 +480,10 @@ export class CustomerManager {
                         }
                     }
                     if (possibleQualityIndices.length === 0) {
-                        debugLogger.log('CustomerManager', `Item type ${selectedType.id} cannot meet quality criteria of preference for ${template.key}`);
+                        debugLogger.log('CustomerManager', `Item type ${selectedType.id} cannot meet quality criteria of preference for ${customerInstance.name}`);
                     } else {
                         const qualityIndex = this._getRandomElement(possibleQualityIndices);
                         const quality = qualityLevelsForType[qualityIndex];
-                        // No purchasePrice or estimatedResaleValue here.
-                        // _calculateItemValue will determine the price when the customer offers it.
                         itemToSell = {
                             id: selectedType.id,
                             name: selectedType.name,
@@ -473,7 +492,7 @@ export class CustomerManager {
                             qualityIndex,
                             description: selectedType.description,
                         };
-                        debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${template.key}`);
+                        debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${customerInstance.name}`);
                         return itemToSell;
                     }
                 }
@@ -487,7 +506,6 @@ export class CustomerManager {
                 const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
                 const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
                 const quality = qualityLevelsForType[qualityIndex];
-                // No purchasePrice or estimatedResaleValue here.
                 itemToSell = {
                     id: selectedType.id,
                     name: selectedType.name,
@@ -496,13 +514,13 @@ export class CustomerManager {
                     qualityIndex,
                     description: selectedType.description,
                 };
-                debugLogger.log('CustomerManager', `Generated item from itemPool: ${itemToSell.name} for ${template.key}`);
+                debugLogger.log('CustomerManager', `Generated item from itemPool: ${itemToSell.name} for ${customerInstance.name}`);
                 return itemToSell;
             }
         }
 
         if (!itemToSell) {
-            debugLogger.log('CustomerManager', `Customer ${template ? template.key : 'Unknown'} generated nothing to sell.`);
+            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} generated nothing to sell.`);
         }
         return null;
     }
@@ -539,9 +557,6 @@ export class CustomerManager {
             const cravingFactor = 1 + (customerInstance.addictionStatus.cravingLevel * 0.1);
             effectiveValue *= cravingFactor;
         }
-        // Apply customer's price tolerance if Rikk is buying from them (purchaseContext = true)
-        // If Rikk is selling (purchaseContext = false), this factor is applied outside this function
-        // when determining the customer's offer.
         if (purchaseContext && customerTemplate) {
             effectiveValue *= (customerTemplate.priceToleranceFactor || 1.0);
         }
