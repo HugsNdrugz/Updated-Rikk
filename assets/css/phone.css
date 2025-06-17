@@ -35,6 +35,7 @@
     border-radius: var(--phone-screen-inset-radius);
     margin: 6px;
     transition: filter 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    font-family: var(--font-body);
 }
 
 .phone-screen-area.screen-off {
@@ -114,7 +115,7 @@
     justify-content: space-between;
     padding: 10px 20px;
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     position: absolute;
     width: 100%;
     top: 0;
@@ -197,7 +198,7 @@
 .app-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: 25px;
     padding: 25px;
 }
 
@@ -221,8 +222,11 @@
 }
 
 .app-icon .app-label {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     opacity: 0.9;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
 }
 
 .app-icon:hover {
@@ -261,11 +265,13 @@
     font-weight: bold;
     font-size: 0.9rem;
     margin-bottom: 4px;
+    overflow-wrap: break-word;
 }
 
 .notification-content {
     font-size: 0.8rem;
     opacity: 0.9;
+    overflow-wrap: break-word;
 }
 
 /* === MAIN GAME CHAT UI Styles === */
@@ -454,6 +460,11 @@
     margin: 0;
     font-weight: bold;
     flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .phone-back-button {
@@ -464,4 +475,10 @@
     color: var(--color-on-surface);
     font-size: 1rem;
     cursor: pointer;
+    padding: var(--spacing-xs, 4px);
+    min-width: 30px;
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
