@@ -22,6 +22,7 @@ const CONFIG = {
     // Base cash ranges for returning customers
     RETURNING_CUSTOMER_CASH_RANGE: 90,
     RETURNING_CUSTOMER_CASH_BASE: 25,
+    MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER: 5,
 };
 
 export class CustomerManager {
@@ -103,6 +104,7 @@ export class CustomerManager {
                 const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
                 dialogue.push({ speaker: "customer", text: offerText });
                 const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
+                itemContext.itemInstanceId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                 if (cash >= customerDemandsPrice) {
                     choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
                 } else {
@@ -111,7 +113,14 @@ export class CustomerManager {
                 choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy", payload: declineResult.payload, followUpDialogue: declineResult.line } });
             }
         } else if (inventory.length > 0) {
-            let potentialItemsToBuy = [...inventory];
+            const allOfRikksItems = [...inventory];
+            // Ensure recentlySoldItems exists and is an array
+            const soldIds = (customerInstance.recentlySoldItems || []).map(record => record.itemInstanceId);
+            const potentialItemsToBuy = allOfRikksItems.filter(item => {
+                // If item has no instanceId, it can't be one they sold
+                // If it has an instanceId, it must NOT be in soldIds
+                return !item.itemInstanceId || !soldIds.includes(item.itemInstanceId);
+            });
             let chosenItem = null;
 
             if (potentialItemsToBuy.length > 0) {
@@ -297,6 +306,13 @@ export class CustomerManager {
                 if (!returningCustomer.addictionStatus) {
                     returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
                 }
+                if (!returningCustomer.recentlySoldItems) {
+                    returningCustomer.recentlySoldItems = [];
+                }
+                // Pruning logic for returning customer
+                if (returningCustomer.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
+                    returningCustomer.recentlySoldItems = returningCustomer.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
+                }
             }
             return returningCustomer;
         }
@@ -312,8 +328,14 @@ export class CustomerManager {
             ...JSON.parse(JSON.stringify(template.baseStats)), 
             cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
             hasMetRikkBefore: false,
-            addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 } // Initialize addiction status
+            addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 }, // Initialize addiction status
+            recentlySoldItems: [] // Initialize for new customer
         };
+
+        // Pruning logic for new customer (though array will be empty initially, this is for consistency)
+        if (newCustomerInstance.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
+            newCustomerInstance.recentlySoldItems = newCustomerInstance.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
+        }
 
         if (this.customersPool.length < CONFIG.MAX_CUSTOMERS_IN_POOL) {
             this.customersPool.push(newCustomerInstance);
@@ -389,6 +411,11 @@ export class CustomerManager {
 
     _generateRandomItem(template = null, combinedWorldEffects = {}) {
         if (combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
+            return null;
+        }
+
+        // Check for sellPreference.any === false at the very start of sell preference evaluation
+        if (template && template.gameplayConfig && template.gameplayConfig.sellPreference && template.gameplayConfig.sellPreference.any === false) {
             return null;
         }
 
