@@ -57,3 +57,8 @@ export const hexToObject = (hex, r = 16) => ({
 export const decToHex = (v) => Math.floor(v).toString(16).padStart(2, '0');
 
 export const waitFor = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// No-operation function for testing edits
+export function noop() {
+  // Does nothing
+}

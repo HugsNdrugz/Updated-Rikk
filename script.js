@@ -328,15 +328,40 @@ function handleTurnProgressionAndEvents() {
     game.setActiveWorldEvents(currentEvents.filter(eventState => eventState.turnsLeft > 0));
 
     let worldEventsState = game.getActiveWorldEvents();
-    if (!(worldEventsState.length > 0 && Math.random() < 0.7)) {
-        worldEventsState = worldEventsState.filter(event => event.turnsLeft > 0);
-        if (possibleWorldEvents.length > 0 && Math.random() < 0.25 && worldEventsState.length === 0) {
-            const eventTemplate = getRandomElement(possibleWorldEvents);
-            worldEventsState.push({ ...eventTemplate, turnsLeft: eventTemplate.duration });
+    // Only attempt to add a new random event if there isn't an active one OR 30% chance to try adding another
+    if (worldEventsState.length === 0 || Math.random() > 0.7) {
+        // Filter out tool-triggered events from the pool of candidates for random selection
+        const nonToolTriggeredEvents = possibleWorldEvents.filter(event => !event.isToolTriggered);
+        if (nonToolTriggeredEvents.length > 0 && Math.random() < 0.25) { // 25% chance to add a random non-tool event if conditions met
+            const eventTemplate = getRandomElement(nonToolTriggeredEvents);
+            // Ensure the event isn't already active before adding
+            if (eventTemplate && !worldEventsState.some(activeEvent => activeEvent.id === eventTemplate.id)) {
+                 // Check if we can add another event (e.g. max 1 random event)
+                if (worldEventsState.filter(ev => !ev.isToolTriggered).length === 0) { // Only add if no other random event is active
+                    game.addActiveWorldEvent({ ...eventTemplate, turnsLeft: eventTemplate.duration });
+                }
+            }
         }
-        game.setActiveWorldEvents(worldEventsState);
     }
-    uiManager.updateEventTicker();
+
+    // Check for info_rival tool effect to trigger rival_stash_opportunity
+    if (game.isToolEffectActive('info_rival')) {
+        const RIVAL_OP_CHANCE = 0.15; // 15% chance per day/turn
+        const rivalEventId = "rival_stash_opportunity";
+        const isRivalEventActive = game.getActiveWorldEvents().some(event => event.id === rivalEventId);
+
+        if (!isRivalEventActive && Math.random() < RIVAL_OP_CHANCE) {
+            const rivalEventTemplate = possibleWorldEvents.find(event => event.id === rivalEventId);
+            if (rivalEventTemplate) {
+                const newEventInstance = { ...rivalEventTemplate, turnsLeft: rivalEventTemplate.duration };
+                game.addActiveWorldEvent(newEventInstance);
+                phoneShowNotification("Your intel on the rival's stash paid off! For today, opportunities abound.", "Intel Update");
+
+                // TODO: Future - Consider if 'info_rival' should be consumed or have uses.
+            }
+        }
+    }
+    uiManager.updateEventTicker(); // Update ticker after all potential event changes
 
     const skills = game.getPlayerSkills();
     const worldEffects = getCombinedActiveEventEffects();

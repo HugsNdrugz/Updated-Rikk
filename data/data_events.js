@@ -28,5 +28,16 @@ export const possibleWorldEvents = [
         description: "Hard to find good product. Prices are up for what's left.",
         duration: 3,
         effects: { itemScarcity: true, allPriceModifier: 1.15 }
+    },
+    {
+        id: "rival_stash_opportunity",
+        name: "Rival Stash Opportunity!",
+        description: "Your intel on a rival's stash has created an opening! Deals might be more lucrative.",
+        duration: 1, // Active for 1 day
+        effects: {
+            allPriceModifier: 1.2, // 20% better prices overall
+            // Consider adding a small chance to find a rare item or a direct cash bonus later if desired
+        },
+        isToolTriggered: true // Custom flag to identify tool-triggered events
     }
 ];

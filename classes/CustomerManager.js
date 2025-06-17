@@ -349,6 +349,8 @@ export class CustomerManager {
 
     _inventoryItemMatchesPreference(inventoryItem, preference) {
         if (!inventoryItem || !preference) return false;
+        // Explicitly handle { any: false }
+        if (preference.any === false) return false;
         if (preference.any === true) return true;
 
         let match = true;
@@ -405,6 +407,10 @@ export class CustomerManager {
             return false;
         }
         if (preference.subType && itemType.subType !== preference.subType) {
+            return false;
+        }
+        // Check for maxBaseValue
+        if (typeof preference.maxBaseValue === 'number' && itemType.baseValue > preference.maxBaseValue) {
             return false;
         }
         return true;
@@ -488,20 +494,43 @@ export class CustomerManager {
                 if (candidateItemTypes.length > 0) {
                     const selectedType = this._getRandomElement(candidateItemTypes);
                     const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
-                    let qualityIndex;
 
-                    if (typeof chosenPreference.quality === 'number') {
-                        qualityIndex = Math.min(chosenPreference.quality, qualityLevelsForType.length - 1);
-                    } else if (typeof chosenPreference.maxQuality === 'number') {
-                        qualityIndex = Math.floor(Math.random() * (Math.min(chosenPreference.maxQuality, qualityLevelsForType.length - 1) + 1));
-                    }
-                     else {
-                        qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
-                    }
-                    const quality = qualityLevelsForType[qualityIndex];
-                    const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+                    let possibleQualityIndices = [];
+                    const prefQuality = chosenPreference.quality;
+                    const prefMinQuality = chosenPreference.minQuality;
+                    const prefMaxQuality = chosenPreference.maxQuality;
 
-                    itemToSell = {
+                    for (let i = 0; i < qualityLevelsForType.length; i++) {
+                        const qualityAvailable = true; // Future: could check if a specific quality is "locked" for a type
+
+                        if (qualityAvailable) {
+                            if (typeof prefQuality === 'number') { // Specific quality requested
+                                if (i === prefQuality) {
+                                    possibleQualityIndices.push(i);
+                                    break; // Found the specific quality, no need to check others
+                                }
+                            } else { // Range or no specific quality preference
+                                const minMatch = (typeof prefMinQuality === 'number' ? i >= prefMinQuality : true);
+                                const maxMatch = (typeof prefMaxQuality === 'number' ? i <= prefMaxQuality : true);
+                                if (minMatch && maxMatch) {
+                                    possibleQualityIndices.push(i);
+                                }
+                            }
+                        }
+                    }
+
+                    if (possibleQualityIndices.length === 0) {
+                        // This selectedType cannot meet the quality criteria of the chosenPreference.
+                        // This path of sellPreference fails for this item type.
+                        // Potentially log this event.
+                        debugLogger.log('CustomerManager', `Item type ${selectedType.id} cannot meet quality criteria of preference for ${template.key}`);
+                        // Continue to the next logic block (itemPool or return null) by not assigning itemToSell here
+                    } else {
+                        const qualityIndex = this._getRandomElement(possibleQualityIndices);
+                        const quality = qualityLevelsForType[qualityIndex];
+                        const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+
+                        itemToSell = {
                         id: selectedType.id,
                         name: selectedType.name,
                         itemTypeObj: selectedType,
