@@ -270,8 +270,7 @@
 
 /* === MAIN GAME CHAT UI Styles === */
 #game-chat-view.mockchat {
-    background: #FCF7FF;
-    background-image: linear-gradient(#FCF7FF, #e4eaf0);
+    background-color: var(--color-dark-bg);
     display: flex;
     flex-direction: column;
     padding-top: 0;
@@ -306,9 +305,9 @@
     width: fit-content;
     max-width: 90%;
     position: relative;
-    padding: 0.75em 1em;
+    padding: 0.8em 1.1em;
     box-shadow: 0 1px 10px rgba(0, 0, 0, 0.08);
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.5;
     word-wrap: break-word;
     font-family: 'Lato', sans-serif;
@@ -323,14 +322,14 @@
 .chat-bubble.rikk {
     background: var(--color-primary);
     color: var(--color-on-primary);
-    border-radius: 12px 12px 4px 12px;
+    border-radius: 16px;
     transform-origin: 100% 100%;
 }
 
 .chat-bubble.customer {
-    background: white;
-    color: #283747;
-    border-radius: 12px 12px 12px 4px;
+    background: var(--color-surface);
+    color: var(--color-on-surface);
+    border-radius: 16px;
     transform-origin: 0% 100%;
 }
 
@@ -411,6 +410,30 @@
     background-color: var(--color-surface);
     border-top: 1px solid #3A3A3C;
     flex-shrink: 0;
+}
+
+#choices-area-game button {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--button-border-radius, 8px); /* Use existing variable or a default */
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    flex-grow: 1; /* Allow buttons to share space */
+    margin: 4px; /* Add small margin for wrapped buttons */
+}
+
+#choices-area-game button:hover {
+    background-color: var(--color-hub-action-hover, #018786); /* Using a hover variable, adjust if needed */
+    transform: translateY(-2px);
+}
+
+#choices-area-game button:active {
+    transform: translateY(0px);
+    background-color: var(--color-primary); /* Revert or use a slightly darker shade */
 }
 
 /* From REMAINING CORE UI STYLES */

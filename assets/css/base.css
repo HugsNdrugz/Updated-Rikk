@@ -14,5 +14,4 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    padding: var(--spacing-sm);
 }
