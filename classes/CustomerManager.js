@@ -301,7 +301,18 @@ export class CustomerManager {
             const template = this.customerTemplates[returningCustomer.archetypeKey];
             returningCustomer.hasMetRikkBefore = true;
             if (template) {
-                returningCustomer.mood = template.baseStats.mood || 'chill';
+                // Initialize metadata if it doesn't exist
+                returningCustomer.metadata = returningCustomer.metadata || {};
+
+                // Apply pending mood effect if any
+                if (returningCustomer.metadata.pendingMoodEffect) {
+                    returningCustomer.mood = returningCustomer.metadata.pendingMoodEffect;
+                    delete returningCustomer.metadata.pendingMoodEffect; // Clear the effect
+                    debugLogger.log('CustomerManager', `Applied pending mood '${returningCustomer.mood}' to ${returningCustomer.name}`);
+                } else {
+                    returningCustomer.mood = template.baseStats.mood || 'chill';
+                }
+
                 returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
                 // Ensure addictionStatus is present
                 if (!returningCustomer.addictionStatus) {
@@ -330,7 +341,8 @@ export class CustomerManager {
             cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
             hasMetRikkBefore: false,
             addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 }, // Initialize addiction status
-            recentlySoldItems: [] // Initialize for new customer
+            recentlySoldItems: [], // Initialize for new customer
+            metadata: {} // Initialize metadata for new customer
         };
 
         // Pruning logic for new customer (though array will be empty initially, this is for consistency)
@@ -456,6 +468,13 @@ export class CustomerManager {
                     const quality = qualityLevelsForType[qualityIndex];
                     const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
 
+                    // Weird items have special pricing, so we can calculate it here directly.
+                    // Or, ensure their itemTypeObj.baseValue and range reflect this.
+                    // For now, let's keep their special pricing logic within _generateRandomItem
+                    // as they are not standard items passing through _calculateItemValue in the same way.
+                    // However, to align with making _calculateItemValue the source of truth,
+                    // ideally, weird items would also have their price determined there based on some properties.
+                    // This is a larger refactor for weird items. For now, let their specific logic stand.
                     itemToSell = {
                         id: selectedType.id,
                         name: selectedType.name,
@@ -463,10 +482,9 @@ export class CustomerManager {
                         quality,
                         qualityIndex,
                         description: selectedType.description,
-                        // Simplified pricing for weird items - could be 0 or low fixed value
-                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.2 + Math.random() * 0.2))), // Customer asks for less for weird stuff
+                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.2 + Math.random() * 0.2))),
                     };
-                    itemToSell.estimatedResaleValue = itemToSell.purchasePrice; // Rikk values it at what he paid initially
+                    // estimatedResaleValue will be determined by _calculateItemValue if Rikk tries to sell it.
                     debugLogger.log('CustomerManager', `Generated weird item: ${itemToSell.name} for ${template.key}`);
                     return itemToSell;
                 }
@@ -530,18 +548,18 @@ export class CustomerManager {
                         const quality = qualityLevelsForType[qualityIndex];
                         const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
 
+                        // No purchasePrice or estimatedResaleValue here.
+                        // _calculateItemValue will determine the price when the customer offers it.
                         itemToSell = {
-                        id: selectedType.id,
-                        name: selectedType.name,
-                        itemTypeObj: selectedType,
-                        quality,
-                        qualityIndex,
-                        description: selectedType.description,
-                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.8 + Math.random() * 0.4))),
-                    };
-                    itemToSell.estimatedResaleValue = itemToSell.purchasePrice;
-                    debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${template.key}`);
-                    return itemToSell;
+                            id: selectedType.id,
+                            name: selectedType.name,
+                            itemTypeObj: selectedType,
+                            quality,
+                            qualityIndex,
+                            description: selectedType.description,
+                        };
+                        debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${template.key}`);
+                        return itemToSell;
                 }
             }
         }
@@ -556,6 +574,7 @@ export class CustomerManager {
                 const quality = qualityLevelsForType[qualityIndex];
                 const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
 
+                // No purchasePrice or estimatedResaleValue here.
                 itemToSell = {
                     id: selectedType.id,
                     name: selectedType.name,
@@ -563,9 +582,7 @@ export class CustomerManager {
                     quality,
                     qualityIndex,
                     description: selectedType.description,
-                    purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.8 + Math.random() * 0.4))),
                 };
-                itemToSell.estimatedResaleValue = itemToSell.purchasePrice;
                 debugLogger.log('CustomerManager', `Generated item from itemPool: ${itemToSell.name} for ${template.key}`);
                 return itemToSell;
             }
@@ -584,11 +601,25 @@ export class CustomerManager {
         if (customerInstance && customerInstance.archetypeKey) {
             customerTemplate = this.customerTemplates[customerInstance.archetypeKey];
         }
-        let baseValue = purchaseContext ? item.purchasePrice : item.estimatedResaleValue;
-        if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') { return baseValue; }
-        let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
-        let effectiveValue = baseValue * qualityModifier;
+        if (!item || !item.itemTypeObj || typeof item.qualityIndex === 'undefined') {
+            debugLogger.warn('_calculateItemValue', 'Item, item.itemTypeObj, or qualityIndex is missing.', item);
+            return CONFIG.MIN_ITEM_PRICE;
+        }
 
+        let currentPrice = item.itemTypeObj.baseValue; // Start with the definition's baseValue
+
+        // Apply range fluctuation from item definition
+        if (typeof item.itemTypeObj.range === 'number' && item.itemTypeObj.range > 0) {
+            const fluctuation = (Math.random() * item.itemTypeObj.range) - (item.itemTypeObj.range / 2);
+            currentPrice += fluctuation;
+        }
+        currentPrice = Math.round(currentPrice);
+
+        // Apply quality modifier
+        let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
+        let effectiveValue = Math.round(currentPrice * qualityModifier);
+
+        // Apply player skills
         if (playerSkills) {
             if (!purchaseContext && playerSkills.appraiser > 0) {
                 effectiveValue *= (1 + playerSkills.appraiser * 0.05);
@@ -614,9 +645,13 @@ export class CustomerManager {
             effectiveValue *= cravingFactor;
         }
 
-        if (customerTemplate && !purchaseContext) {
+        // Apply customer's price tolerance if Rikk is buying from them (purchaseContext = true)
+        // If Rikk is selling (purchaseContext = false), this factor is applied outside this function
+        // when determining the customer's offer.
+        if (purchaseContext && customerTemplate) {
             effectiveValue *= (customerTemplate.priceToleranceFactor || 1.0);
         }
+
         return Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(effectiveValue));
     }
     
@@ -677,7 +712,10 @@ export class CustomerManager {
 
     loadSaveState(state) {
         if (state && state.customersPool && state.nextCustomerId) {
-            this.customersPool = state.customersPool;
+            this.customersPool = state.customersPool.map(customer => ({
+                ...customer,
+                metadata: customer.metadata || {} // Ensure metadata is initialized on load
+            }));
             this.nextCustomerId = state.nextCustomerId;
         } else {
             this.reset();

@@ -238,6 +238,24 @@ function setupEventListeners() {
     if (uiManager.settingsMenuBtn) {
         uiManager.settingsMenuBtn.addEventListener('click', () => uiManager.openSubmenuPanel(uiManager.settingsMenuPanel));
     }
+    // Listener for Load Game button
+    if (uiManager.loadMenuBtn && uiManager.loadMenuPanel) {
+        uiManager.loadMenuBtn.addEventListener('click', () => {
+            uiManager.openSubmenuPanel(uiManager.loadMenuPanel);
+        });
+    } else {
+        if (DEBUG_MODE) debugLogger.warn('EventListeners', 'Load Game button or panel not found by UIManager for listener setup.');
+    }
+
+    // Listener for Credits button
+    if (uiManager.creditsMenuBtn && uiManager.creditsMenuPanel) {
+        uiManager.creditsMenuBtn.addEventListener('click', () => {
+            uiManager.openSubmenuPanel(uiManager.creditsMenuPanel);
+        });
+    } else {
+        if (DEBUG_MODE) debugLogger.warn('EventListeners', 'Credits button or panel not found by UIManager for listener setup.');
+    }
+
     if (uiManager.allSubmenuBackBtns) uiManager.allSubmenuBackBtns.forEach(button => {
         button.addEventListener('click', (event) => {
             const panelToClose = event.target.closest('.submenu-panel');
@@ -520,6 +538,21 @@ function handlePhoneAppClick(event) {
         case 'back-to-home':
             uiManager.setPhoneUIState('home');
             break;
+        case 'music':
+            phoneShowNotification("Music app coming soon!", "System");
+            break;
+        case 'clock':
+            phoneShowNotification("Clock app is ticking!", "System");
+            break;
+        case 'phone':
+            phoneShowNotification("Dialer app is off the hook for now.", "System");
+            break;
+        case 'user':
+            phoneShowNotification("User profile: Under construction.", "System");
+            break;
+        case 'compass':
+            phoneShowNotification("Compass: Finding its direction...", "System");
+            break;
         default:
             phoneShowNotification(`App "${action}" not implemented.`, "System");
             break;
@@ -629,6 +662,19 @@ function handleChoice(outcome) {
                     narrationText = `Flipped "${soldItem.name}" for $${outcome.price}.`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
+
+                    // paranoia_high_dose effect for white_pony
+                    if (soldItem.id === 'white_pony' && soldItem.qualityIndex === 2) { // Pure Fire quality
+                        const CHANCE_BECOME_PARANOID = 0.33; // 33% chance
+                        if (Math.random() < CHANCE_BECOME_PARANOID) {
+                            if (currentCustomer) {
+                                currentCustomer.metadata = currentCustomer.metadata || {};
+                                currentCustomer.metadata.pendingMoodEffect = 'paranoid';
+                                if (DEBUG_MODE) debugLogger.log('EffectSystem', `Customer ${currentCustomer.name} (${currentCustomer.id}) might become paranoid next time due to high-quality white_pony.`);
+                            }
+                        }
+                    }
+
                     if (game.customerManager && typeof game.customerManager.processPotentialAddiction === 'function') {
                         game.customerManager.processPotentialAddiction(currentCustomer, soldItem);
                     }

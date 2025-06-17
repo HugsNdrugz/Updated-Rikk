@@ -1,4 +1,5 @@
 import { debugLogger } from '../utils.js';
+import { showNotification as phoneShowNotification } from '../phone_ambient_ui.js';
 // =================================================================================
 // classes/ContactsAppManager.js - FINAL BUILD
 // =================================================================================
@@ -65,8 +66,8 @@ export class ContactsAppManager {
                 <h1 id="app-title-contacts">Contacts</h1>
                 <div class="header-icons-contacts">
                     <button class="icon-btn" id="add-contact-btn-contacts"><i class="fas fa-plus"></i></button>
-                    <button class="icon-btn"><i class="fas fa-search"></i></button>
-                    <button class="icon-btn"><i class="fas fa-ellipsis-v"></i></button>
+                    <button class="icon-btn" id="search-contact-btn-contacts"><i class="fas fa-search"></i></button>
+                    <button class="icon-btn" id="more-options-btn-contacts"><i class="fas fa-ellipsis-v"></i></button>
                 </div>
             </div>
             <div id="main-app-content-contacts" class="main-app-content-contacts">
@@ -86,7 +87,9 @@ export class ContactsAppManager {
             detailsPanel: this.container.querySelector('#details-panel-contacts'),
             backToContactsBtn: this.container.querySelector('#back-to-contacts-btn'),
             detailsPanelTitle: this.container.querySelector('#details-panel-title'),
-            detailsPanelContent: this.container.querySelector('#details-panel-content')
+            detailsPanelContent: this.container.querySelector('#details-panel-content'),
+            searchContactBtn: this.container.querySelector('#search-contact-btn-contacts'),
+            moreOptionsBtn: this.container.querySelector('#more-options-btn-contacts')
         };
         
         this.renderAppViews();
@@ -94,12 +97,39 @@ export class ContactsAppManager {
     }
     
     addEventListeners() {
-        this.dom.addContactBtn.addEventListener('click', () => this.handleCreateCustomerClick());
-        this.dom.backToContactsBtn.addEventListener('click', () => {
-            this.appState.activeCustomerKey = null;
-            this.appState.creatingNewCustomer = false;
-            this.renderAppViews();
-        });
+        if (this.dom.addContactBtn) {
+            this.dom.addContactBtn.addEventListener('click', () => this.handleCreateCustomerClick());
+        } else {
+            if (typeof debugLogger !== 'undefined') debugLogger.warn('ContactsAppManager', 'Add Contact button not found for listener setup.');
+        }
+
+        if (this.dom.backToContactsBtn) {
+            this.dom.backToContactsBtn.addEventListener('click', () => {
+                this.appState.activeCustomerKey = null;
+                this.appState.creatingNewCustomer = false;
+                this.renderAppViews();
+            });
+        } else {
+            if (typeof debugLogger !== 'undefined') debugLogger.warn('ContactsAppManager', 'Back to Contacts button not found for listener setup.');
+        }
+
+        // Listener for Search button
+        if (this.dom.searchContactBtn) {
+            this.dom.searchContactBtn.addEventListener('click', () => {
+                phoneShowNotification("Contact search coming soon!", "Contacts App");
+            });
+        } else {
+            if (typeof debugLogger !== 'undefined') debugLogger.warn('ContactsAppManager', 'Search button not found for listener setup.');
+        }
+
+        // Listener for More Options button
+        if (this.dom.moreOptionsBtn) {
+            this.dom.moreOptionsBtn.addEventListener('click', () => {
+                phoneShowNotification("More contact options are on the way!", "Contacts App");
+            });
+        } else {
+            if (typeof debugLogger !== 'undefined') debugLogger.warn('ContactsAppManager', 'More Options button not found for listener setup.');
+        }
     }
     
     getRandomColorForInitial(key) {
