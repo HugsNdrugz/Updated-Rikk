@@ -115,25 +115,20 @@ export class CustomerManager {
             }
         } else if (inventory.length > 0) {
             const allOfRikksItems = [...inventory];
-            // Ensure recentlySoldItems exists and is an array
             const soldIds = (customerInstance.recentlySoldItems || []).map(record => record.itemInstanceId);
             const potentialItemsToBuy = allOfRikksItems.filter(item => {
-                // If item has no instanceId, it can't be one they sold
-                // If it has an instanceId, it must NOT be in soldIds
                 return !item.itemInstanceId || !soldIds.includes(item.itemInstanceId);
             });
             let chosenItem = null;
 
             if (potentialItemsToBuy.length > 0) {
-                // 0. Check for Addiction Preference (Highest Priority)
                 if (customerInstance.addictionStatus && customerInstance.addictionStatus.isAddicted && customerInstance.addictionStatus.drugId) {
                     const addictedDrugInStock = potentialItemsToBuy.find(item => item.id === customerInstance.addictionStatus.drugId);
-                    if (addictedDrugInStock && Math.random() < 0.85) { // 85% chance to demand their drug
+                    if (addictedDrugInStock && Math.random() < 0.85) {
                         chosenItem = addictedDrugInStock;
                     }
                 }
 
-                // 1. NEW: Check for Customer's buyPreference
                 if (!chosenItem) {
                     if (template.gameplayConfig && template.gameplayConfig.buyPreference) {
                         const buyPref = template.gameplayConfig.buyPreference;
@@ -158,7 +153,6 @@ export class CustomerManager {
                     }
                 }
 
-                // 2. If not chosen by addiction or buyPreference, check for Specific Item Demand (World Event)
                 if (!chosenItem) {
                     const demandedItemsInStock = potentialItemsToBuy.filter(item =>
                         combinedWorldEffects.specificItemDemand && combinedWorldEffects.specificItemDemand.includes(item.id)
@@ -168,7 +162,6 @@ export class CustomerManager {
                     }
                 }
 
-                // 2. If still not chosen, apply drug demand modifier (World Event)
                 if (!chosenItem) {
                     const drugItemsInStock = potentialItemsToBuy.filter(item => item.itemTypeObj && item.itemTypeObj.type === "DRUG");
                     const nonDrugItemsInStock = potentialItemsToBuy.filter(item => !item.itemTypeObj || item.itemTypeObj.type !== "DRUG");
@@ -183,12 +176,11 @@ export class CustomerManager {
                         } else if (nonDrugItemsInStock.length > 0) {
                             chosenItem = this._getRandomElement(nonDrugItemsInStock);
                         } else {
-                            chosenItem = this._getRandomElement(drugItemsInStock); // Only drugs in stock
+                            chosenItem = this._getRandomElement(drugItemsInStock);
                         }
                     }
                 }
 
-                // 3. If still no item chosen, pick randomly from remaining
                 if (!chosenItem && potentialItemsToBuy.length > 0) {
                     chosenItem = this._getRandomElement(potentialItemsToBuy);
                 }
@@ -252,7 +244,6 @@ export class CustomerManager {
             let allConditionsMet = true;
             if (block.conditions && block.conditions.length > 0) {
                 for (const condition of block.conditions) {
-                    // Check for addiction status condition
                     if (condition.stat === "addictionStatus.isAddicted") {
                         if (!customerInstance.addictionStatus || customerInstance.addictionStatus.isAddicted !== condition.value) {
                             allConditionsMet = false;
@@ -264,7 +255,7 @@ export class CustomerManager {
                             break;
                         }
                     }
-                    else if (!this._checkCondition(customerInstance, condition)) { // Original condition check
+                    else if (!this._checkCondition(customerInstance, condition)) {
                         allConditionsMet = false;
                         break;
                     }
@@ -282,7 +273,7 @@ export class CustomerManager {
     }
 
     _checkCondition(customerInstance, condition) {
-        const customerStatValue = customerInstance[condition.stat]; // This might fail if condition.stat is nested like "addictionStatus.isAddicted"
+        const customerStatValue = customerInstance[condition.stat];
         const checkValue = condition.value;
         switch (condition.op) {
             case 'is': return customerStatValue === checkValue;
@@ -301,27 +292,21 @@ export class CustomerManager {
             const template = this.customerTemplates[returningCustomer.archetypeKey];
             returningCustomer.hasMetRikkBefore = true;
             if (template) {
-                // Initialize metadata if it doesn't exist
                 returningCustomer.metadata = returningCustomer.metadata || {};
-
-                // Apply pending mood effect if any
                 if (returningCustomer.metadata.pendingMoodEffect) {
                     returningCustomer.mood = returningCustomer.metadata.pendingMoodEffect;
-                    delete returningCustomer.metadata.pendingMoodEffect; // Clear the effect
+                    delete returningCustomer.metadata.pendingMoodEffect;
                     debugLogger.log('CustomerManager', `Applied pending mood '${returningCustomer.mood}' to ${returningCustomer.name}`);
                 } else {
                     returningCustomer.mood = template.baseStats.mood || 'chill';
                 }
-
                 returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
-                // Ensure addictionStatus is present
                 if (!returningCustomer.addictionStatus) {
                     returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
                 }
                 if (!returningCustomer.recentlySoldItems) {
                     returningCustomer.recentlySoldItems = [];
                 }
-                // Pruning logic for returning customer
                 if (returningCustomer.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
                     returningCustomer.recentlySoldItems = returningCustomer.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
                 }
@@ -340,12 +325,11 @@ export class CustomerManager {
             ...JSON.parse(JSON.stringify(template.baseStats)), 
             cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
             hasMetRikkBefore: false,
-            addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 }, // Initialize addiction status
-            recentlySoldItems: [], // Initialize for new customer
-            metadata: {} // Initialize metadata for new customer
+            addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 },
+            recentlySoldItems: [],
+            metadata: {}
         };
 
-        // Pruning logic for new customer (though array will be empty initially, this is for consistency)
         if (newCustomerInstance.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
             newCustomerInstance.recentlySoldItems = newCustomerInstance.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
         }
@@ -361,90 +345,49 @@ export class CustomerManager {
 
     _inventoryItemMatchesPreference(inventoryItem, preference) {
         if (!inventoryItem || !preference) return false;
-        // Explicitly handle { any: false }
         if (preference.any === false) return false;
         if (preference.any === true) return true;
 
         let match = true;
+        if (preference.id) match = match && inventoryItem.id === preference.id;
+        if (preference.type) match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.type;
+        if (preference.subType) match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.subType;
+        if (typeof preference.quality === 'number') match = match && inventoryItem.qualityIndex === preference.quality;
+        if (typeof preference.minQuality === 'number') match = match && inventoryItem.qualityIndex >= preference.minQuality;
+        if (typeof preference.maxQuality === 'number') match = match && inventoryItem.qualityIndex <= preference.maxQuality;
+        if (typeof preference.minBaseValue === 'number') match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.baseValue >= preference.minBaseValue;
 
-        if (preference.id) {
-            match = match && inventoryItem.id === preference.id;
-        }
-        if (preference.type) {
-            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.type;
-        }
-        if (preference.subType) {
-            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.subType;
-        }
-        if (typeof preference.quality === 'number') {
-            match = match && inventoryItem.qualityIndex === preference.quality;
-        }
-        if (typeof preference.minQuality === 'number') {
-            match = match && inventoryItem.qualityIndex >= preference.minQuality;
-        }
-        if (typeof preference.maxQuality === 'number') {
-            match = match && inventoryItem.qualityIndex <= preference.maxQuality;
-        }
-        if (typeof preference.minBaseValue === 'number') {
-            match = match && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.baseValue >= preference.minBaseValue;
-        }
-
-        if (!match) return false; // Early exit if basic checks fail
+        if (!match) return false;
 
         if (preference.exclude) {
             let excluded = false;
-            if (preference.exclude.type && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.exclude.type) {
-                excluded = true;
-            }
-            if (!excluded && preference.exclude.subType && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.exclude.subType) {
-                excluded = true;
-            }
-            if (!excluded && preference.exclude.id && inventoryItem.id === preference.exclude.id) {
-                excluded = true;
-            }
-            if (excluded) {
-                match = false;
-            }
+            if (preference.exclude.type && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.type === preference.exclude.type) excluded = true;
+            if (!excluded && preference.exclude.subType && inventoryItem.itemTypeObj && inventoryItem.itemTypeObj.subType === preference.exclude.subType) excluded = true;
+            if (!excluded && preference.exclude.id && inventoryItem.id === preference.exclude.id) excluded = true;
+            if (excluded) match = false;
         }
         return match;
     }
 
     _itemTypeMatchesPreference(itemType, preference) {
         if (!itemType || !preference) return false;
-
-        if (preference.id && itemType.id !== preference.id) {
-            return false;
-        }
-        if (preference.type && itemType.type !== preference.type) {
-            return false;
-        }
-        if (preference.subType && itemType.subType !== preference.subType) {
-            return false;
-        }
-        // Check for maxBaseValue
-        if (typeof preference.maxBaseValue === 'number' && itemType.baseValue > preference.maxBaseValue) {
-            return false;
-        }
+        if (preference.id && itemType.id !== preference.id) return false;
+        if (preference.type && itemType.type !== preference.type) return false;
+        if (preference.subType && itemType.subType !== preference.subType) return false;
+        if (typeof preference.maxBaseValue === 'number' && itemType.baseValue > preference.maxBaseValue) return false;
         return true;
     }
 
     _generateRandomItem(template = null, combinedWorldEffects = {}) {
-        // 1. Initial scarcity check
-        if (combinedWorldEffects && combinedWorldEffects.itemScarcity && Math.random() < 0.5) { // Assuming 0.5 is the configured scarcity trigger
+        if (combinedWorldEffects && combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
             debugLogger.log('CustomerManager', `Item generation stopped by itemScarcity world effect.`);
             return null;
         }
-
-        // 2. Early exit for sellPreference.any === false
         if (template && template.gameplayConfig && template.gameplayConfig.sellPreference && template.gameplayConfig.sellPreference.any === false) {
             debugLogger.log('CustomerManager', `Customer ${template.key} has sellPreference.any === false, will not sell.`);
             return null;
         }
-
         let itemToSell = null;
-
-        // 3. Weird Item Generation
-        // Allow template to override global CHANCE_SELL_WEIRD_ITEM
         const weirdItemChance = (template && typeof template.chanceSellWeirdItem === 'number')
                                 ? template.chanceSellWeirdItem
                                 : CONFIG.CHANCE_SELL_WEIRD_ITEM;
@@ -454,20 +397,16 @@ export class CustomerManager {
             if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
                 weirdItemPool = template.itemPoolWeird;
             } else {
-                // Fallback to a global ODDITY pool if no archetype-specific weird pool
                 weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
             }
-
             if (weirdItemPool.length > 0) {
                 const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
                 const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
                 if (selectedType) {
-                    // Weird items default to base quality (index 0 or 'Standard')
                     const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
                     const qualityIndex = 0;
                     const quality = qualityLevelsForType[qualityIndex];
                     const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-
                     // Weird items have special pricing, so we can calculate it here directly.
                     // Or, ensure their itemTypeObj.baseValue and range reflect this.
                     // For now, let's keep their special pricing logic within _generateRandomItem
@@ -491,63 +430,39 @@ export class CustomerManager {
             }
         }
 
-        // 4. Evaluate sellPreference
         if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
             let chosenPreference = null;
-
             if (sellPref.or && Array.isArray(sellPref.or)) {
-                // Filter preferences that pass their individual chance rolls first
                 const eligiblePreferences = sellPref.or.filter(p => (typeof p.chance === 'number' ? Math.random() < p.chance : true));
-                if (eligiblePreferences.length > 0) {
-                    chosenPreference = this._getRandomElement(eligiblePreferences);
-                }
+                if (eligiblePreferences.length > 0) chosenPreference = this._getRandomElement(eligiblePreferences);
             } else if (typeof sellPref.chance === 'number' ? Math.random() < sellPref.chance : true) {
-                 chosenPreference = sellPref; // Single preference object
+                 chosenPreference = sellPref;
             }
-
 
             if (chosenPreference) {
                 const candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference));
                 if (candidateItemTypes.length > 0) {
                     const selectedType = this._getRandomElement(candidateItemTypes);
                     const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
-
                     let possibleQualityIndices = [];
                     const prefQuality = chosenPreference.quality;
                     const prefMinQuality = chosenPreference.minQuality;
                     const prefMaxQuality = chosenPreference.maxQuality;
-
                     for (let i = 0; i < qualityLevelsForType.length; i++) {
-                        const qualityAvailable = true; // Future: could check if a specific quality is "locked" for a type
-
-                        if (qualityAvailable) {
-                            if (typeof prefQuality === 'number') { // Specific quality requested
-                                if (i === prefQuality) {
-                                    possibleQualityIndices.push(i);
-                                    break; // Found the specific quality, no need to check others
-                                }
-                            } else { // Range or no specific quality preference
-                                const minMatch = (typeof prefMinQuality === 'number' ? i >= prefMinQuality : true);
-                                const maxMatch = (typeof prefMaxQuality === 'number' ? i <= prefMaxQuality : true);
-                                if (minMatch && maxMatch) {
-                                    possibleQualityIndices.push(i);
-                                }
-                            }
+                        if (typeof prefQuality === 'number') {
+                            if (i === prefQuality) { possibleQualityIndices.push(i); break; }
+                        } else {
+                            const minMatch = (typeof prefMinQuality === 'number' ? i >= prefMinQuality : true);
+                            const maxMatch = (typeof prefMaxQuality === 'number' ? i <= prefMaxQuality : true);
+                            if (minMatch && maxMatch) possibleQualityIndices.push(i);
                         }
                     }
-
                     if (possibleQualityIndices.length === 0) {
-                        // This selectedType cannot meet the quality criteria of the chosenPreference.
-                        // This path of sellPreference fails for this item type.
-                        // Potentially log this event.
                         debugLogger.log('CustomerManager', `Item type ${selectedType.id} cannot meet quality criteria of preference for ${template.key}`);
-                        // Continue to the next logic block (itemPool or return null) by not assigning itemToSell here
                     } else {
                         const qualityIndex = this._getRandomElement(possibleQualityIndices);
                         const quality = qualityLevelsForType[qualityIndex];
-                        const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-
                         // No purchasePrice or estimatedResaleValue here.
                         // _calculateItemValue will determine the price when the customer offers it.
                         itemToSell = {
@@ -560,11 +475,11 @@ export class CustomerManager {
                         };
                         debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${template.key}`);
                         return itemToSell;
+                    }
                 }
             }
         }
 
-        // 5. Evaluate itemPool
         if (!itemToSell && template && template.itemPool && template.itemPool.length > 0) {
             const selectedItemId = this._getRandomElement(template.itemPool);
             const selectedType = this.itemTypes.find(it => it.id === selectedItemId);
@@ -572,8 +487,6 @@ export class CustomerManager {
                 const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
                 const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
                 const quality = qualityLevelsForType[qualityIndex];
-                const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-
                 // No purchasePrice or estimatedResaleValue here.
                 itemToSell = {
                     id: selectedType.id,
@@ -588,9 +501,8 @@ export class CustomerManager {
             }
         }
 
-        // 6. If no item generated by specific rules, return null
         if (!itemToSell) {
-            debugLogger.log('CustomerManager', `Customer ${template ? template.key : 'Unknown'} generated nothing to sell based on specific rules (weird, sellPref, itemPool).`);
+            debugLogger.log('CustomerManager', `Customer ${template ? template.key : 'Unknown'} generated nothing to sell.`);
         }
         return null;
     }
@@ -605,53 +517,34 @@ export class CustomerManager {
             debugLogger.warn('_calculateItemValue', 'Item, item.itemTypeObj, or qualityIndex is missing.', item);
             return CONFIG.MIN_ITEM_PRICE;
         }
-
-        let currentPrice = item.itemTypeObj.baseValue; // Start with the definition's baseValue
-
-        // Apply range fluctuation from item definition
+        let currentPrice = item.itemTypeObj.baseValue;
         if (typeof item.itemTypeObj.range === 'number' && item.itemTypeObj.range > 0) {
             const fluctuation = (Math.random() * item.itemTypeObj.range) - (item.itemTypeObj.range / 2);
             currentPrice += fluctuation;
         }
         currentPrice = Math.round(currentPrice);
-
-        // Apply quality modifier
         let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
         let effectiveValue = Math.round(currentPrice * qualityModifier);
 
-        // Apply player skills
         if (playerSkills) {
-            if (!purchaseContext && playerSkills.appraiser > 0) {
-                effectiveValue *= (1 + playerSkills.appraiser * 0.05);
-            }
-            if (purchaseContext && playerSkills.appraiser > 0) {
-                effectiveValue *= (1 - playerSkills.appraiser * 0.03);
-            }
+            if (!purchaseContext && playerSkills.appraiser > 0) effectiveValue *= (1 + playerSkills.appraiser * 0.05);
+            if (purchaseContext && playerSkills.appraiser > 0) effectiveValue *= (1 - playerSkills.appraiser * 0.03);
         }
-        
         if (combinedWorldEffects) {
-            if (combinedWorldEffects.allPriceModifier) {
-                effectiveValue *= combinedWorldEffects.allPriceModifier;
-            }
-            if (combinedWorldEffects.drugPriceModifier && item.itemTypeObj && item.itemTypeObj.type === "DRUG") {
-                effectiveValue *= combinedWorldEffects.drugPriceModifier;
-            }
+            if (combinedWorldEffects.allPriceModifier) effectiveValue *= combinedWorldEffects.allPriceModifier;
+            if (combinedWorldEffects.drugPriceModifier && item.itemTypeObj && item.itemTypeObj.type === "DRUG") effectiveValue *= combinedWorldEffects.drugPriceModifier;
         }
-
-        // Addiction price tolerance modification
         if (customerInstance && customerInstance.addictionStatus && customerInstance.addictionStatus.isAddicted &&
             item.id === customerInstance.addictionStatus.drugId && !purchaseContext) {
             const cravingFactor = 1 + (customerInstance.addictionStatus.cravingLevel * 0.1);
             effectiveValue *= cravingFactor;
         }
-
         // Apply customer's price tolerance if Rikk is buying from them (purchaseContext = true)
         // If Rikk is selling (purchaseContext = false), this factor is applied outside this function
         // when determining the customer's offer.
         if (purchaseContext && customerTemplate) {
             effectiveValue *= (customerTemplate.priceToleranceFactor || 1.0);
         }
-
         return Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(effectiveValue));
     }
     
@@ -676,27 +569,22 @@ export class CustomerManager {
         if (!customerInstance || !soldDrugItem || !soldDrugItem.itemTypeObj || typeof soldDrugItem.itemTypeObj.addictionChance !== 'number') {
             return;
         }
-
         const drugProps = soldDrugItem.itemTypeObj;
         if (Math.random() < drugProps.addictionChance) {
             if (!customerInstance.addictionStatus) {
                 customerInstance.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
             }
-
             const wasAlreadyAddictedToThisDrug = customerInstance.addictionStatus.isAddicted && customerInstance.addictionStatus.drugId === soldDrugItem.id;
-
             customerInstance.addictionStatus.isAddicted = true;
             customerInstance.addictionStatus.drugId = soldDrugItem.id;
-
             if (wasAlreadyAddictedToThisDrug) {
-                customerInstance.addictionStatus.cravingLevel = Math.min((customerInstance.addictionStatus.cravingLevel || 0) + 1, 5); // Cap craving level, e.g., at 5
+                customerInstance.addictionStatus.cravingLevel = Math.min((customerInstance.addictionStatus.cravingLevel || 0) + 1, 5);
             } else {
-                customerInstance.addictionStatus.cravingLevel = 1; // Start craving at 1 for new addiction
+                customerInstance.addictionStatus.cravingLevel = 1;
             }
         }
     }
 
-    // --- Save/Load and State Management ---
     reset() {
         this.customersPool = [];
         this.nextCustomerId = 1;
@@ -714,7 +602,7 @@ export class CustomerManager {
         if (state && state.customersPool && state.nextCustomerId) {
             this.customersPool = state.customersPool.map(customer => ({
                 ...customer,
-                metadata: customer.metadata || {} // Ensure metadata is initialized on load
+                metadata: customer.metadata || {}
             }));
             this.nextCustomerId = state.nextCustomerId;
         } else {

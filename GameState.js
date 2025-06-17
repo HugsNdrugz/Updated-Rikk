@@ -59,21 +59,6 @@ class GameState {
     getMaxInventorySlots() { return this.MAX_INVENTORY_SLOTS; }
     getDaysArray() { return this.DAYS_ARRAY; }
 
-    isToolEffectActive(toolId) {
-        if (!this.inventory || this.inventory.length === 0) {
-            return false;
-        }
-        for (const item of this.inventory) {
-            // Ensure item and item.itemTypeObj exist to prevent errors
-            if (item && item.itemTypeObj && item.itemTypeObj.type === "TOOL" && item.id === toolId) {
-                // Future enhancement: Check for item.uses > 0 if/when 'uses' are tracked on inventory items.
-                // For now, presence of the tool in inventory means it's active.
-                return true;
-            }
-        }
-        return false;
-    }
-
     // --- Setters & Modifiers ---
     setCash(amount) { this.cash = amount; }
     addCash(amount) { this.cash += amount; }
