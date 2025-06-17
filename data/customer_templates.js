@@ -18,8 +18,18 @@ export const customerTemplates = {
             "relationship": 0
         },
         "gameplayConfig": {
-            "buyPreference": { "type": "DRUG", "maxQuality": 1 },
-            "sellPreference": { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.7 },
+            "buyPreference": {
+                "or": [
+                    { "subType": "OPIATE", "maxQuality": 1 },
+                    { "subType": "STIMULANT", "maxQuality": 1 },
+                    { "subType": "SYNTHETIC_CANNABINOID", "maxQuality": 1 }
+                ]
+            },
+            "sellPreference": { "or": [
+                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.7 },
+                { "type": "DRUG", "subType": "SYNTHETIC_CANNABINOID", "quality": 0, "chance": 0.1 },
+                { "type": "DRUG", "subType": "STIMULANT", "quality": 0, "chance": 0.05 }
+            ]},
             "priceToleranceFactor": 0.5,
             "negotiationResists": true,
             "heatImpact": 0,
@@ -323,10 +333,14 @@ export const customerTemplates = {
             "relationship": 0
         },
         "gameplayConfig": {
-            "buyPreference": { "or": [
-                { "type": "DRUG", "quality": 2 },
-                { "type": "STOLEN_GOOD", "minQuality": 1, "minBaseValue": 100 }
-            ]},
+            "buyPreference": {
+                "or": [
+                    { "subType": "PSYCHEDELIC", "quality": 2 },
+                    { "subType": "NOOTROPIC", "quality": 2 },
+                    { "subType": "METHAMPHETAMINE", "quality": 2 },
+                    { "type": "STOLEN_GOOD", "minQuality": 1, "minBaseValue": 100 }
+                ]
+            },
             "sellPreference": { "or": [
                 { "type": "INFORMATION", "quality": 2 },
                 { "id": "questionable_jewelry", "quality": 2 }
@@ -357,9 +371,17 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
+                    "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
+                    "lines": [
+                        "Rikk. We meet again. I trust your standards for [ITEM_NAME] haven't slipped since our last transaction.",
+                        "Ah, Rikk. Let's dispense with the pleasantries. You know my expectations regarding [ITEM_NAME]."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                },
+                {
                     "conditions": [],
                     "lines": [
-                        "Rikk. The usual standards, if you please. I require the finest [ITEM_NAME] you have.",
+                        "Rikk. I trust my expectations for [ITEM_NAME] will be met today. Promptly.",
                         "I am given to understand you are the Rikk of renown? One hopes the rumors of quality are not... exaggerated. I am in the market for the most... *efficacious* [ITEM_NAME] available. **Time is a luxury I do not squander on subpar experiences.**",
                         "Rikk. Let's not dally. My interest lies in your premium [ITEM_NAME].",
                         "You are Rikk, I presume? My sources indicate you may have access to the caliber of [ITEM_NAME] I require. **Impress me.**"
@@ -492,9 +514,10 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "(A dry, mirthless chuckle) You are declining my offer? **An amusing, if monumentally foolish, decision.** I trust you will not come to regret it. **My memory, unlike your judgment, is impeccable.**",
-                        "You pass? So be it. **Quality, it seems, is wasted on the uninspired.** Do not expect such an opportunity again. Others will be more... appreciative.",
-                        "I see. You fail to grasp the value before you. **A pity. Opportunities, like fine wine, do not improve when left in the hands of those who cannot appreciate them.**"
+                        "You decline? An interesting, if shortsighted, financial decision, Rikk.",
+                        "Passing on this opportunity? Rest assured, someone with more... acumen will appreciate its value.",
+                        "I see. You fail to grasp the value before you. **A pity. Opportunities, like fine wine, do not improve when left in the hands of those who cannot appreciate them.**",
+                        "No? A curious response to a generous offer. Your prerogative, of course... however ill-advised."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -503,9 +526,54 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "You are... unwilling to sell? **Do not mistake my patronage for patience, Rikk.** This is a transaction, not a negotiation of terms. Produce the [ITEM_NAME].",
-                        "Holding out on me? A dangerous gambit. **There are... consequences for failing to meet demand.** I suggest you reconsider your position before I am forced to have it reconsidered for you.",
-                        "Let me be clear. I did not ask if the [ITEM_NAME] was for sale. I stated my intention to acquire it. **Let us not complicate this simple matter.**"
+                        "Unwilling to part with it? Rikk, my time is a valuable commodity. Do not test its limits.",
+                        "Holding out? A curious strategy. There are other avenues for acquisition, you know.",
+                        "Let me be clear. I did not ask if the [ITEM_NAME] was for sale. I stated my intention to acquire it. **Let us not complicate this simple matter.**",
+                        "This reluctance... it is unexpected, and frankly, irritating. Reconsider."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Your shelves are... barren, Rikk? An unfortunate state of affairs.",
+                        "Nothing to offer? Most disappointing. I trust this is a temporary setback.",
+                        "Hm. It seems your inventory is... lacking. A missed opportunity for us both."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "It appears my usual source was... mistaken. No trinkets for you today, Rikk.",
+                        "Fortuna is fickle. I came to offer an item, but it seems it has vanished.",
+                        "Regrettably, I have nothing of value to part with at this moment. Another time, perhaps."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Your selection today is... lacking, Rikk. Nothing here meets my standards.",
+                        "I require a specific caliber of product. This is... pedestrian.",
+                        "Alas, your current offerings do not align with my... refined tastes."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "This environment has become... untenable. I shall take my business elsewhere.",
+                        "The ambiance here is deteriorating rapidly. Good day, Rikk.",
+                        "I detect an unwelcome shift in the... climate. I must depart."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -535,8 +603,19 @@ export const customerTemplates = {
             "relationship": 0
         },
         "gameplayConfig": {
-            "buyPreference": { "quality": 1, "exclude": { "type": "METHAMPHETAMINE", "subType": "SYNTHETIC_CANNABINOID" } },
-            "sellPreference": { "type": "STOLEN_GOOD", "maxQuality": 1, "maxBaseValue": 100 },
+            "buyPreference": {
+                "or": [
+                    { "subType": "CANNABINOID", "maxQuality": 1 },
+                    { "subType": "PARTY", "maxQuality": 1 },
+                    { "subType": "PSYCHEDELIC_MILD", "maxQuality": 1 }
+                ],
+                "exclude": { "type": "METHAMPHETAMINE", "subType": "SYNTHETIC_CANNABINOID" }
+            },
+            "sellPreference": { "or": [
+                { "type": "STOLEN_GOOD", "maxQuality": 1, "maxBaseValue": 100, "chance": 0.8 },
+                { "id": "burner_phone", "chance": 0.1 },
+                { "type": "DRUG", "subType": "NOOTROPIC", "quality": 0, "chance": 0.05 }
+            ]},
             "priceToleranceFactor": 0.9,
             "negotiationResists": false,
             "heatImpact": 1,
@@ -559,6 +638,15 @@ export const customerTemplates = {
                     "lines": [
                         "(Big smile, relaxed posture) Rikk, my dude! What's good? **Sun's shining, birds are singing, and I haven't lost my keys yet today – it's a miracle!** Got that smooth [ITEM_NAME] for a fair price? **Trying to ride this good wave all the way to... well, probably just my couch, but a happy couch!**",
                         "Yo Rikk! Feelin' golden today! Just cashed my paycheck – **which means I have exactly enough for rent and one good time.** You got that [ITEM_NAME] to make it count?"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                },
+                {
+                    "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
+                    "lines": [
+                        "Rikk, my man! Back again. Whatcha got for me today regarding that [ITEM_NAME]?",
+                        "Yo Rikk, good to see your face. Still holding onto that [ITEM_NAME] for your boy?",
+                        "Chad's back in the house! What's the word, Rikk? Still got that [ITEM_NAME]?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -594,7 +682,8 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Yeah, that's solid. **Good looking out.**",
-                        "Cool, cool. That works for me. **Appreciate it, my dude.**"
+                        "Cool, cool. That works for me. **Appreciate it, my dude.**",
+                        "Sweet, that's a price I can live with. Good looking out."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -694,7 +783,8 @@ export const customerTemplates = {
                     "lines": [
                         "Not feelin' it? Cool, cool. **No hard feelings.** My buddy's cousin might be into it anyway. Worth a shot.",
                         "All good, man. **If it ain't your vibe, it ain't your vibe.** I'll find another home for this... thing.",
-                        "No worries. Just figured I'd ask. Thanks for lookin', anyway."
+                        "No worries. Just figured I'd ask. Thanks for lookin', anyway.",
+                        "No go? Fair enough, man. Can't win 'em all."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -706,6 +796,50 @@ export const customerTemplates = {
                         "Not for sale? Aight, I respect it. **Gotta keep the good stuff for the right moment, I get that.** Maybe next time then.",
                         "Can't part with it, huh? No worries, man. **Just means I gotta find another way to chill.** The quest continues.",
                         "Ah, for sure. No problem. Let me know if that changes, my dude."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, shelves are lookin' pretty bare, Rikk. Tough times, huh?",
+                        "Nothin' today, man? All good, maybe next time.",
+                        "Slim pickings, eh Rikk? No worries, man."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Ah man, thought I had something for ya, but I must've left it. My bad.",
+                        "Pockets are empty today, Rikk. Next time for sure.",
+                        "Coulda sworn I had a little something to trade... guess not. Oh well."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Hmm, nothin' really jumpin' out at me today, Rikk.",
+                        "Appreciate you showin' me, but not quite what I'm after.",
+                        "Gotcha. Maybe your next shipment will have my name on it."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Yo, this vibe is getting a little too weird for me. I'm gonna bail.",
+                        "Something feels off, Rikk. Think I'm gonna take off.",
+                        "Not liking the look of this, man. Catch you later."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -785,9 +919,10 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Rikk. Got a fresh whisper for ya. **Hot off the griddle.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
-                        "You Rikk? Heard you trade in... *information*. **I got some prime cuts.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
+                        "You Rikk? Name's [CUSTOMER_NAME]. Heard you trade in... *information*. **I got some prime cuts.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
                         "Rikk. Word on the street is you're looking for an edge. I might have just the thing. **Information broker, at your service... for a fee.**",
-                        "They call you Rikk? Good. I hear things. **Things people pay to know.** Interested?"
+                        "They call you Rikk? Good. I hear things. **Things people pay to know.** Interested?",
+                        "Rikk. I've got a whisper that's worth its weight in gold. You buying?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -813,7 +948,8 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "This ain't a charity, Rikk. **My whispers have value. You want the dirt, you gotta pay for the shovel.**",
-                        "Look, Rikk. **Good intel costs. Bad intel costs more.** Your call."
+                        "Look, Rikk. **Good intel costs. Bad intel costs more.** Your call.",
+                        "My sources don't work for free, Rikk. This quality of intel has a premium."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -839,7 +975,30 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Solid. **Use that wisely, it could save your hide. Or make you a mint.** Keep my number.",
-                        "Good. **Remember where you got it. And remember, some doors are best left unopened... unless you have a key. Which I just sold you.**"
+                        "Good. **Remember where you got it. And remember, some doors are best left unopened... unless you have a key. Which I just sold you.**",
+                        "Pleasure doing business. Remember, loose lips sink ships... and operations."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Looks like my source dried up on this one, Rikk. Came up empty.",
+                        "The well is dry today, my friend. No secrets to share.",
+                        "Unfortunate, but I have no information of value for you at this time."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "This meeting is attracting the wrong kind of attention. I'm gone.",
+                        "Too many eyes, Rikk. We'll reconvene some other time.",
+                        "My gut says this is a bad scene. Vanishing now."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -910,7 +1069,8 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Well hello there, Rikk! **Such a... *dynamic* street, isn't it?** My, my, what have we here? Some [ITEM_NAME]? **You always have the most... *unique* things. Tell me all about it! For... research, of course!**",
-                        "Oh, Rikk! Just out for a stroll. **Trying to keep an eye on things, you know. For the good of the community.** That [ITEM_NAME] looks... *special*. What's its story?"
+                        "Oh, Rikk! It's me, [CUSTOMER_NAME], just out for a stroll. **Trying to keep an eye on things, you know. For the good of the community.** That [ITEM_NAME] looks... *special*. What's its story?",
+                        "Oh, Rikk! Just observing the... *local color*. Anything interesting to report today? About [ITEM_NAME], perhaps?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -953,7 +1113,30 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Oh, really? Well, alright then. **Just trying to be friendly! One never knows what interesting things are about!**",
-                        "Keeping it to yourself, Rikk? **Mysterious! I like a good mystery.**"
+                        "Keeping it to yourself, Rikk? **Mysterious! I like a good mystery.**",
+                        "Oh, secretive today, are we? No matter, I'm sure it will all come out in the wash."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Oh, nothing to show today, Rikk? Keeping a low profile, are we?",
+                        "Shelves are a bit bare... makes it hard for a concerned citizen to stay informed.",
+                        "No items on display? Most unusual. I'll make a note of this... for the community newsletter, of course."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Goodness me, this is all a bit much! I should be going!",
+                        "This situation seems... volatile. I'll be on my way, thank you.",
+                        "I... I think I left my oven on. Must dash!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -986,7 +1169,8 @@ export const customerTemplates = {
                     "lines": [
                         "Oh? You can't make the sale? **How... peculiar. Is everything alright with your... cash flow?** One hears things.",
                         "No sale today? That's a shame. **I do hope there isn't a problem. The community relies on its local businesses to be... operational.**",
-                        "That's quite alright, Rikk. **But it is... unusual. I'll just make a little note of it. For my records.**"
+                        "That's quite alright, Rikk. **But it is... unusual. I'll just make a little note of it. For my records.**",
+                        "Experiencing a... shortfall, Rikk? Most unusual. I'll make a note of this market fluctuation."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1016,11 +1200,17 @@ export const customerTemplates = {
             "relationship": 0
         },
         "gameplayConfig": {
-            "buyPreference": { "subType": ["STIMULANT", "METHAMPHETAMINE"] },
+            "buyPreference": {
+                "or": [
+                    { "subType": "STIMULANT" },
+                    { "subType": "METHAMPHETAMINE" },
+                    { "subType": "NOOTROPIC" }
+                ]
+            },
             "sellPreference": { "or": [
-                { "type": "STOLEN_GOOD", "quality": 0 },
-                { "id": "half_baked_invention_idea" },
-                { "id": "blueprint_for_squirrel_armor" }
+                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.6 },
+                { "id": "half_baked_invention_idea", "chance": 0.2 },
+                { "id": "blueprint_for_squirrel_armor", "chance": 0.2 }
             ]},
             "priceToleranceFactor": 0.7,
             "negotiationResists": true,
@@ -1103,6 +1293,50 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "NOTHING?! Rikk, my brain is a Ferrari with no gas! This is an IDEA EMERGENCY!",
+                        "Empty?! But I had a million-dollar idea brewing, and it required... well, SOMETHING!",
+                        "You're out? My momentum! My genius! It's... it's like a deflated bouncy castle of brilliance!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Wait, what? I was SURE I had... Did I invent it already? Or did I forget to invent it?",
+                        "Pockets... empty! My plan to sell you the patent for self-solving Rubik's cubes... delayed!",
+                        "I came here with... something! I think! It was brilliant! Now it's... brilliantly gone!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Nah, Rikk, this ain't the high-speed rail for my thought train! Need that rocket fuel!",
+                        "This stuff? This is like... dial-up for the brain! I need fiber optics, man!",
+                        "My ideas are too fast for this slow-lane stuff, Rikk! Gotta have the zoom!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "WHOA! Too much heat, Rikk! My ideas are melting! Gotta go, gotta go!",
+                        "This scene is NOT conducive to rapid innovation! Aborting mission!",
+                        "My internal alarm system is BLARING! Time to activate escape velocity!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
             "itemNotGoodEnough": [
                 {
                     "conditions": [],
@@ -1154,12 +1388,22 @@ export const customerTemplates = {
             "relationship": 0
         },
         "gameplayConfig": {
-            "buyPreference": { "subType": ["PSYCHEDELIC", "PSYCHEDELIC_MILD"] },
-            "sellPreference": { "or": [
-                { "id": "perfectly_normal_rock_portal_key" },
-                { "id": "sentient_dust_bunny_wisdom" },
-                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 }
-            ]},
+            "buyPreference": {
+                "or": [
+                    { "subType": "PSYCHEDELIC" },
+                    { "subType": "PSYCHEDELIC_MILD" },
+                    { "subType": "DISSOCIATIVE" }
+                ]
+            },
+            "sellPreference": {
+                "or": [
+                    { "id": "perfectly_normal_rock_portal_key" },
+                    { "id": "sentient_dust_bunny_wisdom" },
+                    { "subType": "PSYCHEDELIC_MILD", "chance": 0.4, "maxQuality": 1 },
+                    { "subType": "PSYCHEDELIC", "quality": 0, "chance": 0.2 },
+                    { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 }
+                ]
+            },
             "priceToleranceFactor": 1.1,
             "negotiationResists": true,
             "heatImpact": 1,
@@ -1237,6 +1481,50 @@ export const customerTemplates = {
                         "*Cosmic!* This [ITEM_NAME] is just what my third eye was craving. Time to go explore the space between thoughts. *Wish me luck, or, like, don't. Time is an illusion anyway.* Peace!",
                         "Beautiful, Rikk. This [ITEM_NAME] feels... *correct*. My spirit animal, which is currently a mildly confused sloth, thanks you. *He says you have good vibes. For a carbon-based biped.*",
                         "Awesome! With this [ITEM_NAME], I can finally find out if my cat is secretly a time traveler. *He has that look, you know? Like he's seen things.* Later, space-time!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, an empty space... is this, like, a metaphor for the void? Heavy. But also, like, not helpful for my current quest.",
+                        "The shelves are bare, Rikk. The universe is sending me a sign... or you're just out of stock. Which is it?",
+                        "No cosmic goodies today? My third eye is, like, totally bummed out, man."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "I thought I had a piece of solidified rainbow to sell... but it must have, like, evaporated back into the light spectrum.",
+                        "Hmm, I was gonna offer you this cool rock that whispers secrets, but I think it just told me it's not ready to leave me. Deep.",
+                        "The universe wanted me to keep my... uh... *cosmic artifact* for a bit longer. So, no sale today, my friend."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Nah, man, this selection isn't quite vibrating on my frequency today.",
+                        "My spirit guide is telling me these items are, like, too... terrestrial for my current journey.",
+                        "Looking for something to unlock the doors of perception, Rikk, and these are more like... regular door knobs."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, bad vibes, Rikk! The energy here just got, like, super spiky. Gotta float away.",
+                        "The colors are turning weird, man. Not in a fun way. I'm outie.",
+                        "My aura is sensing some real discordant frequencies. Time to make like a cloud and drift."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }

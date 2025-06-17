@@ -23,6 +23,7 @@ const CONFIG = {
     RETURNING_CUSTOMER_CASH_RANGE: 90,
     RETURNING_CUSTOMER_CASH_BASE: 25,
     MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER: 5,
+    CHANCE_SELL_WEIRD_ITEM: 0.05,
 };
 
 export class CustomerManager {
@@ -410,99 +411,142 @@ export class CustomerManager {
     }
 
     _generateRandomItem(template = null, combinedWorldEffects = {}) {
-        if (combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
+        // 1. Initial scarcity check
+        if (combinedWorldEffects && combinedWorldEffects.itemScarcity && Math.random() < 0.5) { // Assuming 0.5 is the configured scarcity trigger
+            debugLogger.log('CustomerManager', `Item generation stopped by itemScarcity world effect.`);
             return null;
         }
 
-        // Check for sellPreference.any === false at the very start of sell preference evaluation
+        // 2. Early exit for sellPreference.any === false
         if (template && template.gameplayConfig && template.gameplayConfig.sellPreference && template.gameplayConfig.sellPreference.any === false) {
+            debugLogger.log('CustomerManager', `Customer ${template.key} has sellPreference.any === false, will not sell.`);
             return null;
         }
 
-        if (template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
+        let itemToSell = null;
+
+        // 3. Weird Item Generation
+        // Allow template to override global CHANCE_SELL_WEIRD_ITEM
+        const weirdItemChance = (template && typeof template.chanceSellWeirdItem === 'number')
+                                ? template.chanceSellWeirdItem
+                                : CONFIG.CHANCE_SELL_WEIRD_ITEM;
+
+        if (Math.random() < weirdItemChance) {
+            let weirdItemPool = [];
+            if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
+                weirdItemPool = template.itemPoolWeird;
+            } else {
+                // Fallback to a global ODDITY pool if no archetype-specific weird pool
+                weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
+            }
+
+            if (weirdItemPool.length > 0) {
+                const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
+                const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
+                if (selectedType) {
+                    // Weird items default to base quality (index 0 or 'Standard')
+                    const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
+                    const qualityIndex = 0;
+                    const quality = qualityLevelsForType[qualityIndex];
+                    const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+
+                    itemToSell = {
+                        id: selectedType.id,
+                        name: selectedType.name,
+                        itemTypeObj: selectedType,
+                        quality,
+                        qualityIndex,
+                        description: selectedType.description,
+                        // Simplified pricing for weird items - could be 0 or low fixed value
+                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.2 + Math.random() * 0.2))), // Customer asks for less for weird stuff
+                    };
+                    itemToSell.estimatedResaleValue = itemToSell.purchasePrice; // Rikk values it at what he paid initially
+                    debugLogger.log('CustomerManager', `Generated weird item: ${itemToSell.name} for ${template.key}`);
+                    return itemToSell;
+                }
+            }
+        }
+
+        // 4. Evaluate sellPreference
+        if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
             let chosenPreference = null;
 
             if (sellPref.or && Array.isArray(sellPref.or)) {
-                chosenPreference = this._getRandomElement(sellPref.or);
-            } else {
-                chosenPreference = sellPref;
+                // Filter preferences that pass their individual chance rolls first
+                const eligiblePreferences = sellPref.or.filter(p => (typeof p.chance === 'number' ? Math.random() < p.chance : true));
+                if (eligiblePreferences.length > 0) {
+                    chosenPreference = this._getRandomElement(eligiblePreferences);
+                }
+            } else if (typeof sellPref.chance === 'number' ? Math.random() < sellPref.chance : true) {
+                 chosenPreference = sellPref; // Single preference object
             }
+
 
             if (chosenPreference) {
-                let applyPreference = true;
-                if (typeof chosenPreference.chance === 'number') {
-                    applyPreference = Math.random() < chosenPreference.chance;
-                }
+                const candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference));
+                if (candidateItemTypes.length > 0) {
+                    const selectedType = this._getRandomElement(candidateItemTypes);
+                    const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
+                    let qualityIndex;
 
-                if (applyPreference) {
-                    const candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference));
-                    if (candidateItemTypes.length > 0) {
-                        const selectedType = this._getRandomElement(candidateItemTypes);
-
-                        let qualityIndex;
-                        const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
-                        if (typeof chosenPreference.quality === 'number') {
-                            qualityIndex = Math.min(chosenPreference.quality, qualityLevelsForType.length - 1);
-                        } else {
-                            qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
-                        }
-                        const quality = qualityLevelsForType[qualityIndex];
-
-                        const basePurchaseValue = selectedType.baseValue + Math.floor(Math.random() * (selectedType.range * 2)) - selectedType.range;
-                        const item = {
-                            id: selectedType.id,
-                            name: selectedType.name,
-                            itemTypeObj: selectedType,
-                            quality,
-                            qualityIndex,
-                            description: selectedType.description,
-                        };
-                        const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-                        item.purchasePrice = Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
-                        item.estimatedResaleValue = Math.max(item.purchasePrice + CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
-                        return item;
+                    if (typeof chosenPreference.quality === 'number') {
+                        qualityIndex = Math.min(chosenPreference.quality, qualityLevelsForType.length - 1);
+                    } else if (typeof chosenPreference.maxQuality === 'number') {
+                        qualityIndex = Math.floor(Math.random() * (Math.min(chosenPreference.maxQuality, qualityLevelsForType.length - 1) + 1));
                     }
+                     else {
+                        qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
+                    }
+                    const quality = qualityLevelsForType[qualityIndex];
+                    const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+
+                    itemToSell = {
+                        id: selectedType.id,
+                        name: selectedType.name,
+                        itemTypeObj: selectedType,
+                        quality,
+                        qualityIndex,
+                        description: selectedType.description,
+                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.8 + Math.random() * 0.4))),
+                    };
+                    itemToSell.estimatedResaleValue = itemToSell.purchasePrice;
+                    debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${template.key}`);
+                    return itemToSell;
                 }
             }
         }
 
-        if (!this.itemTypes || this.itemTypes.length === 0) {
-            return { id: "error_item", name: "Error Item", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
+        // 5. Evaluate itemPool
+        if (!itemToSell && template && template.itemPool && template.itemPool.length > 0) {
+            const selectedItemId = this._getRandomElement(template.itemPool);
+            const selectedType = this.itemTypes.find(it => it.id === selectedItemId);
+            if (selectedType) {
+                const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
+                const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
+                const quality = qualityLevelsForType[qualityIndex];
+                const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
+
+                itemToSell = {
+                    id: selectedType.id,
+                    name: selectedType.name,
+                    itemTypeObj: selectedType,
+                    quality,
+                    qualityIndex,
+                    description: selectedType.description,
+                    purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * qualityPriceModifier * (0.8 + Math.random() * 0.4))),
+                };
+                itemToSell.estimatedResaleValue = itemToSell.purchasePrice;
+                debugLogger.log('CustomerManager', `Generated item from itemPool: ${itemToSell.name} for ${template.key}`);
+                return itemToSell;
+            }
         }
 
-        let availableItemTypes = [...this.itemTypes];
-        if (template && template.itemPool && template.itemPool.length > 0) {
-             availableItemTypes = this.itemTypes.filter(it => template.itemPool.includes(it.id));
+        // 6. If no item generated by specific rules, return null
+        if (!itemToSell) {
+            debugLogger.log('CustomerManager', `Customer ${template ? template.key : 'Unknown'} generated nothing to sell based on specific rules (weird, sellPref, itemPool).`);
         }
-        if (availableItemTypes.length === 0) {
-            // Fallback if template.itemPool filters out everything, or itemPool is empty
-            availableItemTypes = [...this.itemTypes];
-        }
-
-        // Ensure selectedType is not null before proceeding
-        const selectedType = this._getRandomElement(availableItemTypes);
-        if (!selectedType) { // Should ideally not happen if this.itemTypes is not empty
-            debugLogger.error('CustomerManager', "Could not select an item type in _generateRandomItem after all filters.");
-            return { id: "error_item_notype", name: "Error Item (No Type)", itemTypeObj: { type: "ERROR", heat: 0 }, quality: "Unknown", qualityIndex: 0, purchasePrice: 1, estimatedResaleValue: 1 };
-        }
-
-        const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ["Standard"];
-        const qualityIndex = Math.floor(Math.random() * qualityLevelsForType.length);
-        const quality = qualityLevelsForType[qualityIndex];
-        const basePurchaseValue = selectedType.baseValue + Math.floor(Math.random() * (selectedType.range * 2)) - selectedType.range;
-        const item = {
-          id: selectedType.id,
-          name: selectedType.name,
-          itemTypeObj: selectedType,
-          quality,
-          qualityIndex,
-          description: selectedType.description,
-        };
-        const qualityPriceModifier = this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0;
-        item.purchasePrice = Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.3 + Math.random() * 0.25) * qualityPriceModifier));
-        item.estimatedResaleValue = Math.max(item.purchasePrice + CONFIG.MIN_ITEM_PRICE, Math.round(basePurchaseValue * (0.7 + Math.random() * 0.35) * qualityPriceModifier));
-        return item;
+        return null;
     }
 
     _calculateItemValue(item, purchaseContext = true, context) {
