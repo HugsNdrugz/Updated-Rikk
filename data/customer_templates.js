@@ -38,6 +38,18 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
+                    "conditions": [
+                        {"stat": "addictionStatus.isAddicted", "op": "is", "value": true},
+                        {"stat": "mood", "op": "isNot", "value": "happy"}
+                    ],
+                    "lines": [
+                        "Rikk! You GOTTA have it, man! The shakes are comin' back! That good [ITEM_NAME], please!",
+                        "Don't care the price, Rikk, just tell me you got the [ITEM_NAME]... I *need* it. Bad.",
+                        "(Twitching) The craving... it's a beast, Rikk. Got my fix? That sweet [ITEM_NAME]?"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                },
+                {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
                         "(Grinning ear-to-ear, slightly too loud) RIKK! My savior! You're like a guardian angel, but with better connections! **Last batch had me convinced I could talk to cats! Turns out, they're terrible conversationalists.** Got more of that magic [ITEM_NAME]? Price is just a number when you're floating! **My rent can wait, my sanity can't!**",
@@ -54,12 +66,22 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
+                    "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
+                    "lines": [
+                        "Rikk! Thank god it's you again! You know what I need... that [ITEM_NAME]! Quick!",
+                        "Me again, Rikk. The usual... please tell me you have the [ITEM_NAME]. The walls are talkin' again."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                },
+                {
                     "conditions": [],
                     "lines": [
                         "Rikk! Thank god! It's me, [CUSTOMER_NAME]! **My soul is trying to escape through my eyeballs.** I'm hurtin' bad, need that [ITEM_NAME]... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
                         "Yo, uh, you Rikk? **They said you were the shaman of the streets.** I'm hurtin' bad, need that [ITEM_NAME]... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
                         "Rikk, my man! [CUSTOMER_NAME] here! **My insides feel like a washing machine full of angry badgers.** That [ITEM_NAME], what's the damage? And please, tell me it's the good stuff, **my disappointment tolerance is at an all-time low.**",
-                        "You Rikk? Heard you're the guy. **Got that... *medicine*?** Specifically the [ITEM_NAME] kind. Price? And be gentle, **my wallet's already crying.**"
+                        "You Rikk? Heard you're the guy. **Got that... *medicine*?** Specifically the [ITEM_NAME] kind. Price? And be gentle, **my wallet's already crying.**",
+                        "Rikk, man, you're a sight for sore eyes! The walls are starting to melt again. Got that [ITEM_NAME]?",
+                        "Is that you, Rikk? The static in my head is getting loud. Need that [ITEM_NAME] to turn down the volume. What's the cost for some quiet?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -110,8 +132,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "What, Rikk? This is vintage! **Okay, maybe not vintage, but it's definitely... something.** My **guts are playing the blues, man!**",
-                        "Seriously? You're passing this up? **My cat seemed to like it. And she's got impeccable taste... for a cat.**"
+                        "No sale? Come on Rikk, this thing's practically an antique! My grandma used it... I think.",
+                        "Seriously? You're passing this up? **My cat seemed to like it. And she's got impeccable taste... for a cat.**",
+                        "Not buying? Rikk, this is a treasure! Okay, maybe a slightly tarnished treasure... covered in... existential dread."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -188,8 +211,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Yeah, that's the good stuff. **Phew... my soul just sighed in relief.**",
-                        "Nice. This'll do. **Now I can finally face... well, probably just another Tuesday. But slightly less horribly.**"
+                        "Finally! The sweet release. My nerves were about to snap, Rikk.",
+                        "Nice. This'll do. **Now I can finally face... well, probably just another Tuesday. But slightly less horribly.**",
+                        "Ah, that hits the spot. For a minute there, I thought the squirrels were winning."
                     ],
                     "payload": {
                         "type": "EFFECT",
@@ -227,6 +251,61 @@ export const customerTemplates = {
                         "Did you hear that? **Sounded like a whisper... could be the wind... or it could be the FBI communicating through my fillings.** Better be safe. And quick.",
                         "**My horoscope today said to avoid financial transactions with suspicious individuals.** But I figure, that's every day, right? So what's the difference?",
                         "I swear the pigeons are spelling out my social security number in their flight patterns. **They're getting bolder, Rikk. BOLDER.**"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Nothin'? Rikk, you're killin' me! My kingdom for a crumb!",
+                        "Dry as a desert in here, huh? My luck...",
+                        "Seriously, Rikk? Not even a breadcrumb for a starving man? The desperation is real."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerHasNothingToSell": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Thought I had somethin'... must've imagined it. Story of my life.",
+                        "Damn, pockets are empty. Swear I had a gem... or maybe it was a bottle cap.",
+                        "Came all this way thinkin' I had treasure... turns out it was just lint and regret."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [
+                {
+                    "conditions": [
+                        {"stat": "addictionStatus.isAddicted", "op": "is", "value": true}
+                    ],
+                    "lines": [
+                        "NO! None of this is what I NEED! Rikk, you're telling me you don't have MY STUFF?! This is a nightmare!",
+                        "But... but that's not it... I need MY fix, Rikk! Don't do this to me!",
+                        "You're out of what I need?! My world is ending, Rikk. ENDING."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                },
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Nah, man, that ain't it. Need that *other* stuff, you know? The stuff that quiets the screams.",
+                        "None of this hits the spot, Rikk. You sure you ain't holdin' out the good stuff?",
+                        "My kingdom for something that actually works, Rikk! This ain't it."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "customerScaredOff": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "(Eyes darting) Too hot, Rikk, too hot! Gotta bounce!",
+                        "This whole scene is makin' my skin crawl. I'm out!",
+                        "Nah, man, my paranoia is kicking in. I'm gone!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
