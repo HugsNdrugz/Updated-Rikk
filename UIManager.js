@@ -55,6 +55,7 @@ class UIManager {
         this.newsArticleHeadline = null;
         this.newsArticleBody = null;
         this.newsArticleBackButton = null; // Specific back button for article view
+        this.newsArticleMeta = null;
 
         this.slotGameView = null;
         this.phoneThemeSettingsView = null;
@@ -158,6 +159,7 @@ class UIManager {
         this.newsArticleHeadline = document.getElementById('news-article-headline');
         this.newsArticleBody = document.getElementById('news-article-body');
         this.newsArticleBackButton = document.getElementById('news-article-back-button');
+        this.newsArticleMeta = document.getElementById('news-article-meta');
 
 
         this.slotGameView = document.getElementById('slot-game-view');       // Passed to SlotGameManager
@@ -1252,6 +1254,9 @@ class UIManager {
         if (this.newsArticleHeadline && this.newsArticleBody && this.newsArticleDetailView) {
             this.newsArticleHeadline.textContent = article.headline;
             this.newsArticleBody.textContent = article.body;
+            if (this.newsArticleMeta) {
+                this.newsArticleMeta.textContent = `${article.category || 'General'} - ${article.timestamp}`;
+            }
             // Back button setup
             if (this.newsArticleBackButton) {
                 this.newsArticleBackButton.onclick = () => this.setPhoneUIState('newsAppList');
