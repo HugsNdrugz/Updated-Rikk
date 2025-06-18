@@ -306,6 +306,10 @@
       justify-content: space-between;
       padding: 1rem 0.5rem;
       flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 10; /* Ensure it's above the chat log content */
+      background-color: var(--bg-color); /* Add background to prevent chat log showing through during scroll */
     }
 
     #game-chat-view .header-left { /* Adjusted */
@@ -456,6 +460,10 @@
     #game-chat-view .chat-footer { /* Adjusted */
       padding: 0.5rem 1rem 1rem 1rem;
       flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 10; /* Ensure it's above the chat log content */
+      background-color: var(--bg-color); /* Add background to prevent chat log showing through during scroll */
     }
 
     #game-chat-view .rcs-status { /* Adjusted */
