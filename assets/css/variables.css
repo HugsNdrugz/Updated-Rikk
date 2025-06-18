@@ -1,78 +1,97 @@
 :root {
-    /* Colors */
-    --color-dark-bg: #121212;
-    --color-surface: #1e1e1e;
-    --color-primary: #bb86fc;
-    --color-secondary: #03dac6;
-    --color-error: #cf6679;
-    --color-on-surface: #e0e0e0;
-    --color-on-primary: #000000;
-    --color-mid-dark: #2c3e50;
-    --color-grey-dark: #333333;
-    --color-grey-mid: #757575;
-    --color-grey-light: #bdbdbd;
-    --color-accent-gold: #f39c12;
-    --color-accent-orange: #e67e22;
-    --color-link-blue: #3498db;
-    --color-success-green: #2ecc71;
-    --color-danger-red: var(--color-error);
-    --color-overlay-dark-strong: rgba(0, 0, 0, 0.9);
-    --color-overlay-dark-medium: rgba(0, 0, 0, 0.65);
+    /* --- Theme: Modern Underground/Gritty --- */
+
+    /* Fonts */
+    --font-body: 'Roboto', 'Arial', sans-serif; /* Roboto is clean, Arial as fallback */
+    --font-display: 'Aldrich', 'Orbitron', 'Arial Black', sans-serif; /* Aldrich for a modern, slightly edgy feel */
+
+    /* Core Colors */
+    --color-dark-bg: #0A0A0A; /* Very dark background */
+    --color-surface: #161618; /* Slightly lighter surface for cards, modals */
+    --color-surface-medium: #222225; /* For slightly more elevated surfaces */
+    --color-primary: #00B0B0;   /* Desaturated Cyan/Teal - Primary Action */
+    --color-on-primary: #0A0A0A; /* Text on primary buttons - Dark for contrast with Teal */
+
+    --color-secondary: #D00070; /* Muted Magenta - Secondary Accent / Destructive actions */
+    --color-on-secondary: #F0F0F0; /* Text on secondary buttons */
+
+    --color-text-primary: #E5E5E5;   /* Main text color - slightly off-white */
+    --color-text-secondary: #A0A0A5; /* Subdued text, placeholders */
+    --color-text-disabled: #606065;  /* Disabled text */
+
+    /* Accent & Utility Colors */
+    --color-accent-gold: #FFB300;  /* Gold/Amber for highlights, money */
+    --color-accent-orange: #E87A00;/* Gritty orange for alerts or specific highlights */
+    --color-link: #30A0FF;         /* Link color - a brighter blue */
+    --color-success: #30C030;      /* Success messages - a clear green */
+    --color-error: #D03030;        /* Error messages - a clear red */
+    --color-warning: var(--color-accent-orange);
+
+    /* UI Elements */
+    --color-border: #303035;       /* Borders for elements */
+    --color-divider: var(--color-border);
+    --color-overlay-dark-strong: rgba(0, 0, 0, 0.92);
+    --color-overlay-dark-medium: rgba(0, 0, 0, 0.70);
+
+    /* Button Specifics */
     --color-button-primary-bg: var(--color-primary);
     --color-button-primary-text: var(--color-on-primary);
     --color-button-primary-border: var(--color-primary);
+
     --color-button-secondary-bg: transparent;
     --color-button-secondary-text: var(--color-secondary);
     --color-button-secondary-border: var(--color-secondary);
-    --color-disabled-bg: rgba(224, 224, 224, 0.12);
-    --color-disabled-border: rgba(224, 224, 224, 0.12);
-    --color-disabled-text: rgba(224, 224, 224, 0.38);
-    --color-bubble-customer: #3E3E42;
-    --color-bubble-customer-text: var(--color-on-surface);
+
+    --color-disabled-bg: #28282D;
+    --color-disabled-border: #38383D;
+    --color-disabled-text: var(--color-text-disabled);
+
+    /* Chat Bubbles (example of theme application) */
+    --color-bubble-customer: var(--color-surface-medium);
+    --color-bubble-customer-text: var(--color-text-primary);
     --color-bubble-rikk-main: var(--color-primary);
     --color-bubble-rikk-text: var(--color-on-primary);
     --color-bubble-narration: transparent;
-    --color-bubble-narration-text: var(--color-grey-mid);
+    --color-bubble-narration-text: var(--color-text-secondary);
+
+    /* HUD Actions (example) */
     --color-hub-action-main: var(--color-secondary);
-    --color-hub-action-hover: #018786;
+    --color-hub-action-hover: #A00050; /* Darker magenta for hover */
     --color-hub-inventory-main: var(--color-primary);
-    --color-hub-inventory-hover: #7f39fb;
+    --color-hub-inventory-hover: #008080; /* Darker teal for hover */
 
-    /* NEW UI-SPECIFIC VARS */
-    --primary-accent: #e040fb;
-    --alert-color: #f44336;
-    --ui-bg: rgba(25, 25, 25, 0.6);
-    --border-light: rgba(255, 255, 255, 0.2);
-    --text-primary: #f0f0f0;
-    --text-secondary: #a0a0a0;
-    --divider-color: var(--border-light);
-    --active-card-bg: #2a2a2e;
+    /* Heat Level Colors (for Task 5.3.1) */
+    --color-heat-low: var(--color-success);
+    --color-heat-medium: #FFDD00; /* Yellowish */
+    --color-heat-high: var(--color-accent-orange);
+    --color-heat-critical: var(--color-error);
 
-    /* Fonts */
-    --font-body: 'Roboto', 'Open Sans', sans-serif;
-    --font-display: 'Press Start 2P', 'Comic Neue', cursive;
     /* Sizes & Dimensions */
     --viewport-max-width: 480px;
-    --viewport-border-radius: 12px;
-    --phone-max-width: 320px;
-    --phone-max-height: 70vh;
-    --phone-border-radius: 28px;
-    --phone-screen-inset-radius: calc(var(--phone-border-radius) - 10px);
+    --viewport-border-radius: 10px; /* Slightly less rounded for a sharper look */
+
+    --phone-max-width: 340px;
+    --phone-max-height: 75vh;
+    --phone-border-radius: 20px; /* Sharper phone corners */
+    --phone-screen-inset-radius: calc(var(--phone-border-radius) - 8px);
+
     --modal-max-width: 420px;
-    --modal-border-radius: 10px;
-    --button-border-radius: 8px;
-    --chat-bubble-border-radius: 18px;
+    --modal-border-radius: 8px;
+    --button-border-radius: 6px; /* Sharper buttons */
+    --chat-bubble-border-radius: 16px;
     --icon-size: 22px;
+
     /* Spacing */
     --spacing-unit: 8px;
-    --spacing-xs: calc(var(--spacing-unit) * 0.5);
-    --spacing-sm: var(--spacing-unit);
-    --spacing-md: calc(var(--spacing-unit) * 1.5);
-    --spacing-lg: calc(var(--spacing-unit) * 2);
-    --spacing-xl: calc(var(--spacing-unit) * 3);
+    --spacing-xs: calc(var(--spacing-unit) * 0.5); /* 4px */
+    --spacing-sm: var(--spacing-unit);             /* 8px */
+    --spacing-md: calc(var(--spacing-unit) * 1.5); /* 12px */
+    --spacing-lg: calc(var(--spacing-unit) * 2);   /* 16px */
+    --spacing-xl: calc(var(--spacing-unit) * 3);   /* 24px */
+
     /* Transitions & Animations */
-    --transition-duration-short: 0.2s;
-    --transition-duration-medium: 0.4s;
+    --transition-duration-short: 0.15s;
+    --transition-duration-medium: 0.3s;
     --transition-easing: ease-in-out;
-    --transition-phone-slide: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-phone-slide: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

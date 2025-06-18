@@ -1,0 +1,43 @@
+{
+  "staticNewsArticles": [
+    {
+      "id": "static_news_1",
+      "headline": "City Council Debates New Budget Amidst Growing Concerns",
+      "body": "The City Council convened yesterday for a heated debate on the proposed annual budget. Key points of contention include funding for law enforcement, social programs, and infrastructure development. Several council members expressed concerns over rising city despair levels and their potential link to resource allocation. A vote is expected next week.",
+      "category": "Local Politics",
+      "timestamp": "Day 1, Morning"
+    },
+    {
+      "id": "static_news_2",
+      "headline": "Mysterious Graffiti Appears Overnight in Downtown Core",
+      "body": "Residents of the Downtown Core woke this morning to find several prominent buildings adorned with elaborate, if somewhat unsettling, graffiti. The artwork, featuring abstract designs and cryptic symbols, has sparked a mixture of intrigue and annoyance. City officials state they are investigating the incident and will remove the graffiti promptly. No group has yet claimed responsibility.",
+      "category": "City Life",
+      "timestamp": "Day 2, Evening"
+    },
+    {
+      "id": "static_news_3",
+      "headline": "Police Chief Vows Crackdown on 'Emerging Contraband Markets'",
+      "body": "In a press conference held earlier today, Police Chief Eva Rostova declared a renewed focus on dismantling what she termed 'emerging contraband markets' operating within city limits. \"We will not stand by while illicit substances and stolen goods flow freely through our streets,\" Chief Rostova stated. Specific operational details were not provided, but an increased police presence in known hotbeds is anticipated.",
+      "category": "Crime",
+      "timestamp": "Day 3, Mid-day"
+    },
+    {
+      "id": "static_news_4",
+      "headline": "Local Soup Kitchen Reports Record Demand",
+      "body": "Mama Carter's Soup Kitchen in The Warrens has reported a significant increase in demand for its services over the past month. Volunteers are working overtime to meet the needs of the community's most vulnerable. Donations of non-perishable food items and volunteer time are urgently requested.",
+      "category": "Community",
+      "timestamp": "Day 4, Morning"
+    }
+  ],
+  "dynamicNewsTemplates": [
+    // Placeholders for Phase 2 dynamic news
+    {
+      "templateId": "overdose_spike_district",
+      "headline": "Overdose Spike Reported in [DistrictName]",
+      "body_template": "Health officials are alarmed by a recent spike in overdose cases reported in the [DistrictName] district. Authorities suspect a particularly potent batch of [DrugType] may be circulating. Residents are urged to exercise extreme caution.",
+      "triggerConditions": [
+        { "type": "systemicStat", "statId": "[DistrictName]_overdoses", "operator": ">=", "value": 5 }
+      ]
+    }
+  ]
+}

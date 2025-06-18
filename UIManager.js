@@ -34,7 +34,28 @@ class UIManager {
         this.phoneScreenArea = null;
         this.androidHomeScreen = null;
         this.gameChatView = null;
-        this.contactsAppView = null;
+        // this.contactsAppView = null; // This will be the main container for list/detail
+        this.contactsAppScreen = null; // Main container for the contacts app
+        this.contactsListContainer = null; // For the list view
+        this.contactDetailView = null; // For the detail view
+        this.contactDetailAvatar = null;
+        this.contactDetailName = null;
+        this.contactDetailDescription = null;
+        this.contactDetailLoyalty = null;
+        this.contactDetailServicesList = null;
+        this.contactDetailMissionsList = null;
+        this.contactDetailBackButton = null;
+
+        this.mapAppView = null; // Main container for map app
+        this.mapGridContainer = null; // For visual grid layout
+
+        this.newsAppView = null; // Main container for news app
+        this.newsListContainer = null; // For the list of articles
+        this.newsArticleDetailView = null; // For showing full article
+        this.newsArticleHeadline = null;
+        this.newsArticleBody = null;
+        this.newsArticleBackButton = null; // Specific back button for article view
+
         this.slotGameView = null;
         this.phoneThemeSettingsView = null;
         this.chatContainer = null;
@@ -112,7 +133,33 @@ class UIManager {
         this.phoneScreenArea = document.getElementById('phone-screen-area');
         this.androidHomeScreen = document.getElementById('android-home-screen');
         this.gameChatView = document.getElementById('game-chat-view');
-        this.contactsAppView = document.getElementById('contacts-app-view'); // Passed to ContactsAppManager
+        // this.contactsAppView = document.getElementById('contacts-app-view');
+        this.contactsAppScreen = document.getElementById('contacts-app-view'); // Use existing as main screen
+
+        // Assuming these are new elements within contacts-app-view or created dynamically
+        // For now, let's assume they might not exist yet and handle null checks,
+        // or that they are part of a pre-defined hidden structure in index.html
+        this.contactsListContainer = document.getElementById('contacts-list-container');
+        this.contactDetailView = document.getElementById('contact-detail-view');
+        this.contactDetailAvatar = document.getElementById('contact-detail-avatar');
+        this.contactDetailName = document.getElementById('contact-detail-name');
+        this.contactDetailDescription = document.getElementById('contact-detail-description');
+        this.contactDetailLoyalty = document.getElementById('contact-detail-loyalty');
+        this.contactDetailServicesList = document.getElementById('contact-detail-services-list');
+        this.contactDetailMissionsList = document.getElementById('contact-detail-missions-list');
+        this.contactDetailBackButton = document.getElementById('contact-detail-back-button');
+
+        this.mapAppView = document.getElementById('map-app-view');
+        this.mapGridContainer = document.getElementById('map-grid-container');
+
+        this.newsAppView = document.getElementById('news-app-view');
+        this.newsListContainer = document.getElementById('news-list-container');
+        this.newsArticleDetailView = document.getElementById('news-article-detail-view');
+        this.newsArticleHeadline = document.getElementById('news-article-headline');
+        this.newsArticleBody = document.getElementById('news-article-body');
+        this.newsArticleBackButton = document.getElementById('news-article-back-button');
+
+
         this.slotGameView = document.getElementById('slot-game-view');       // Passed to SlotGameManager
         this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
 
@@ -189,8 +236,23 @@ class UIManager {
         }
         this.cashDisplay.textContent = this.gameState.getCash();
         this.dayDisplay.textContent = this.gameState.getFiendsLeft();
-        this.heatDisplay.textContent = this.gameState.getHeat();
-        this.credDisplay.textContent = this.gameState.getStreetCred();
+        const heatLevel = this.gameState.getHeat();
+        this.heatDisplay.textContent = heatLevel;
+        this.credDisplay.textContent = this.gameState.getStreetCred('global'); // Assuming global for HUD
+
+        // Remove old heat classes
+        this.heatDisplay.classList.remove('heat-low', 'heat-medium', 'heat-high', 'heat-critical');
+
+        // Add new heat class based on thresholds
+        if (heatLevel <= 25) {
+            this.heatDisplay.classList.add('heat-low');
+        } else if (heatLevel <= 50) {
+            this.heatDisplay.classList.add('heat-medium');
+        } else if (heatLevel <= 75) {
+            this.heatDisplay.classList.add('heat-high');
+        } else {
+            this.heatDisplay.classList.add('heat-critical');
+        }
     }
 
     updateEventTicker() {
@@ -223,7 +285,7 @@ class UIManager {
     // --- Phone UI Management (Skeleton) ---
     setPhoneUIState(state) {
         this.currentPhoneState = state; // Store the state
-        if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppView || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
+        if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppScreen || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
             debugLogger.warn('UIManager', "Phone UI elements not fully initialized for setPhoneUIState.");
             return;
         }
@@ -232,7 +294,13 @@ class UIManager {
         this.rikkPhoneUI.classList.remove('is-offscreen', 'chatting-game', 'home-screen-active', 'app-menu-game');
         this.androidHomeScreen.classList.add('hidden');
         this.gameChatView.classList.add('hidden');
-        this.contactsAppView.classList.add('hidden');
+        this.contactsAppScreen.classList.add('hidden'); // Main screen for contacts app
+        if (this.contactsListContainer) this.contactsListContainer.classList.add('hidden');
+        if (this.contactDetailView) this.contactDetailView.classList.add('hidden');
+        if (this.mapAppView) this.mapAppView.classList.add('hidden');
+        if (this.newsAppView) this.newsAppView.classList.add('hidden'); // Hide news app main view
+        if (this.newsListContainer) this.newsListContainer.classList.add('hidden');
+        if (this.newsArticleDetailView) this.newsArticleDetailView.classList.add('hidden');
         this.slotGameView.classList.add('hidden');
         this.phoneThemeSettingsView.classList.add('hidden');
 
@@ -253,10 +321,66 @@ class UIManager {
                 this.phoneDock.classList.remove('hidden');
                 this.phoneHomeIndicator.classList.remove('hidden');
                 break;
-            case 'contacts':
-                this.rikkPhoneUI.classList.add('app-menu-game');
-                this.contactsAppView.classList.remove('hidden');
+            case 'contactsAppList': // New state for showing contacts list
+                this.rikkPhoneUI.classList.add('app-menu-game'); // Use generic app state class
+                this.contactsAppScreen.classList.remove('hidden');
+                if (this.contactDetailView) this.contactDetailView.classList.add('hidden'); // Hide detail
+                if (this.contactsListContainer) {
+                    this.contactsListContainer.classList.remove('hidden'); // Show list
+                    this._renderContactsAppList();
+                } else {
+                     this._renderContactsAppList(); // Render directly into contactsAppScreen if no sub-container
+                }
                 if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                this.setPhoneTitle("Contacts");
+                break;
+            case 'contactDetail': // New state for showing contact detail
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                this.contactsAppScreen.classList.remove('hidden');
+                if (this.contactsListContainer) this.contactsListContainer.classList.add('hidden'); // Hide list
+                if (this.contactDetailView) {
+                    this.contactDetailView.classList.remove('hidden'); // Show detail
+                    // _renderContactsAppDetail would be called by the click handler with contactId
+                } else {
+                    // If contactDetailView is not a separate element, _renderContactsAppDetail will replace
+                    // content of contactsAppScreen. The argument for contactId must be passed.
+                    // This state change itself doesn't call render, the click handler does.
+                }
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                // Phone title will be set by _renderContactsAppDetail
+                break;
+            case 'mapAppView': // New state for Map App
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                if (this.mapAppView) this.mapAppView.classList.remove('hidden');
+                this._renderMapAppView();
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                this.setPhoneTitle("City Map");
+                break;
+            case 'newsAppList': // New state for News App List
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                if (this.newsAppView) this.newsAppView.classList.remove('hidden');
+                if (this.newsArticleDetailView) this.newsArticleDetailView.classList.add('hidden');
+                if (this.newsListContainer) {
+                    this.newsListContainer.classList.remove('hidden');
+                    this._renderNewsAppList();
+                } else if (this.newsAppView) { // Fallback if specific list container doesn't exist
+                    this._renderNewsAppList();
+                }
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                this.setPhoneTitle("News Feed");
+                break;
+            case 'newsAppArticleDetail': // New state for News Article Detail
+                this.rikkPhoneUI.classList.add('app-menu-game');
+                if (this.newsAppView) this.newsAppView.classList.remove('hidden');
+                if (this.newsListContainer) this.newsListContainer.classList.add('hidden');
+                if (this.newsArticleDetailView) {
+                    this.newsArticleDetailView.classList.remove('hidden');
+                    // _renderNewsAppArticleDetail will be called by click handler with articleId
+                } else if (this.newsAppView) { // Fallback
+                     // _renderNewsAppArticleDetail will populate this main view
+                }
+                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                // Phone title will be set by _renderNewsAppArticleDetail
                 break;
             case 'slots':
                 this.rikkPhoneUI.classList.add('app-menu-game');
@@ -750,6 +874,357 @@ class UIManager {
         }
         panelElement.classList.add('hidden');
         this.toggleMainMenuButtons(true);
+    }
+
+    // --- Cash Change Animation ---
+    showCashChangeAnimation(amount) {
+        if (!this.cashDisplay || isNaN(parseFloat(amount))) return;
+
+        const animationText = document.createElement('div');
+        animationText.className = 'cash-change-animation';
+        animationText.textContent = `${amount >= 0 ? '+' : ''}$${Math.abs(amount)}`;
+
+        if (amount >= 0) {
+            animationText.classList.add('positive');
+        } else {
+            animationText.classList.add('negative');
+        }
+
+        // Position near cashDisplay. This might need adjustment based on actual HUD layout.
+        // For simplicity, append to a common ancestor or game viewport.
+        const hudElement = this.cashDisplay.closest('.hud-container') || this.gameScreen || document.body;
+        hudElement.appendChild(animationText);
+
+        // Get position of cashDisplay to position the animation relatively
+        const cashRect = this.cashDisplay.getBoundingClientRect();
+        const hudRect = hudElement.getBoundingClientRect(); // Parent for relative positioning
+
+        // Adjust to position above the cash display and centered
+        animationText.style.position = 'absolute'; // Ensure it's absolute to its offsetParent
+        animationText.style.left = `${cashRect.left - hudRect.left + (cashRect.width / 2) - (animationText.offsetWidth / 2)}px`;
+        animationText.style.top = `${cashRect.top - hudRect.top - 20}px`; // 20px above
+
+        animationText.addEventListener('animationend', () => {
+            animationText.remove();
+        });
+    }
+
+
+    // --- Contacts App UI Rendering Methods ---
+    _renderContactsAppList() {
+        if (!this.gameState.contactsManager) {
+            debugLogger.error("UIManager", "ContactsManager not found on gameState!");
+            if(this.contactsListContainer) this.contactsListContainer.innerHTML = '<p class="error-message">Error: Contacts unavailable.</p>';
+            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contacts unavailable.</p>';
+            return;
+        }
+
+        const unlockedContacts = this.gameState.contactsManager.getUnlockedContacts();
+        const targetContainer = this.contactsListContainer || this.contactsAppScreen; // Render to list container or main app screen
+
+        if (!targetContainer) {
+            debugLogger.error("UIManager", "Target container for contacts list not found.");
+            return;
+        }
+
+        targetContainer.innerHTML = ''; // Clear previous content
+
+        if (unlockedContacts.length === 0) {
+            targetContainer.innerHTML = '<p class="empty-message">No contacts unlocked yet. Increase your StreetCred!</p>';
+            return;
+        }
+
+        const ul = document.createElement('ul');
+        ul.className = 'contacts-list';
+        unlockedContacts.forEach(contact => {
+            const li = document.createElement('li');
+            li.className = 'contact-list-item';
+            li.dataset.contactId = contact.id;
+
+            const img = document.createElement('img');
+            img.src = contact.avatarUrl || 'https://via.placeholder.com/40/cccccc/000000?text=?';
+            img.alt = contact.name;
+            img.className = 'contact-avatar-small';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = contact.name;
+            nameSpan.className = 'contact-name';
+
+            li.appendChild(img);
+            li.appendChild(nameSpan);
+
+            li.addEventListener('click', () => {
+                this._renderContactsAppDetail(contact.id);
+                this.setPhoneUIState('contactDetail'); // Switch view state
+            });
+            ul.appendChild(li);
+        });
+        targetContainer.appendChild(ul);
+    }
+
+    _renderContactsAppDetail(contactId) {
+        if (!this.gameState.contactsManager || !this.gameState.loyaltyManager) {
+            debugLogger.error("UIManager", "ContactsManager or LoyaltyManager not found on gameState!");
+            if(this.contactDetailView) this.contactDetailView.innerHTML = '<p class="error-message">Error: Contact details unavailable.</p>';
+            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contact details unavailable.</p>';
+            return;
+        }
+
+        const contact = this.gameState.contactsManager.getContact(contactId);
+        if (!contact) {
+            debugLogger.error("UIManager", `Contact with ID ${contactId} not found.`);
+            if(this.contactDetailView) this.contactDetailView.innerHTML = '<p class="error-message">Error: Contact not found.</p>';
+            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contact not found.</p>';
+            return;
+        }
+
+        const targetContainer = this.contactDetailView || this.contactsAppScreen; // Render to detail view or main app screen
+         if (!targetContainer) {
+            debugLogger.error("UIManager", "Target container for contact detail not found.");
+            return;
+        }
+        targetContainer.innerHTML = ''; // Clear previous content
+
+        this.setPhoneTitle(contact.name); // Set phone title to contact's name
+
+        // Avatar
+        if (this.contactDetailAvatar) { // If dedicated img tag exists
+            this.contactDetailAvatar.src = contact.avatarUrl || 'https://via.placeholder.com/80/cccccc/000000?text=?';
+            this.contactDetailAvatar.alt = contact.name;
+            // If not, create it dynamically
+        } else {
+            const avatarImg = document.createElement('img');
+            avatarImg.src = contact.avatarUrl || 'https://via.placeholder.com/80/cccccc/000000?text=?';
+            avatarImg.alt = contact.name;
+            avatarImg.className = 'contact-detail-avatar-dynamic'; // Add class for styling
+            targetContainer.appendChild(avatarImg);
+        }
+
+        // Name
+        if (this.contactDetailName) this.contactDetailName.textContent = contact.name;
+        else {
+            const nameHeader = document.createElement('h3');
+            nameHeader.className = 'contact-detail-name-dynamic';
+            nameHeader.textContent = contact.name;
+            targetContainer.appendChild(nameHeader);
+        }
+
+        // Description
+        if (this.contactDetailDescription) this.contactDetailDescription.textContent = contact.description;
+        else {
+            const descP = document.createElement('p');
+            descP.className = 'contact-detail-description-dynamic';
+            descP.textContent = contact.description;
+            targetContainer.appendChild(descP);
+        }
+
+        // Loyalty
+        const loyaltyLevel = this.gameState.loyaltyManager.getLoyalty(contactId);
+        if (this.contactDetailLoyalty) this.contactDetailLoyalty.textContent = `Loyalty: ${loyaltyLevel}/100`;
+        else {
+            const loyaltyP = document.createElement('p');
+            loyaltyP.className = 'contact-detail-loyalty-dynamic';
+            loyaltyP.textContent = `Loyalty: ${loyaltyLevel}/100`;
+            targetContainer.appendChild(loyaltyP);
+        }
+
+        // Services
+        const servicesContainer = this.contactDetailServicesList || document.createElement('div');
+        if (!this.contactDetailServicesList) {
+            servicesContainer.className = 'contact-detail-services-dynamic';
+            targetContainer.appendChild(servicesContainer);
+        }
+        servicesContainer.innerHTML = '<h4>Services:</h4>';
+        if (contact.services && contact.services.length > 0) {
+            const ul = document.createElement('ul');
+            contact.services.forEach(service => {
+                const li = document.createElement('li');
+                li.textContent = service.name;
+                // Add event listener if service is functional in future
+                // li.addEventListener('click', () => this.gameState.contactsManager.interactWithService(contactId, service.serviceId));
+                ul.appendChild(li);
+            });
+            servicesContainer.appendChild(ul);
+        } else {
+            servicesContainer.innerHTML += '<p>No services currently available.</p>';
+        }
+
+        // Missions (Placeholder)
+        const missionsContainer = this.contactDetailMissionsList || document.createElement('div');
+         if (!this.contactDetailMissionsList) {
+            missionsContainer.className = 'contact-detail-missions-dynamic';
+            targetContainer.appendChild(missionsContainer);
+        }
+        missionsContainer.innerHTML = '<h4>Missions:</h4><p>[Coming Soon]</p>';
+
+        // Back Button (if not using the global phone back button for this)
+        if (this.contactDetailBackButton) { // If specific back button for this view
+            this.contactDetailBackButton.onclick = () => this.setPhoneUIState('contactsAppList');
+        } else if (targetContainer === this.contactsAppScreen) { // If rendering directly, add a dynamic back button
+            const backBtn = document.createElement('button');
+            backBtn.textContent = 'Back to List';
+            backBtn.className = 'dynamic-back-button';
+            backBtn.onclick = () => this.setPhoneUIState('contactsAppList');
+            targetContainer.appendChild(backBtn);
+        }
+        // If using global phone back button, ensure its data-action is set to 'back-to-contacts-list' or similar
+        // and handle that in script.js#handlePhoneAppClick
+    }
+
+    // --- Map App UI Rendering Methods ---
+    _renderMapAppView() {
+        if (!this.mapAppView) {
+            debugLogger.warn("UIManager", "Map App view container not found.");
+            return;
+        }
+        if (!this.gameState.mapManager) {
+            debugLogger.error("UIManager", "MapManager not found on gameState!");
+            this.mapAppView.innerHTML = '<p class="error-message">Error: Map data unavailable.</p>';
+            return;
+        }
+
+        const districts = this.gameState.mapManager.getDiscoveredDistricts(); // Or getAllDistricts() for Phase 1
+        this.mapAppView.innerHTML = ''; // Clear previous content
+
+        if (this.mapGridContainer) { // Preferred: Render as a simple grid
+            this.mapGridContainer.innerHTML = ''; // Clear grid
+            this.mapGridContainer.style.display = 'grid';
+            // Determine grid size (e.g., 2x2 for 4 districts)
+            // This is a simplified example; a more robust solution would calculate rows/cols
+            const gridSize = Math.ceil(Math.sqrt(districts.length));
+            this.mapGridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            this.mapGridContainer.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+
+            districts.forEach(district => {
+                const districtCell = document.createElement('div');
+                districtCell.className = 'map-district-cell';
+                districtCell.textContent = district.name;
+                districtCell.title = district.description; // Show description on hover
+                // Basic styling based on ID or type for differentiation
+                districtCell.style.backgroundColor = `#${(district.id.charCodeAt(0) * district.id.length * 333 % 0xFFFFFF).toString(16).padStart(6, '0')}33`; // Semi-random color
+                districtCell.style.border = '1px solid #555';
+                districtCell.style.padding = '10px';
+                districtCell.style.textAlign = 'center';
+                districtCell.style.cursor = 'pointer'; // If clickable later
+
+                // Position using gridPosition if available, otherwise just add to grid
+                if (district.gridPosition) {
+                    districtCell.style.gridColumnStart = district.gridPosition.x + 1;
+                    districtCell.style.gridRowStart = district.gridPosition.y + 1;
+                }
+
+                districtCell.addEventListener('click', () => {
+                    // For Phase 1, maybe just a notification. Detail view can be Phase 2.
+                    if (typeof phoneShowNotification === 'function') {
+                        phoneShowNotification(`Selected: ${district.name} - ${district.description}`, "Map");
+                    }
+                });
+                this.mapGridContainer.appendChild(districtCell);
+            });
+            this.mapAppView.appendChild(this.mapGridContainer);
+
+        } else { // Fallback: Render as a list if no grid container
+            const ul = document.createElement('ul');
+            ul.className = 'map-district-list';
+            if (districts.length === 0) {
+                ul.innerHTML = '<li class="empty-message">No districts to display.</li>';
+            } else {
+                districts.forEach(district => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${district.name}</strong>: ${district.description}`;
+                    // Add click listener if districts become interactive
+                    // li.addEventListener('click', () => { /* handle district click */ });
+                    ul.appendChild(li);
+                });
+            }
+            this.mapAppView.appendChild(ul);
+        }
+    }
+
+    // --- News App UI Rendering Methods ---
+    _renderNewsAppList() {
+        const targetContainer = this.newsListContainer || this.newsAppView;
+        if (!targetContainer) {
+            debugLogger.warn("UIManager", "News App list container not found.");
+            return;
+        }
+        if (!this.gameState.newsManager) {
+            debugLogger.error("UIManager", "NewsManager not found on gameState!");
+            targetContainer.innerHTML = '<p class="error-message">Error: News feed unavailable.</p>';
+            return;
+        }
+
+        const articles = this.gameState.newsManager.getAllDisplayableArticles(); // Will get static for Phase 1
+        targetContainer.innerHTML = ''; // Clear previous
+
+        if (articles.length === 0) {
+            targetContainer.innerHTML = '<p class="empty-message">No news to report right now.</p>';
+            return;
+        }
+
+        const ul = document.createElement('ul');
+        ul.className = 'news-article-list';
+        articles.forEach(article => {
+            const li = document.createElement('li');
+            li.className = 'news-article-item';
+            li.dataset.articleId = article.id;
+            li.innerHTML = `
+                <h4 class="news-headline">${article.headline}</h4>
+                <p class="news-meta">${article.category || 'General'} - ${article.timestamp}</p>
+            `;
+            li.addEventListener('click', () => {
+                this._renderNewsAppArticleDetail(article.id);
+                this.setPhoneUIState('newsAppArticleDetail');
+            });
+            ul.appendChild(li);
+        });
+        targetContainer.appendChild(ul);
+    }
+
+    _renderNewsAppArticleDetail(articleId) {
+        const targetContainer = this.newsArticleDetailView || this.newsAppView;
+        if (!targetContainer) {
+            debugLogger.warn("UIManager", "News App article detail container not found.");
+            return;
+        }
+        if (!this.gameState.newsManager) {
+            debugLogger.error("UIManager", "NewsManager not found on gameState for article detail!");
+            targetContainer.innerHTML = '<p class="error-message">Error: Could not load article.</p>';
+            return;
+        }
+
+        // In Phase 2, getArticleById might check dynamic and static. For now, just static.
+        const article = this.gameState.newsManager.getStaticArticleById(articleId);
+
+        if (!article) {
+            debugLogger.error("UIManager", `Article with ID ${articleId} not found.`);
+            targetContainer.innerHTML = '<p class="error-message">Error: Article not found.</p>';
+            this.setPhoneTitle("Article Not Found");
+            return;
+        }
+
+        this.setPhoneTitle(article.category || "News Article"); // Set phone title
+
+        // Using dedicated elements if they exist
+        if (this.newsArticleHeadline && this.newsArticleBody && this.newsArticleDetailView) {
+            this.newsArticleHeadline.textContent = article.headline;
+            this.newsArticleBody.textContent = article.body;
+            // Back button setup
+            if (this.newsArticleBackButton) {
+                this.newsArticleBackButton.onclick = () => this.setPhoneUIState('newsAppList');
+            }
+        } else { // Fallback to populating the main newsAppView
+            targetContainer.innerHTML = `
+                <button class="dynamic-back-button news-dynamic-back">Back to News List</button>
+                <h3 class="news-article-headline-dynamic">${article.headline}</h3>
+                <p class="news-article-meta-dynamic">${article.category || 'General'} - ${article.timestamp}</p>
+                <div class="news-article-body-dynamic">${article.body.replace(/\n/g, '<br>')}</div>
+            `;
+            const backBtn = targetContainer.querySelector('.news-dynamic-back');
+            if (backBtn) {
+                backBtn.onclick = () => this.setPhoneUIState('newsAppList');
+            }
+        }
     }
 }
 

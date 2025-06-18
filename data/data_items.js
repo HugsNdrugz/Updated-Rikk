@@ -16,9 +16,17 @@ export const ITEM_QUALITY_MODIFIERS = {
 
 export const itemTypes = [
     // --- Standard Drugs ---
-    { id: "green_crack", name: "Bag of 'Green Crack'", baseValue: 60, range: 20, type: "DRUG", subType: "STIMULANT", heat: 3, description: "Budget-friendly, gets the job done.", effects: ["energy_boost", "jitters"], addictionChance: 0.1 },
+    { id: "green_crack", name: "Bag of 'Green Crack'", baseValue: 60, range: 20, type: "DRUG", subType: "STIMULANT", heat: 3, description: "Budget-friendly, gets the job done.", effects: ["energy_boost", "jitters"], addictionChance: 0.1,
+      effectsOnSell: [
+        { "type": "statChange", "target": "player", "stat": "heat", "amount": 1, "chance": 0.25, "message": "A patrol car eyed you during the 'Green Crack' deal." }
+      ]
+    },
     { id: "blue_magic", name: "Few 'Blue Magic' Pills", baseValue: 40, range: 15, type: "DRUG", subType: "PARTY", heat: 2, description: "Small pills, big promises.", effects: ["euphoria", "sociability"], addictionChance: 0.15 },
-    { id: "white_pony", name: "Gram of 'White Pony'", baseValue: 100, range: 30, type: "DRUG", subType: "STIMULANT", heat: 5, description: "The uptown special. Potent.", effects: ["focus", "confidence", "paranoia_high_dose"], addictionChance: 0.3 },
+    { id: "white_pony", name: "Gram of 'White Pony'", baseValue: 100, range: 30, type: "DRUG", subType: "STIMULANT", heat: 5, description: "The uptown special. Potent.", effects: ["focus", "confidence", "paranoia_high_dose"], addictionChance: 0.3,
+      effectsOnSell: [
+        { "type": "statChange", "target": "player", "stat": "heat", "amount": 2, "chance": 0.6, "message": "Selling 'White Pony' always feels risky... and it was." }
+      ]
+    },
     { id: "psy_sunshine", name: "Sheet of 'Psychedelic Sunshine'", baseValue: 150, range: 50, type: "DRUG", subType: "PSYCHEDELIC", heat: 6, description: "A trip to another dimension.", effects: ["visuals", "altered_perception", "anxiety_chance"], addictionChance: 0.05 },
     { id: "liquid_giggles", name: "Vial of 'Liquid Giggles'", baseValue: 80, range: 25, type: "DRUG", subType: "PARTY", heat: 4, description: "Warning: May cause uncontrollable laughter.", effects: ["euphoria", "disinhibition"], addictionChance: 0.2 },
     { id: "afghan_gold", name: "Brick of 'Afghan Gold' (Hash)", baseValue: 250, range: 80, type: "DRUG", subType: "CANNABINOID", heat: 8, description: "Top-shelf import, heavy hitter.", effects: ["relaxation", "hunger", "red_eyes"], addictionChance: 0.08 },
@@ -41,7 +49,11 @@ export const itemTypes = [
     { id: "designer_bag", name: "Designer Handbag (Scuffed)", baseValue: 130, range: 60, type: "STOLEN_GOOD", heat: 3, description: "Still got the label, mostly."},
     { id: "premium_liquor", name: "Crate of 'Premium' Liquor", baseValue: 100, range: 40, type: "STOLEN_GOOD", heat: 2, description: "Fell off a truck, you know the vibes."},
     { id: "questionable_jewelry", name: "Jewelry (Questionable Origin)", baseValue: 200, range: 100, type: "STOLEN_GOOD", heat: 4, description: "Shiny, but don't ask where it came from."},
-    { id: "hot_laptop", name: "High-End Laptop (Needs Charger)", baseValue: 180, range: 70, type: "STOLEN_GOOD", heat: 3, description: "Top specs, just a little... warm."},
+    { id: "hot_laptop", name: "High-End Laptop (Needs Charger)", baseValue: 180, range: 70, type: "STOLEN_GOOD", heat: 3, description: "Top specs, just a little... warm.",
+      effectsOnSell: [
+        { "type": "statChange", "target": "player", "stat": "heat", "amount": 3, "chance": 1.0, "message": "That laptop was definitely hot. Heat's up." }
+      ]
+    },
     // --- New Oddities (STOLEN_GOOD subType ODDITY) ---
     { id: "blueprint_for_squirrel_armor", name: "Blueprint for Squirrel Armor", baseValue: 15, range: 10, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "Detailed schematics for tiny, acorn-resistant battle gear. Seems legit."},
     { id: "perfectly_normal_rock_portal_key", name: "Perfectly Normal Rock (Portal Key?)", baseValue: 20, range: 15, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "Just a rock. Or is it? Feels... tingly. Probably just a rock."},

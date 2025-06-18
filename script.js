@@ -12,8 +12,15 @@
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 import { GameState } from './GameState.js';
 import { UIManager } from './UIManager.js';
+import { StreetCredManager } from './managers/StreetCredManager.js';
+import { LoyaltyManager } from './managers/LoyaltyManager.js';
+import { WorldEventManager } from './managers/WorldEventManager.js';
+import { ItemEffectManager } from './managers/ItemEffectManager.js';
+import { ContactsManager } from './managers/ContactsManager.js';
+import { MapManager } from './managers/MapManager.js';
+import { NewsManager } from './managers/NewsManager.js'; // Added
 import { CustomerManager } from './classes/CustomerManager.js';
-import { ContactsAppManager } from './classes/ContactsAppManager.js';
+// import { ContactsAppManager } from './classes/ContactsAppManager.js'; // Old one, replaced by new manager
 import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js';
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
@@ -102,6 +109,22 @@ const uiManagerConfig = {
 // --- Instantiate Core Classes ---
 const game = new GameState(gameStateConfig);
 const uiManager = new UIManager(game, uiManagerConfig);
+const streetCredManager = new StreetCredManager(game);
+const loyaltyManager = new LoyaltyManager(game);
+const worldEventManager = new WorldEventManager(game, uiManager);
+const itemEffectManager = new ItemEffectManager(game);
+const contactsManager = new ContactsManager(game);
+const mapManager = new MapManager(game);
+const newsManager = new NewsManager(game); // Added
+
+// Make Managers available globally if needed
+game.streetCredManager = streetCredManager;
+game.loyaltyManager = loyaltyManager;
+game.worldEventManager = worldEventManager;
+game.itemEffectManager = itemEffectManager;
+game.contactsManager = contactsManager;
+game.mapManager = mapManager;
+game.newsManager = newsManager; // Added
 
 // --- State Variables ---
 const localStorageAvailable = isLocalStorageAvailable();
@@ -197,7 +220,10 @@ function initializeManagers() {
     const currentTemplates = game.getCustomerTemplates();
 
     game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates);
+    // game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates); // Old
+    // New ContactsManager is already instantiated and attached to game.contactsManager
+    // It doesn't require uiManager.contactsAppView directly in constructor, UIManager handles views.
+
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
         () => game.getCash(),
@@ -207,16 +233,23 @@ function initializeManagers() {
         }
     );
 
-    if (uiManager.contactsAppView) {
-        uiManager.contactsAppView.addEventListener('customerTemplatesUpdated', (event) => {
+    // The event listener for 'customerTemplatesUpdated' from the old ContactsAppManager
+    // might need to be re-evaluated or removed if that functionality is no longer part of a UI view
+    // or if the new ContactsManager handles template updates differently (it currently doesn't manage templates).
+    // For now, commenting it out to avoid errors if uiManager.contactsAppView is not the old component.
+    /*
+    if (uiManager.contactsAppScreen) { // Assuming contactsAppScreen is the main view for new app
+        uiManager.contactsAppScreen.addEventListener('customerTemplatesUpdated', (event) => {
             if (event.detail && event.detail.updatedTemplates) {
                 game.updateCustomerTemplates(event.detail.updatedTemplates);
                 saveCustomerTemplates();
+                // CustomerManager might need re-initialization or an update method if templates change
                 game.customerManager = new CustomerManager(game.getCustomerTemplates(), itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
                 phoneShowNotification('Contact templates updated and saved!', 'Contacts App');
             }
         });
     }
+    */
 }
 
 function setupEventListeners() {
@@ -341,14 +374,39 @@ function handleTurnProgressionAndEvents() {
     const skills = game.getPlayerSkills();
     const worldEffects = getCombinedActiveEventEffects();
     let passiveHeatChange = -(1 + (skills.lowProfile || 0));
-    if (worldEffects.heatModifier !== 0) {
-        passiveHeatChange /= worldEffects.heatModifier;
+
+    // Apply world event modifiers to passive heat change
+    const currentModifiers = game.gameState.activeEventModifiers;
+    if (currentModifiers && currentModifiers.heatGainMultiplier) {
+        // If heatGainMultiplier is > 1, passive heat reduction is less effective
+        // If heatGainMultiplier is < 1, passive heat reduction is more effective
+        // A multiplier of 0 would mean infinite heat reduction, so guard against that.
+        if (currentModifiers.heatGainMultiplier !== 0) {
+             passiveHeatChange /= currentModifiers.heatGainMultiplier;
+        } else {
+            passiveHeatChange = -game.getMaxHeat(); // Effectively cools down all heat if multiplier is 0
+        }
     }
+
+    // This worldEffects.heatModifier seems to be from a different system (possibly items or specific customer interactions)
+    // It should be combined with or reviewed alongside the new activeEventModifiers.
+    // For now, let's assume they stack multiplicatively or one takes precedence.
+    // Sticking to the original logic for worldEffects.heatModifier for now.
+    if (worldEffects.heatModifier !== 0) { // This was from getCombinedActiveEventEffects() from activeWorldEvents in GameState directly
+        passiveHeatChange /= worldEffects.heatModifier; // This might be redundant if worldEffects are now fully in activeEventModifiers
+    }
+
     if (game.isToolEffectActive && game.isToolEffectActive('info_cops')) {
         passiveHeatChange -= 2;
     }
     game.addHeat(Math.round(passiveHeatChange));
     uiManager.updateHUD();
+
+    // Update world events (triggers new, updates active) & then check consequences
+    if (game.worldEventManager) {
+        game.worldEventManager.updateEvents(); // This will also recalculate modifiers
+        game.worldEventManager.checkConsequences();
+    }
 }
 
 function setupUIForNewInteraction() {
@@ -481,7 +539,13 @@ function handlePhoneAppClick(event) {
             uiManager.openInventoryModal();
             break;
         case 'contacts-app':
-            uiManager.setPhoneUIState('contacts');
+            uiManager.setPhoneUIState('contactsAppList');
+            break;
+        case 'map-app':
+            uiManager.setPhoneUIState('mapAppView');
+            break;
+        case 'news-app': // Added News App case
+            uiManager.setPhoneUIState('newsAppList');
             break;
         case 'slot-game':
             uiManager.setPhoneUIState('slots');
@@ -580,17 +644,23 @@ function handleChoice(outcome) {
         let narrationText = "";
         let dealSuccess = false;
         let dialogueContextKey = '';
+        let loyaltyChange = 0; // Initialize loyalty change
 
         switch (outcome.type) {
             case "buy_from_customer":
                 if (game.getCash() >= outcome.price && !game.isInventoryFull()) {
-                    game.removeCash(outcome.price);
+                    const price = outcome.price;
+                    game.removeCash(price);
+                    uiManager.showCashChangeAnimation(-price); // Cash lost
                     game.addItemToInventory({ ...outcome.item });
                     dealSuccess = true;
+                    loyaltyChange = 2; // Successful buy
                     narrationText = `Rikk copped "${outcome.item.name}".`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkBuysSuccess';
                 } else {
+                    dealSuccess = false;
+                    loyaltyChange = -1; // Failed buy
                     narrationText = `Deal failed. ${(game.isInventoryFull()) ? "Stash full." : "Not enough cash."}`;
                     uiManager.playSound(uiManager.deniedSound);
                     dialogueContextKey = 'lowCashRikk';
@@ -599,27 +669,57 @@ function handleChoice(outcome) {
             case "sell_to_customer":
                 const soldItem = game.removeItemFromInventoryById(outcome.item.id);
                 if (soldItem) {
-                    game.addCash(outcome.price);
+                    const price = outcome.price;
+                    game.addCash(price);
+                    uiManager.showCashChangeAnimation(price); // Cash gained
                     dealSuccess = true;
-                    narrationText = `Flipped "${soldItem.name}" for $${outcome.price}.`;
+                    loyaltyChange = 2; // Successful sell
+                    narrationText = `Flipped "${soldItem.name}" for $${price}.`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
                     if (game.customerManager && typeof game.customerManager.processPotentialAddiction === 'function') {
                         game.customerManager.processPotentialAddiction(currentCustomer, soldItem);
                     }
+
+                    // Process item effects on successful sell
+                    const itemDefinition = itemTypes.find(it => it.id === soldItem.id);
+                    if (itemDefinition && itemDefinition.effectsOnSell && game.itemEffectManager) {
+                        if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Processing effectsOnSell for ${itemDefinition.name}`);
+                        game.itemEffectManager.processEffects(itemDefinition.effectsOnSell, { gameState: game /* pass full game object as context */ });
+                    }
                 } else {
+                    dealSuccess = false;
+                    loyaltyChange = 0; // No item, no real interaction to penalize loyalty for yet
                     narrationText = "Couldn't find that item.";
                     uiManager.playSound(uiManager.deniedSound);
                 }
                 break;
             case "negotiate_sell":
                 setTimeout(() => {
-                    if (Math.random() < 0.55 + (game.getPlayerSkills().negotiator * 0.12)) {
+                    const negotiatorSkill = game.getPlayerSkills().negotiator || 0;
+                    // Base success chance: 50%. Each skill point adds 5% to success chance.
+                    const successChance = 0.50 + (negotiatorSkill * 0.05);
+                    if (game.DEBUG_MODE) debugLogger.log('Negotiate_Sell', `Negotiator Skill: ${negotiatorSkill}, Success Chance: ${successChance}`);
+
+                    if (Math.random() < successChance) {
                         const negoSuccessResult = game.customerManager.getOutcomeDialogue(currentCustomer, 'negotiationSuccess');
+                        // Price improvement: Each skill point adds 0.5% to the proposed price, capped at a reasonable amount (e.g., 10% of original offer diff)
+                        const priceDifference = outcome.proposedPrice - outcome.originalOffer;
+                        let priceImprovement = priceDifference * (negotiatorSkill * 0.005); // 0.5% per point on the *negotiated part*
+                        // Ensure improvement is not excessively large, cap at e.g. 25% of the proposed price increase or a fixed small % of total
+                        const maxImprovement = Math.min(priceDifference * 0.25, outcome.proposedPrice * 0.05); // Cap improvement
+                        priceImprovement = Math.min(priceImprovement, maxImprovement);
+
+                        const finalNegotiatedPrice = Math.round(outcome.proposedPrice + priceImprovement);
+
+                        if (game.DEBUG_MODE) debugLogger.log('Negotiate_Sell', `Original Offer: ${outcome.originalOffer}, Proposed: ${outcome.proposedPrice}, Price Improvement: ${priceImprovement}, Final Price: ${finalNegotiatedPrice}`);
+                        // Note: showCashChangeAnimation will be called when handleChoice processes the "sell_to_customer" type
                         queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
-                            handleChoice({ type: "sell_to_customer", item: outcome.item, price: outcome.proposedPrice });
+                            handleChoice({ type: "sell_to_customer", item: outcome.item, price: finalNegotiatedPrice });
                         });
                     } else {
+                        // Failed Haggle: For Phase 1, no additional direct penalty beyond not getting the better price.
+                        // Future: negotiator skill could reduce any negative sentiment from a failed haggle.
                         const negoFailResult = game.customerManager.getOutcomeDialogue(currentCustomer, 'negotiationFail');
                         queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
                             const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
@@ -627,23 +727,30 @@ function handleChoice(outcome) {
                         });
                     }
                 }, 1000);
-                return;
+                return; // Loyalty handled after negotiation outcome
             case "decline_offer_to_buy":
+                dealSuccess = false;
+                loyaltyChange = -1; // Declined to buy from them
                 narrationText = "Rikk passes on the offer.";
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToBuy';
                 break;
             case "decline_offer_to_sell":
+                dealSuccess = false;
+                loyaltyChange = -1; // Declined to sell to them
                 narrationText = "Rikk tells them to kick rocks.";
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'rikkDeclinesToSell';
                 break;
             case "acknowledge_empty_stash":
+                dealSuccess = false;
+                loyaltyChange = -1; // Rikk is unprepared
                 narrationText = "Rikk's stash is dry. Customer ain't happy.";
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'acknowledge_empty_stash';
                 break;
             case "acknowledge_error":
+                loyaltyChange = 0; // System error, no loyalty change
                 narrationText = "System error acknowledged.";
                 break;
         }
@@ -656,17 +763,28 @@ function handleChoice(outcome) {
         if (outcome.payload) processPayload(outcome.payload, dealSuccess);
         if (outcomeResult.payload) processPayload(outcomeResult.payload, dealSuccess);
 
-        const customerForCredConfig = game.getCurrentCustomerInstance();
-        if (customerForCredConfig && customerForCredConfig.archetypeKey) {
+        const customerInstanceForLoyalty = game.getCurrentCustomerInstance();
+        if (customerInstanceForLoyalty && customerInstanceForLoyalty.id && loyaltyChange !== 0) {
+            game.loyaltyManager.addLoyalty(customerInstanceForLoyalty.id, loyaltyChange);
+            phoneShowNotification(`Loyalty with ${customerInstanceForLoyalty.name} changed by ${loyaltyChange}.`, "System");
+        }
+
+        if (customerInstanceForLoyalty && customerInstanceForLoyalty.archetypeKey) {
             const allTemplates = game.getCustomerTemplates();
-            const customerTemplateData = allTemplates[customerForCredConfig.archetypeKey];
+            const customerTemplateData = allTemplates[customerInstanceForLoyalty.archetypeKey];
             if (customerTemplateData && customerTemplateData.gameplayConfig) {
                 const config = customerTemplateData.gameplayConfig;
                 if (dealSuccess) {
-                    if (outcome.type === "sell_to_customer" && typeof config.credImpactSell === 'number') {
-                        game.addStreetCred(config.credImpactSell);
-                    } else if (outcome.type === "buy_from_customer" && typeof config.credImpactBuy === 'number') {
-                        game.addStreetCred(config.credImpactBuy);
+                    // Basic global street cred for any successful deal
+                    game.streetCredManager.addStreetCred('global', null, 1);
+                    if (game.DEBUG_MODE) phoneShowNotification("StreetCred +1 (Successful Deal).", "System");
+
+                    if (outcome.type === "sell_to_customer" && typeof config.credImpactSell === 'number' && config.credImpactSell !== 1) {
+                        game.streetCredManager.addStreetCred('global', null, config.credImpactSell - 1);
+                        if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Additional global StreetCred from template (sell): ${config.credImpactSell - 1}`);
+                    } else if (outcome.type === "buy_from_customer" && typeof config.credImpactBuy === 'number' && config.credImpactBuy !== 1) {
+                        game.streetCredManager.addStreetCred('global', null, config.credImpactBuy - 1);
+                        if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Additional global StreetCred from template (buy): ${config.credImpactBuy - 1}`);
                     }
                 }
             }
@@ -716,13 +834,38 @@ function processPayload(payload, dealSuccess) {
                 if (effect.statToModify && typeof effect.value === 'number') {
                     let valueToApply = effect.value;
                     if (effect.statToModify === 'heat' && valueToApply > 0) {
-                        valueToApply = Math.round(valueToApply * worldEffects.heatModifier);
-                        valueToApply = applyDealHeat(valueToApply, game);
+                        // Apply general world event heat modifiers first
+                        const currentModifiers = game.gameState.activeEventModifiers;
+                        if (currentModifiers && currentModifiers.heatGainMultiplier) {
+                            valueToApply *= currentModifiers.heatGainMultiplier;
+                        }
+
+                        // Apply LowProfile skill reduction to heat gain
+                        if (valueToApply > 0) { // Only reduce heat *gain*
+                            const lowProfileSkill = game.getPlayerSkills().lowProfile || 0;
+                            const reductionFactor = 1 - (lowProfileSkill * 0.05); // 5% reduction per skill point
+                            valueToApply *= reductionFactor;
+                            if (game.DEBUG_MODE) debugLogger.log('processPayload', `LowProfile skill ${lowProfileSkill} reducing heat gain by factor ${reductionFactor}. Pre-dealHeat value: ${valueToApply}`);
+                        }
+
+                        // Apply specific deal-related heat modification (like burner phone)
+                        valueToApply = applyDealHeat(Math.round(valueToApply), game);
                     }
                     const statMap = {
-                        'cash': () => game.addCash(valueToApply),
-                        'heat': () => game.addHeat(valueToApply),
-                        'streetCred': () => game.addStreetCred(valueToApply),
+                        'cash': () => {
+                            game.addCash(valueToApply);
+                            uiManager.showCashChangeAnimation(valueToApply); // Show animation for payload cash changes
+                        },
+                        'heat': () => game.addHeat(valueToApply), // Value already processed for heat
+                        'streetCred': () => game.streetCredManager.addStreetCred('global', null, valueToApply),
+                        'loyalty': () => { // Added loyalty effect processing
+                            if (currentCustomer && currentCustomer.id) {
+                                game.loyaltyManager.addLoyalty(currentCustomer.id, valueToApply);
+                                if (game.DEBUG_MODE) debugLogger.log('processPayload', `Loyalty for ${currentCustomer.id} changed by ${valueToApply} via payload.`);
+                            } else {
+                                if (game.DEBUG_MODE) debugLogger.warn('processPayload', 'Could not apply loyalty effect: currentCustomer or ID missing.');
+                            }
+                        },
                         'playerSkills.negotiator': () => game.updatePlayerSkill('negotiator', valueToApply),
                         'playerSkills.appraiser': () => game.updatePlayerSkill('appraiser', valueToApply),
                         'playerSkills.lowProfile': () => game.updatePlayerSkill('lowProfile', valueToApply)
@@ -738,19 +881,42 @@ function processPayload(payload, dealSuccess) {
                 if (Math.random() < effect.chance && currentCustomer) {
                     let message = effect.message || '';
                     if (effect.eventName === 'snitchReport') {
-                        let heatGain = Math.round((Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin) * worldEffects.heatModifier);
-                        heatGain = applyDealHeat(heatGain, game);
+                        let heatGain = Math.round((Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin) * worldEffects.heatModifier); // Initial heat calc
+                        const currentModifiers = game.gameState.activeEventModifiers;
+                        if (currentModifiers && currentModifiers.heatGainMultiplier) {
+                            heatGain *= currentModifiers.heatGainMultiplier;
+                        }
+                        // Apply LowProfile skill reduction
+                        if (heatGain > 0) {
+                            const lowProfileSkill = game.getPlayerSkills().lowProfile || 0;
+                            const reductionFactor = 1 - (lowProfileSkill * 0.05);
+                            heatGain *= reductionFactor;
+                             if (game.DEBUG_MODE) debugLogger.log('processPayload', `SnitchReport: LowProfile ${lowProfileSkill} reducing heat to ${heatGain}`);
+                        }
+                        heatGain = applyDealHeat(Math.round(heatGain), game);
                         game.addHeat(heatGain);
-                        game.addStreetCred(effect.credValue);
+                        if (effect.credValue) game.streetCredManager.addStreetCred('global', null, effect.credValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[HEAT_VALUE]', heatGain);
                     } else if (effect.eventName === 'highRollerTip') {
-                        const tip = Math.floor(game.getCash() * effect.tipPercentage);
+                        const tip = Math.floor(game.getCash() * effect.tipPercentage); // Tip is calculated based on current cash *before* adding the tip itself.
                         game.addCash(tip);
-                        game.addStreetCred(effect.credValue);
+                        uiManager.showCashChangeAnimation(tip); // Show tip animation
+                        if (effect.credValue) game.streetCredManager.addStreetCred('global', null, effect.credValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[TIP_AMOUNT]', tip);
                     } else if (effect.eventName === 'publicIncident') {
-                        let heatValue = Math.round(effect.heatValue * worldEffects.heatModifier);
-                        heatValue = applyDealHeat(heatValue, game);
+                        let heatValue = effect.heatValue; // Base heat from event
+                        const currentModifiers = game.gameState.activeEventModifiers;
+                        if (currentModifiers && currentModifiers.heatGainMultiplier) {
+                            heatValue *= currentModifiers.heatGainMultiplier;
+                        }
+                        // Apply LowProfile skill reduction
+                        if (heatValue > 0) {
+                            const lowProfileSkill = game.getPlayerSkills().lowProfile || 0;
+                            const reductionFactor = 1 - (lowProfileSkill * 0.05);
+                            heatValue *= reductionFactor;
+                            if (game.DEBUG_MODE) debugLogger.log('processPayload', `PublicIncident: LowProfile ${lowProfileSkill} reducing heat to ${heatValue}`);
+                        }
+                        heatValue = applyDealHeat(Math.round(heatValue), game);
                         game.addHeat(heatValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
                     }
@@ -768,8 +934,20 @@ function processPayload(payload, dealSuccess) {
         const customerTemplateData = game.getCustomerTemplates()[customerForConfig.archetypeKey];
         if (customerTemplateData?.gameplayConfig?.heatImpact) {
             let heatFromConfig = customerTemplateData.gameplayConfig.heatImpact;
-            if (heatFromConfig > 0) heatFromConfig = applyDealHeat(heatFromConfig, game);
-            game.addHeat(heatFromConfig);
+            if (heatFromConfig > 0) {
+                const currentModifiers = game.gameState.activeEventModifiers;
+                if (currentModifiers && currentModifiers.heatGainMultiplier) {
+                    heatFromConfig *= currentModifiers.heatGainMultiplier;
+                }
+                // Apply LowProfile skill reduction
+                const lowProfileSkill = game.getPlayerSkills().lowProfile || 0;
+                const reductionFactor = 1 - (lowProfileSkill * 0.05);
+                heatFromConfig *= reductionFactor;
+                if (game.DEBUG_MODE) debugLogger.log('processPayload', `CustomerTemplate Heat: LowProfile ${lowProfileSkill} reducing heat to ${heatFromConfig}`);
+
+                heatFromConfig = applyDealHeat(Math.round(heatFromConfig), game);
+            }
+            game.addHeat(Math.round(heatFromConfig)); // Ensure it's rounded before final add
         }
     }
     uiManager.updateHUD();

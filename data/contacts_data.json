@@ -1,0 +1,57 @@
+[
+  {
+    "id": "contact_whisper",
+    "name": "Whisper",
+    "avatarUrl": "assets/images/contacts/whisper_placeholder.png",
+    "description": "Sells information and rumors. Reliability varies, but sometimes drops gold.",
+    "initialLoyalty": 40,
+    "streetCredUnlockRequirement": 0,
+    "services": [
+      { "serviceId": "buy_rumor_cheap", "name": "Buy Cheap Rumor (Low Quality)" },
+      { "serviceId": "buy_info_specific", "name": "Request Specific Intel (Unavailable)" }
+    ],
+    "missions": [],
+    "dialogueTrees": {
+        "greeting": ["Yo. Heard you the one askin'.", "Lookin' for whispers? I got 'em."],
+        "default": ["Got somethin' for ya, or just browsin' the menu?"]
+    }
+  },
+  {
+    "id": "contact_fixer_sal",
+    "name": "Fixer Sal",
+    "avatarUrl": "assets/images/contacts/sal_placeholder.png",
+    "description": "A pragmatic fixer. Offers 'problem-solving' services and occasional gear.",
+    "initialLoyalty": 50,
+    "streetCredUnlockRequirement": 5,
+    "services": [
+      { "serviceId": "reduce_heat_small", "name": "Reduce Heat Slightly (Cost: $200)" },
+      { "serviceId": "get_burner_phone", "name": "Acquire Burner Phone (Cost: $100)" }
+    ],
+    "missions": [
+        { "missionId": "sal_intro_mission", "name": "Small Errand (Introductory)", "status": "locked" }
+    ],
+    "dialogueTrees": {
+        "greeting": ["Name's Sal. You need somethin' done, or you sellin'?", "Heard you were lookin' for someone like me."],
+        "default": ["Spit it out, I ain't got all day.", "Whatchu need?"]
+    }
+  },
+  {
+    "id": "contact_mama_carter",
+    "name": "Mama Carter",
+    "avatarUrl": "assets/images/contacts/mamacarter_placeholder.png",
+    "description": "Community matriarch. Doesn't like trouble, but values those who help the neighborhood.",
+    "initialLoyalty": 60,
+    "streetCredUnlockRequirement": 10,
+    "notesSource": "STORY_BREAKDOWN.MD (Community Figure)",
+    "services": [
+      { "serviceId": "community_tip_off", "name": "Get Neighborhood Tip-off (Free, High Loyalty)" }
+    ],
+    "missions": [
+        { "missionId": "carter_community_help_1", "name": "Help with Local Issue", "status": "locked" }
+    ],
+    "dialogueTrees": {
+        "greeting": ["Blessin's. You new around here, child?", "Folks call me Mama Carter. What can I do for you?"],
+        "default": ["Keep your nose clean, you hear?", "The community looks out for its own."]
+    }
+  }
+]

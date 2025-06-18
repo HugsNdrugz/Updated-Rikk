@@ -544,10 +544,28 @@ export class CustomerManager {
         let qualityModifier = this.itemQualityModifiers[item.itemTypeObj.type]?.[item.qualityIndex] || 1.0;
         let effectiveValue = Math.round(currentPrice * qualityModifier);
 
-        if (playerSkills) {
-            if (!purchaseContext && playerSkills.appraiser > 0) effectiveValue *= (1 + playerSkills.appraiser * 0.05);
-            if (purchaseContext && playerSkills.appraiser > 0) effectiveValue *= (1 - playerSkills.appraiser * 0.03);
+        // Apply Appraiser Skill
+        // When Rikk sells (purchaseContext = false), he gets a better price.
+        // When Rikk buys (purchaseContext = true), he pays less.
+        if (playerSkills && playerSkills.appraiser && typeof playerSkills.appraiser === 'number' && playerSkills.appraiser > 0) {
+            const appraiserSkill = playerSkills.appraiser;
+            // Example: 0.75% improvement per skill point (0.0075)
+            const appraisalFactor = 0.0075 * appraiserSkill;
+
+            if (!purchaseContext) { // Rikk is selling to customer
+                effectiveValue *= (1 + appraisalFactor);
+                if (debugLogger && typeof debugLogger.log === 'function' && customerInstance && customerInstance.name && item) { // Check if debugLogger is defined
+                    debugLogger.log('AppraiserSkill', `Rikk selling ${item.name} to ${customerInstance.name}. Appraiser skill ${appraiserSkill} increased value by ${appraisalFactor * 100}%.`);
+                }
+            } else { // Rikk is buying from customer
+                effectiveValue *= (1 - appraisalFactor);
+                 if (debugLogger && typeof debugLogger.log === 'function' && customerInstance && customerInstance.name && item) {
+                    debugLogger.log('AppraiserSkill', `Rikk buying ${item.name} from ${customerInstance.name}. Appraiser skill ${appraiserSkill} decreased demanded price by ${appraisalFactor * 100}%.`);
+                }
+            }
+            effectiveValue = Math.round(effectiveValue);
         }
+
         if (combinedWorldEffects) {
             if (combinedWorldEffects.allPriceModifier) effectiveValue *= combinedWorldEffects.allPriceModifier;
             if (combinedWorldEffects.drugPriceModifier && item.itemTypeObj && item.itemTypeObj.type === "DRUG") effectiveValue *= combinedWorldEffects.drugPriceModifier;
