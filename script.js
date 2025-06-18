@@ -907,7 +907,7 @@ function processPayload(payload, dealSuccess) {
                     let valueToApply = effect.value;
                     if (effect.statToModify === 'heat' && valueToApply > 0) {
                         // Apply general world event heat modifiers first
-                        const currentModifiers = game.gameState.activeEventModifiers;
+                        const currentModifiers = game.activeEventModifiers;
                         if (currentModifiers && currentModifiers.heatGainMultiplier) {
                             valueToApply *= currentModifiers.heatGainMultiplier;
                         }
@@ -954,7 +954,7 @@ function processPayload(payload, dealSuccess) {
                     let message = effect.message || '';
                     if (effect.eventName === 'snitchReport') {
                         let heatGain = Math.round((Math.floor(Math.random() * (effect.heatValueMax - effect.heatValueMin + 1)) + effect.heatValueMin) * worldEffects.heatModifier); // Initial heat calc
-                        const currentModifiers = game.gameState.activeEventModifiers;
+                        const currentModifiers = game.activeEventModifiers;
                         if (currentModifiers && currentModifiers.heatGainMultiplier) {
                             heatGain *= currentModifiers.heatGainMultiplier;
                         }
@@ -977,7 +977,7 @@ function processPayload(payload, dealSuccess) {
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[TIP_AMOUNT]', tip);
                     } else if (effect.eventName === 'publicIncident') {
                         let heatValue = effect.heatValue; // Base heat from event
-                        const currentModifiers = game.gameState.activeEventModifiers;
+                        const currentModifiers = game.activeEventModifiers;
                         if (currentModifiers && currentModifiers.heatGainMultiplier) {
                             heatValue *= currentModifiers.heatGainMultiplier;
                         }
@@ -1007,7 +1007,7 @@ function processPayload(payload, dealSuccess) {
         if (customerTemplateData?.gameplayConfig?.heatImpact) {
             let heatFromConfig = customerTemplateData.gameplayConfig.heatImpact;
             if (heatFromConfig > 0) {
-                const currentModifiers = game.gameState.activeEventModifiers;
+                const currentModifiers = game.activeEventModifiers;
                 if (currentModifiers && currentModifiers.heatGainMultiplier) {
                     heatFromConfig *= currentModifiers.heatGainMultiplier;
                 }
