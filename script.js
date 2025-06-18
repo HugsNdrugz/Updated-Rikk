@@ -20,6 +20,7 @@ import { ContactsManager } from './managers/ContactsManager.js';
 import { MapManager } from './managers/MapManager.js';
 import { NewsManager } from './managers/NewsManager.js'; // Added
 import { CustomerManager } from './classes/CustomerManager.js';
+import { ContactsAppManager } from './classes/ContactsAppManager.js';
 // import { ContactsAppManager } from './classes/ContactsAppManager.js'; // Old one, replaced by new manager
 import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js';
@@ -249,7 +250,7 @@ function initializeManagers() {
     game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     console.log("SCRIPT: CustomerManager instantiated.");
 
-    // game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates); // Old
+    game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppScreen, currentTemplates);
 
     console.log("SCRIPT: Instantiating SlotGameManager...");
     game.slotGameManager = new SlotGameManager(
