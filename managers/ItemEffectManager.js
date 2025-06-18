@@ -1,6 +1,6 @@
 // managers/ItemEffectManager.js
 import { debugLogger } from '../utils.js'; // Assuming utils.js is in the parent directory
-import { phoneShowNotification } from '../phone_ambient_ui.js'; // Assuming this path
+import { showNotification as phoneShowNotification } from '../phone_ambient_ui.js'; // Assuming this path
 
 class ItemEffectManager {
     constructor(game) { // Pass the main game object (which contains gameState, managers)
