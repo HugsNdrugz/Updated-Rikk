@@ -2,7 +2,7 @@
 import { debugLogger } from '../utils.js';
 import { possibleWorldEvents } from '../data/data_events.js'; // Now loading event definitions
 // import { consequences } from '../data/consequences.js'; // Will be needed later
-import { phoneShowNotification } from '../phone_ambient_ui.js';
+import { showNotification as phoneShowNotification } from '../phone_ambient_ui.js';
 
 class WorldEventManager {
     constructor(gameState, uiManager) {
