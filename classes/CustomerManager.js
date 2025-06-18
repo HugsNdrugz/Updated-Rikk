@@ -106,14 +106,65 @@ export class CustomerManager {
                 const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance, combinedWorldEffects });
                 const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
                 dialogue.push({ speaker: "customer", text: offerText });
-                const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
                 itemContext.itemInstanceId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+                const declineResultOriginal = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
+
+                if (!customerInstance.hasMetRikkBefore) {
+                    // New customer etiquette choices
+
+                    // BAD ETIQUETTE DECLINE
+                    let rudeDismissalPayload = { type: "EFFECT", effects: [] };
+                    // Note: The original instruction mentioned merging with 'customerReactsToRudeDismissal' payload.
+                    // For this pass, creating a fresh payload as per simplified instruction.
+                    // If 'customerReactsToRudeDismissal' also has a payload, it would be merged here or its effects added.
+                    rudeDismissalPayload.effects.push({ type: "statChange", target: "player", stat: "globalStreetCred", amount: -1 });
+                    rudeDismissalPayload.effects.push({ type: "statChange", target: "player", stat: "loyalty", npcId: customerInstance.id, amount: -2 });
+
+                    choices.push({
+                        text: "That's junk. Get lost.", // More dismissive text
+                        outcome: {
+                            type: "rikkDeclinesToBuy",
+                            payload: rudeDismissalPayload,
+                            followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToRudeDismissal') || {}).line || "Hmph. Whatever."
+                        }
+                    });
+
+                    // GOOD ETIQUETTE / NEUTRAL DECLINE
+                    const politeDeclinePayload = {
+                        type: "EFFECT",
+                        effects: [
+                            { type: "statChange", target: "player", stat: "globalStreetCred", amount: 1 },
+                            { type: "statChange", target: "player", stat: "loyalty", npcId: customerInstance.id, amount: 2 }
+                        ]
+                    };
+                    choices.push({
+                        text: "Not for me. Good looks tho.", // Polite decline
+                        outcome: {
+                            type: "rikkDeclinesToBuy",
+                            payload: politeDeclinePayload,
+                            followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToPoliteDismissal') || {}).line || "Aight. Respect."
+                        }
+                    });
+
+                } else {
+                    // Original "Nah, pass." choice for returning customers
+                    choices.push({
+                        text: "Nah, pass.",
+                        outcome: {
+                            type: "rikkDeclinesToBuy",
+                            payload: declineResultOriginal.payload,
+                            followUpDialogue: declineResultOriginal.line
+                        }
+                    });
+                }
+
+                // "Cop it" choices are added after decline options
                 if (cash >= customerDemandsPrice) {
                     choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
                 } else {
                     choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer" }, disabled: true });
                 }
-                choices.push({ text: "Nah, pass.", outcome: { type: "rikkDeclinesToBuy", payload: declineResult.payload, followUpDialogue: declineResult.line } });
             }
         } else if (inventory.length > 0) {
             const allOfRikksItems = [...inventory];
