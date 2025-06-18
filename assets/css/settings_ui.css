@@ -22,7 +22,7 @@
     width: 40px;
     height: 40px;
     animation: spin 1s ease-infinite; /* Assuming @keyframes spin is in base.css or layout.css */
-    margin-bottom: 15px;
+    margin-bottom: var(--spacing-lg);
 }
 
 .settings-error {
@@ -30,16 +30,16 @@
 }
 
 .settings-error .error-message {
-    margin-bottom: 15px;
+    margin-bottom: var(--spacing-lg);
     font-size: 1.1em;
 }
 
 .settings-error .retry-button {
-    padding: 8px 16px;
+    padding: var(--spacing-sm) var(--spacing-lg);
     background-color: var(--color-primary, #007bff);
     color: var(--color-on-primary, #ffffff);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--spacing-xs);
     cursor: pointer;
 }
 
@@ -54,9 +54,9 @@
 .preview-mode::after {
     content: 'Preview Mode';
     position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 8px;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
     background: var(--color-accent-gold, #ffd700);
     color: var(--color-on-primary, #000000);
     font-size: 0.8em;
@@ -69,22 +69,22 @@
 .settings-controls-container {
     overflow-y: auto;
     max-height: 65vh;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    margin-top: var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm); /* Already uses variables */
+    margin-top: var(--spacing-md); /* Already uses variables */
 }
 
 .settings-group {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg); /* Already a variable */
     border: 1px solid var(--color-grey-dark);
-    padding: var(--spacing-md);
-    border-radius: var(--button-border-radius);
+    padding: var(--spacing-md); /* Already a variable */
+    border-radius: var(--button-border-radius); /* Already a variable */
 }
 
 .settings-group legend {
     font-weight: bold;
     color: var(--color-primary);
-    padding: 0 var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    padding: 0 var(--spacing-sm); /* Already a variable */
+    margin-bottom: var(--spacing-md); /* Already a variable */
     font-size: 1.1rem;
 }
 
@@ -92,16 +92,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-md);
-    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md); /* Already a variable */
+    gap: var(--spacing-sm); /* Already a variable */
 }
 
 .setting-row:last-child {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs); /* Already a variable */
 }
 
 .setting-row label {
-    margin-right: var(--spacing-sm);
+    margin-right: var(--spacing-sm); /* Already a variable */
     font-size: 0.9rem;
     color: var(--color-grey-light);
     flex-shrink: 0;
@@ -114,8 +114,8 @@
     background-color: var(--color-dark-bg);
     border: 1px solid var(--color-grey-mid);
     color: var(--color-on-surface);
-    border-radius: var(--spacing-xs);
-    padding: var(--spacing-xs);
+    border-radius: var(--spacing-xs); /* Already a variable */
+    padding: var(--spacing-xs); /* Already a variable */
     font-family: var(--font-body);
     font-size: 0.9rem;
 }
@@ -123,23 +123,23 @@
 .settings-controls-container input[type="color"] {
     min-width: 60px;
     height: 30px;
-    padding: 2px;
+    padding: 2px; /* Fine-tuning, leave as is */
 }
 
 .settings-controls-container select {
     min-width: 160px;
     height: 30px;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm); /* Already uses variables */
 }
 
 .settings-controls-container input[type="range"] {
     flex-grow: 1;
-    height: 20px;
+    height: 20px; /* Could be var(--spacing-xl) if desired, but might be too large for a range input height */
     accent-color: var(--color-primary);
 }
 
 .setting-row .value-display {
-    margin-left: var(--spacing-sm);
+    margin-left: var(--spacing-sm); /* Already a variable */
     font-size: 0.85rem;
     color: var(--text-secondary);
     min-width: 30px;

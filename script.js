@@ -341,6 +341,7 @@ function initGame() {
     console.log("SCRIPT: initGame() started.");
     try {
         uiManager.initDOMReferences();
+        uiManager.setChatInputHandler(processPlayerChoiceInput);
         console.log("SCRIPT: uiManager.initDOMReferences() completed.");
         initializeManagers();
         console.log("SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.");
@@ -1173,5 +1174,3 @@ function processPlayerChoiceInput(inputText) {
         uiManager.displayPhoneMessage("Invalid choice. Please type a number from the list.", 'narration');
     }
 }
-// Make it globally accessible for UIManager.js for this subtask
-window.processPlayerChoiceInput = processPlayerChoiceInput;

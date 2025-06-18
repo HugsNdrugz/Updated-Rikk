@@ -108,6 +108,7 @@ class UIManager {
         this.previewPhoneSettingsButton = null;
         this.resetMainSettingsButton = null;
         this.resetPhoneSettingsButton = null;
+        this.chatInputHandler = null;
     }
 
     initDOMReferences() {
@@ -587,7 +588,7 @@ class UIManager {
         return;
     }
 
-    // const customerInstance = this.gameState.getCurrentCustomerInstance(); // No longer needed here
+    // const customerInstance = this.gameState.getCurrentCustomerInstance(); // THIS LINE IS REMOVED
 
     if (speaker === 'narration') {
         // Create a timestamp element
@@ -629,6 +630,15 @@ class UIManager {
         this.playSound(this.chatBubbleSound);
     }
 
+    // The dynamic header/footer update block is removed from here.
+}
+
+setChatInputHandler(handlerFunction) {
+    if (typeof handlerFunction === 'function') {
+        this.chatInputHandler = handlerFunction;
+    } else {
+        console.error('UIMgr: Attempted to set invalid chat input handler.');
+    }
 }
 
 updateChatParticipantInfo(customerNameStr) {

@@ -29,12 +29,12 @@
 
 .phone-screen-area {
     width: calc(100% - 12px);
-    height: calc(100% - 12px);
+    height: calc(100% - var(--spacing-md));
     background: #000;
     position: relative;
     overflow: hidden;
     border-radius: var(--phone-screen-inset-radius);
-    margin: 6px;
+    margin: var(--spacing-sm);
     transition: filter 0.3s ease-in-out, opacity 0.3s ease-in-out;
     font-family: var(--font-body);
 }
@@ -79,10 +79,10 @@
     left: 50%;
     transform: translateX(-50%);
     width: 150px;
-    height: 25px;
+    height: var(--spacing-xl);
     background: #111;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: var(--spacing-lg);
+    border-bottom-right-radius: var(--spacing-lg);
     z-index: 100;
 }
 
@@ -93,9 +93,9 @@
 }
 
 .notch .camera {
-    right: 25px;
-    width: 8px;
-    height: 8px;
+    right: var(--spacing-xl);
+    width: var(--spacing-sm);
+    height: var(--spacing-sm);
     border-radius: 50%;
     background: #333;
     transform: translateY(-50%);
@@ -104,7 +104,7 @@
 .notch .speaker {
     left: 50%;
     width: 50px;
-    height: 4px;
+    height: var(--spacing-xs);
     background: #222;
     border-radius: 3px;
     transform: translate(-50%, -50%);
@@ -114,7 +114,7 @@
 .phone-screen-area .status-bar {
     display: flex;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: var(--spacing-md) var(--spacing-xl);
     color: white;
     font-size: 0.9rem;
     position: absolute;
@@ -126,7 +126,7 @@
 
 .status-icons {
     display: flex;
-    gap: 8px;
+    gap: var(--spacing-sm);
 }
 
 .dock {
@@ -157,13 +157,13 @@
 
 .home-indicator {
     position: absolute;
-    bottom: 10px;
+    bottom: var(--spacing-md);
     left: 50%;
     transform: translateX(-50%);
     width: 100px;
-    height: 5px;
+    height: var(--spacing-xs);
     background: rgba(255, 255, 255, 0.5);
-    border-radius: 5px;
+    border-radius: var(--spacing-xs);
     z-index: 100;
 }
 
@@ -186,28 +186,28 @@
     font-weight: 200;
     font-size: 3.5rem;
     text-align: center;
-    margin-top: 20px;
+    margin-top: var(--spacing-xl);
 }
 
 #android-home-screen .date-display {
     color: rgba(255, 255, 255, 0.7);
     text-align: center;
-    margin-top: 10px;
+    margin-top: var(--spacing-md);
     font-size: 1rem;
 }
 
 .app-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    padding: 15px 20px;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 .app-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: var(--spacing-xs);
     cursor: pointer;
     transition: transform 0.2s ease;
 }
@@ -238,12 +238,12 @@
 .notification {
     position: absolute;
     top: 40px;
-    left: 15px;
+    left: var(--spacing-lg);
     width: calc(100% - 30px);
     background: rgba(30, 30, 30, 0.7);
     backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 10px;
+    border-radius: var(--spacing-lg);
+    padding: var(--spacing-md);
     color: white;
     animation: slideIn 0.5s forwards;
     display: none;
@@ -265,7 +265,7 @@
 .notification-title {
     font-weight: bold;
     font-size: 0.9rem;
-    margin-bottom: 4px;
+    margin-bottom: var(--spacing-xs);
     overflow-wrap: break-word;
 }
 
@@ -305,7 +305,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 0.5rem;
+      padding: var(--spacing-lg) var(--spacing-xs); /* 1rem is 16px, 0.5rem is 8px */
       flex-shrink: 0;
       position: sticky;
       top: 0;
@@ -316,14 +316,14 @@
     #game-chat-view .header-left { /* Adjusted */
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: var(--spacing-sm); /* 0.75rem is 12px, using sm for 8px for slightly tighter feel */
     }
 
     #game-chat-view .header-right { /* Adjusted */
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding-right: 0.5rem;
+      gap: var(--spacing-lg); /* 1rem is 16px */
+      padding-right: var(--spacing-xs); /* 0.5rem is 8px */
     }
 
     #game-chat-view .icon { /* Adjusted */
@@ -356,17 +356,17 @@
 
     #game-chat-view .chat-log { /* Adjusted */
       flex-grow: 1;
-      padding: 0 1rem;
+      padding: 0 var(--spacing-lg);
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: var(--spacing-sm); /* 0.6rem is ~9.6px, close to 8px */
       overflow-y: auto;
       scroll-behavior: smooth;
     }
 
     /* Scrollbar styling */
     #game-chat-view .chat-log::-webkit-scrollbar { /* Adjusted */
-        width: 6px;
+        width: var(--spacing-sm);
     }
     #game-chat-view .chat-log::-webkit-scrollbar-track { /* Adjusted */
         background: var(--bg-color);
@@ -383,7 +383,7 @@
       text-align: center;
       color: var(--timestamp-text);
       font-size: 0.75rem;
-      padding: 0.75rem 0;
+      padding: var(--spacing-sm) 0; /* 0.75rem is 12px, using sm for 8px as it's a vertical padding */
       font-weight: 500;
     }
 
@@ -401,7 +401,7 @@
     }
 
     #game-chat-view .message-bubble { /* Adjusted */
-      padding: 0.6rem 0.9rem;
+      padding: var(--spacing-sm) var(--spacing-md); /* 0.6rem ~9.6px, 0.9rem ~14.4px */
       max-width: 75%;
       line-height: 1.4;
       font-size: 1rem;
@@ -423,7 +423,7 @@
     #game-chat-view .message-stack { /* Adjusted */
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 2px; /* 0.2rem, leave as is or use var(--spacing-xxs) if defined for 2px */
         /* align-items: flex-end; /* This might need to be conditional based on sent/received */
     }
     /* Added specific alignment for sent message stacks */
@@ -459,7 +459,7 @@
 
 
     #game-chat-view .chat-footer { /* Adjusted */
-      padding: 0.5rem 1rem 1rem 1rem;
+      padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); /* 0.5rem, 1rem, 1rem, 1rem */
       flex-shrink: 0;
       position: sticky;
       bottom: 0;
@@ -471,23 +471,23 @@
       text-align: center;
       font-size: 0.75rem;
       color: var(--timestamp-text);
-      margin-bottom: 0.5rem;
+      margin-bottom: var(--spacing-xs);
     }
 
     #game-chat-view #chat-form { /* Adjusted */
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: var(--spacing-sm); /* 0.75rem is 12px */
     }
 
     #game-chat-view .input-bar { /* Adjusted */
       flex-grow: 1;
       background-color: var(--input-bar-bg);
       border-radius: 2rem;
-      padding: 0.5rem 0.75rem;
+      padding: var(--spacing-xs) var(--spacing-sm); /* 0.5rem, 0.75rem */
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: var(--spacing-sm); /* 0.75rem */
     }
 
     #game-chat-view #chat-input { /* Adjusted */
@@ -553,13 +553,13 @@
 
 .phone-back-button {
     position: absolute;
-    left: 15px;
+    left: var(--spacing-lg);
     background: none;
     border: none;
     color: var(--color-on-surface);
     font-size: 1rem;
     cursor: pointer;
-    padding: var(--spacing-xs, 4px);
+    padding: var(--spacing-xs);
     min-width: 30px;
     min-height: 30px;
     display: inline-flex;
