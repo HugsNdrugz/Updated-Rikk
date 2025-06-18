@@ -534,7 +534,8 @@ function nextFiend() {
 
 function startCustomerInteraction(interaction) {
     uiManager.setPhoneUIState('chatting');
-    uiManager.setPhoneTitle(interaction.name);
+    // uiManager.setPhoneTitle(interaction.name); // REMOVE THIS LINE
+    uiManager.updateChatParticipantInfo(interaction.name); // ADD THIS LINE
     phoneShowNotification(`Incoming message from: ${interaction.name}`, "New Customer");
     uiManager.clearChat();
     let dialogueIndex = 0;
@@ -569,8 +570,9 @@ function startCustomerInteraction(interaction) {
 
 function endCustomerInteraction() {
     uiManager.clearChoices();
-    uiManager.setPhoneTitle('Street Talk');
+    // uiManager.setPhoneTitle('Street Talk'); // This will be handled by updateChatParticipantInfo
     game.clearCurrentCustomerInstance();
+    uiManager.updateChatParticipantInfo(null); // ADD THIS LINE
     uiManager.setPhoneUIState('home');
     if (game.isGameActive() && game.getFiendsLeft() > 0 && game.getHeat() < game.getMaxHeat() && (game.getCash() > 0 || game.getInventory().length > 0)) {
         uiManager.setNextCustomerButtonDisabled(false);
@@ -619,8 +621,15 @@ function handlePhoneAppClick(event) {
                 nextFiend();
             } else if (game.getCurrentCustomerInstance()) {
                 uiManager.setPhoneUIState('chatting');
-            } else {
+                // If there's an active customer, their info should already be in the header.
+                // No need to call updateChatParticipantInfo here unless logic changes.
+            } else { // No active customer, no new fiend
+                // uiManager.setPhoneUIState('chatting'); // Optionally switch to chat view
+                uiManager.updateChatParticipantInfo(null); // Reset header to generic
                 phoneShowNotification("No new messages.", "Rikk's Inbox");
+                // If you also want to ensure the chat view is shown and empty:
+                // uiManager.clearChat();
+                // uiManager.setPhoneUIState('chatting'); // if you want to show the empty chat view
             }
             break;
         case 'inventory-app':

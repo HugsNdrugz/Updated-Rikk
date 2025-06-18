@@ -587,7 +587,7 @@ class UIManager {
         return;
     }
 
-    const customerInstance = this.gameState.getCurrentCustomerInstance(); // For context if needed later
+    // const customerInstance = this.gameState.getCurrentCustomerInstance(); // No longer needed here
 
     if (speaker === 'narration') {
         // Create a timestamp element
@@ -629,35 +629,36 @@ class UIManager {
         this.playSound(this.chatBubbleSound);
     }
 
-    // Update header and footer dynamic content (basic implementation)
-    // This should ideally be done when a chat is initiated or contact changes.
-    // For now, let's update it with every message for simplicity, using placeholders if no customer.
+}
+
+updateChatParticipantInfo(customerNameStr) {
     const chatHeaderAvatar = document.getElementById('chat-header-avatar');
     const chatHeaderContactName = document.getElementById('chat-header-contact-name');
     const rcsStatus = document.getElementById('chat-footer-rcs-status');
 
-    if (customerInstance) {
+    if (customerNameStr) {
         if (chatHeaderAvatar) {
-            // Assuming avatar is just the first letter of the name for simplicity, matching new HTML.
-            // Or, if you have avatar URLs, you'd set an <img> src.
-            // For now, let's use the first letter of the name.
-             chatHeaderAvatar.textContent = customerInstance.name ? customerInstance.name.charAt(0).toUpperCase() : 'C';
+            chatHeaderAvatar.textContent = customerNameStr.charAt(0).toUpperCase();
         }
         if (chatHeaderContactName) {
-            chatHeaderContactName.textContent = customerInstance.name || 'Contact';
+            chatHeaderContactName.textContent = customerNameStr;
         }
         if (rcsStatus) {
-            rcsStatus.textContent = `RCS chat with ${customerInstance.name || 'Contact'}`;
+            rcsStatus.textContent = `RCS chat with ${customerNameStr}`;
         }
+         // Also update the main phone title for the chat view
+        this.setPhoneTitle(customerNameStr);
     } else {
-        // Default/empty state if no customer or for general messages
-        if (chatHeaderAvatar) chatHeaderAvatar.textContent = 'S'; // System/Self
-        if (chatHeaderContactName) chatHeaderContactName.textContent = 'System';
-        if (rcsStatus) rcsStatus.textContent = 'RCS Message';
+        // Default/empty state
+        if (chatHeaderAvatar) chatHeaderAvatar.textContent = 'S'; // System/Self or Default
+        if (chatHeaderContactName) chatHeaderContactName.textContent = 'Street Talk'; // Generic title
+        if (rcsStatus) rcsStatus.textContent = 'RCS Messages';
+         // Reset main phone title for generic chat view
+        this.setPhoneTitle('Street Talk');
     }
-} // This curly brace closes displayPhoneMessage. The next method should be initChatFormListener.
+}
 
-    initChatFormListener() {
+initChatFormListener() {
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
 
