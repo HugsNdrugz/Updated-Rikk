@@ -448,7 +448,7 @@ function handleTurnProgressionAndEvents() {
     let passiveHeatChange = -(1 + (skills.lowProfile || 0));
 
     // Apply world event modifiers to passive heat change
-    const currentModifiers = game.gameState.activeEventModifiers;
+    const currentModifiers = game.activeEventModifiers;
     if (currentModifiers && currentModifiers.heatGainMultiplier) {
         // If heatGainMultiplier is > 1, passive heat reduction is less effective
         // If heatGainMultiplier is < 1, passive heat reduction is more effective
@@ -468,7 +468,7 @@ function handleTurnProgressionAndEvents() {
         passiveHeatChange /= worldEffects.heatModifier; // This might be redundant if worldEffects are now fully in activeEventModifiers
     }
 
-    if (game.isToolEffectActive && game.isToolEffectActive('info_cops')) {
+    if (typeof game.isToolEffectActive === 'function' && game.isToolEffectActive('info_cops')) {
         passiveHeatChange -= 2;
     }
     game.addHeat(Math.round(passiveHeatChange));
