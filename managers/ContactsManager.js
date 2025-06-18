@@ -4,17 +4,26 @@ import { contactsData } from '../data/contacts_data.js'; // Assuming direct impo
 
 class ContactsManager {
     constructor(gameState) {
-        console.log("MANAGER: ContactsManager constructor called"); // Added log
+        console.log("MANAGER: ContactsManager constructor called");
         this.gameState = gameState;
-        this.allContacts = contactsData; // Load contacts directly
+        this.allContacts = contactsData;
 
-        if (this.gameState.DEBUG_MODE) {
+        if (!Array.isArray(this.allContacts)) {
+            console.error("ContactsManager FATAL: contactsData did not load correctly or is not an array. Halting initialization. Imported data:", this.allContacts);
+            this.allContacts = [];
+            // throw new Error("ContactsManager FATAL: contactsData failed to load."); // Optionally halt
+        } else {
+            console.log("MANAGER: ContactsManager - contactsData loaded successfully. Number of contacts:", this.allContacts.length);
+        }
+
+        if (this.gameState.DEBUG_MODE && Array.isArray(this.allContacts)) { // Check if allContacts is an array before logging
             debugLogger.log('ContactsManager', 'Initialized with contacts data:', this.allContacts);
         }
         this.ensureInitialPlayerContacts();
     }
 
     ensureInitialPlayerContacts() {
+        console.log("MANAGER: ContactsManager - ensureInitialPlayerContacts() started"); // Added log
         if (!this.gameState.playerContacts) {
             this.gameState.playerContacts = {};
         }
@@ -23,6 +32,7 @@ class ContactsManager {
                 this.unlockContact(contact.id, false); // Unlock without immediate notification, happens on app open
             }
         });
+        console.log("MANAGER: ContactsManager - ensureInitialPlayerContacts() completed"); // Added log
     }
 
     /**

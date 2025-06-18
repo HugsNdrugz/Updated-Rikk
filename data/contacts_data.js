@@ -1,4 +1,4 @@
-[
+export const contactsData = [
   {
     "id": "contact_whisper",
     "name": "Whisper",
@@ -54,4 +54,4 @@
         "default": ["Keep your nose clean, you hear?", "The community looks out for its own."]
     }
   }
-]
+];

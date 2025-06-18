@@ -4,17 +4,26 @@ import { districtsData } from '../data/map_data.js'; // Assuming direct import
 
 class MapManager {
     constructor(gameState) {
-        console.log("MANAGER: MapManager constructor called"); // Added log
+        console.log("MANAGER: MapManager constructor called");
         this.gameState = gameState;
-        this.allDistricts = districtsData; // Load district data directly
+        this.allDistricts = districtsData;
 
-        if (this.gameState.DEBUG_MODE) {
+        if (!Array.isArray(this.allDistricts)) {
+            console.error("MapManager FATAL: districtsData did not load correctly or is not an array. Halting initialization. Imported data:", this.allDistricts);
+            this.allDistricts = [];
+            // throw new Error("MapManager FATAL: districtsData failed to load."); // Optionally halt
+        } else {
+            console.log("MANAGER: MapManager - districtsData loaded successfully. Number of districts:", this.allDistricts.length);
+        }
+
+        if (this.gameState.DEBUG_MODE && Array.isArray(this.allDistricts)) { // Check if allDistricts is an array
             debugLogger.log('MapManager', 'Initialized with districts data:', this.allDistricts);
         }
         this.initializeMapState();
     }
 
     initializeMapState() {
+        console.log("MANAGER: MapManager - initializeMapState() started"); // Added log
         if (!this.gameState.mapState) {
             this.gameState.mapState = {};
         }
@@ -38,6 +47,7 @@ class MapManager {
                 this.gameState.mapState.districtHeatLevels[district.id] = 0; // Initial heat
             });
         }
+        console.log("MANAGER: MapManager - initializeMapState() completed"); // Added log
     }
 
     /**

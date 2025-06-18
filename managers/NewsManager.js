@@ -1,6 +1,6 @@
 // managers/NewsManager.js
 import { debugLogger } from '../utils.js';
-import newsData from '../data/news_articles.json'; // Using ES6 module import for JSON
+import { newsData } from '../data/news_articles.js'; // Changed to .js and named import
 
 class NewsManager {
     constructor(gameState) {

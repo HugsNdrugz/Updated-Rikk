@@ -1,5 +1,5 @@
-{
-  "staticNewsArticles": [
+export const newsData = {
+  staticNewsArticles: [
     {
       "id": "static_news_1",
       "headline": "City Council Debates New Budget Amidst Growing Concerns",
@@ -29,8 +29,7 @@
       "timestamp": "Day 4, Morning"
     }
   ],
-  "dynamicNewsTemplates": [
-    // Placeholders for Phase 2 dynamic news
+  dynamicNewsTemplates: [
     {
       "templateId": "overdose_spike_district",
       "headline": "Overdose Spike Reported in [DistrictName]",
@@ -40,4 +39,4 @@
       ]
     }
   ]
-}
+};

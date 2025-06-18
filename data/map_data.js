@@ -1,4 +1,4 @@
-[
+export const districtsData = [
   {
     "id": "downtown_core",
     "name": "Downtown Core",
@@ -39,4 +39,4 @@
     "ambientHeatModifier": 0.9,
     "size": "medium"
   }
-]
+];
