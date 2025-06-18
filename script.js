@@ -547,22 +547,12 @@ function startCustomerInteraction(interaction) {
             queueNextMessage(msg.text, msg.speaker, () => {
                 setTimeout(displayNext, CUSTOMER_WAIT_TIME);
             });
-        } else {
-            // uiManager.displayChoices(interaction.choices, handleChoice); // Old way
+        } else { // This is after all dialogue messages are displayed
             if (interaction.choices && interaction.choices.length > 0) {
-                let choiceText = "Choose an option:\n";
-                interaction.choices.forEach((choice, index) => {
-                    choiceText += `${index + 1}. ${choice.text}\n`;
-                });
-                // Store outcomes for later retrieval, associate with game state
-                game.setCurrentChoices(interaction.choices.map(choice => choice.outcome));
-                game.setIsExpectingChoice(true);
-                uiManager.displayPhoneMessage(choiceText, 'narration'); // Using 'narration' for system messages/choices
+                uiManager.displayChoices(interaction.choices, handleChoice);
             } else {
-                // No choices, end interaction or handle as per existing logic if applicable
-                // This case might not occur if interactions always have choices or an end path
-                console.warn("Interaction ended with no choices to present.");
-                endCustomerInteraction();
+                console.warn("Interaction ended with no choices to present, or choices array is malformed.");
+                endCustomerInteraction(); // Proceed to end interaction if no choices
             }
         }
     };
