@@ -7,6 +7,7 @@ const MAX_LOYALTY = 100;
 
 class LoyaltyManager {
     constructor(gameState) {
+        console.log("MANAGER: LoyaltyManager constructor called"); // Added log
         this.gameState = gameState;
         if (this.gameState.DEBUG_MODE) {
             debugLogger.log('LoyaltyManager', 'Initialized with gameState:', gameState);

@@ -36,6 +36,7 @@ export class CustomerManager {
      * @param {object} itemQualityModifiersData - Data from data_items.js.
      */
     constructor(customerTemplatesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData) {
+        console.log("MANAGER: CustomerManager constructor called"); // Added log (using MANAGER prefix for consistency)
         // Store references to all required game data.
         this.customerTemplates = customerTemplatesData;
         this.itemTypes = itemTypesData;

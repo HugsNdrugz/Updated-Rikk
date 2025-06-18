@@ -4,6 +4,7 @@ import { districtsData } from '../data/map_data.js'; // Assuming direct import
 
 class MapManager {
     constructor(gameState) {
+        console.log("MANAGER: MapManager constructor called"); // Added log
         this.gameState = gameState;
         this.allDistricts = districtsData; // Load district data directly
 

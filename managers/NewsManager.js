@@ -4,6 +4,7 @@ import newsData from '../data/news_articles.json'; // Using ES6 module import fo
 
 class NewsManager {
     constructor(gameState) {
+        console.log("MANAGER: NewsManager constructor called"); // Added log
         this.gameState = gameState;
         this.staticArticles = newsData.staticNewsArticles || [];
         this.dynamicTemplates = newsData.dynamicNewsTemplates || []; // For Phase 2

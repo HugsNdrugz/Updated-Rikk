@@ -4,6 +4,7 @@ import { contactsData } from '../data/contacts_data.js'; // Assuming direct impo
 
 class ContactsManager {
     constructor(gameState) {
+        console.log("MANAGER: ContactsManager constructor called"); // Added log
         this.gameState = gameState;
         this.allContacts = contactsData; // Load contacts directly
 

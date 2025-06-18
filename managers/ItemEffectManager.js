@@ -4,6 +4,7 @@ import { phoneShowNotification } from '../phone_ambient_ui.js'; // Assuming this
 
 class ItemEffectManager {
     constructor(game) { // Pass the main game object (which contains gameState, managers)
+        console.log("MANAGER: ItemEffectManager constructor called"); // Added log
         this.game = game;
         if (this.game.gameState.DEBUG_MODE) {
             debugLogger.log('ItemEffectManager', 'Initialized.');

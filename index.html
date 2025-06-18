@@ -271,7 +271,48 @@
                             </div>
                             
                             <div id="contacts-app-view" class="phone-content-view hidden">
-                                <!-- The ContactsAppManager will render its UI content here -->
+                                <!-- Container for the list of contacts -->
+                                <div id="contacts-list-container">
+                                    <!-- Contacts will be rendered here by UIManager -->
+                                </div>
+                                <!-- Container for viewing a single contact's details -->
+                                <div id="contact-detail-view" class="hidden">
+                                    <img id="contact-detail-avatar" src="" alt="Contact Avatar" class="contact-avatar-large">
+                                    <h3 id="contact-detail-name"></h3>
+                                    <p id="contact-detail-description"></p>
+                                    <p id="contact-detail-loyalty"></p>
+                                    <h4>Services:</h4>
+                                    <ul id="contact-detail-services-list"></ul>
+                                    <h4>Missions:</h4>
+                                    <div id="contact-detail-missions-list"></div>
+                                    <!-- Specific back button for this view, or rely on global phone-back-button -->
+                                    <!-- <button id="contact-detail-back-button" class="phone-back-button">Back</button> -->
+                                </div>
+                            </div>
+
+                            <div id="map-app-view" class="phone-content-view hidden">
+                                <header class="phone-header">
+                                    <!-- Title will be set by UIManager to "City Map" -->
+                                    <h3 id="phone-title-map">City Map</h3>
+                                </header>
+                                <div id="map-grid-container" class="map-grid">
+                                    <!-- Districts will be rendered here by UIManager -->
+                                </div>
+                            </div>
+
+                            <div id="news-app-view" class="phone-content-view hidden">
+                                <!-- Container for the list of news articles -->
+                                <div id="news-list-container">
+                                    <!-- News articles list will be rendered here -->
+                                </div>
+                                <!-- Container for viewing a single article -->
+                                <div id="news-article-detail-view" class="hidden">
+                                    <h3 id="news-article-headline"></h3>
+                                    <p id="news-article-meta"></p> <!-- For category/timestamp -->
+                                    <div id="news-article-body"></div>
+                                    <!-- Specific back button for this view -->
+                                    <!-- <button id="news-article-back-button" class="phone-back-button">Back</button> -->
+                                </div>
                             </div>
                             
                             <!-- NEW: Container for the Slot Game App -->

@@ -225,7 +225,15 @@ class UIManager {
             this.chatSpacerElement.className = 'chat-spacer';
             this.chatContainer.appendChild(this.chatSpacerElement);
         }
-        debugLogger.log('UIManager', 'DOM references initialized.');
+    // debugLogger.log('UIManager', 'DOM references initialized.'); // Replaced by more specific logs
+    console.log("UIMGR: initDOMReferences() finished.");
+    console.log("UIMGR: splashScreen element:", this.splashScreen ? "Found" : "NOT FOUND");
+    console.log("UIMGR: startScreen element:", this.startScreen ? "Found" : "NOT FOUND");
+    console.log("UIMGR: gameScreen element:", this.gameScreen ? "Found" : "NOT FOUND");
+    console.log("UIMGR: rikkPhoneUI element:", this.rikkPhoneUI ? "Found" : "NOT FOUND");
+    console.log("UIMGR: contactsAppScreen element:", this.contactsAppScreen ? "Found" : "NOT FOUND");
+    console.log("UIMGR: mapAppView element:", this.mapAppView ? "Found" : "NOT FOUND");
+    console.log("UIMGR: newsAppView element:", this.newsAppView ? "Found" : "NOT FOUND");
     }
 
     // --- HUD Updates ---
@@ -268,10 +276,15 @@ class UIManager {
 
     // --- Screen Management ---
     showScreen(screenToShow) {
+    console.log("UIMGR: showScreen() called for:", screenToShow ? screenToShow.id : "null element");
         [this.splashScreen, this.startScreen, this.gameScreen, this.endScreen].forEach(screen => {
             if (screen) screen.classList.remove('active');
         });
-        if (screenToShow) screenToShow.classList.add('active');
+    if (screenToShow) {
+        screenToShow.classList.add('active');
+    } else {
+        console.warn("UIMGR: showScreen() called with a null element. No screen will be shown.");
+    }
     }
 
     activateMainMenuLights(isActive) {
@@ -284,9 +297,10 @@ class UIManager {
 
     // --- Phone UI Management (Skeleton) ---
     setPhoneUIState(state) {
+        console.log("UIMGR: setPhoneUIState() called with state:", state); // Added log
         this.currentPhoneState = state; // Store the state
         if (!this.rikkPhoneUI || !this.androidHomeScreen || !this.gameChatView || !this.contactsAppScreen || !this.slotGameView || !this.phoneThemeSettingsView || !this.phoneScreenArea || !this.phoneDockedIndicator || !this.phoneDock || !this.phoneHomeIndicator) {
-            debugLogger.warn('UIManager', "Phone UI elements not fully initialized for setPhoneUIState.");
+            console.warn('UIMGR: Critical Phone UI elements not fully initialized for setPhoneUIState. Aborting state change.'); // Changed to console.warn
             return;
         }
 
@@ -912,22 +926,29 @@ class UIManager {
 
     // --- Contacts App UI Rendering Methods ---
     _renderContactsAppList() {
+        console.log("UIMGR: Attempting to render ContactsAppList view");
+        console.log("UIMGR: contactsAppScreen container:", this.contactsAppScreen ? "Found" : "NOT FOUND");
+        console.log("UIMGR: contactsListContainer container:", this.contactsListContainer ? "Found" : "NOT FOUND");
+
         if (!this.gameState.contactsManager) {
             debugLogger.error("UIManager", "ContactsManager not found on gameState!");
-            if(this.contactsListContainer) this.contactsListContainer.innerHTML = '<p class="error-message">Error: Contacts unavailable.</p>';
-            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contacts unavailable.</p>';
+            const errContainer = this.contactsListContainer || this.contactsAppScreen;
+            if(errContainer) errContainer.innerHTML = '<p class="error-message">Error: Contacts unavailable (manager missing).</p>';
             return;
         }
 
         const unlockedContacts = this.gameState.contactsManager.getUnlockedContacts();
-        const targetContainer = this.contactsListContainer || this.contactsAppScreen; // Render to list container or main app screen
+        const targetContainer = this.contactsListContainer || this.contactsAppScreen;
 
         if (!targetContainer) {
-            debugLogger.error("UIManager", "Target container for contacts list not found.");
+            debugLogger.error("UIManager", "Target container for contacts list not found (_renderContactsAppList).");
             return;
         }
+        if (targetContainer === this.contactsAppScreen && this.contactsListContainer) {
+            console.warn("UIMGR: contactsListContainer NOT FOUND. Using fallback rendering in contactsAppScreen for Contacts List.");
+        }
 
-        targetContainer.innerHTML = ''; // Clear previous content
+        targetContainer.innerHTML = '';
 
         if (unlockedContacts.length === 0) {
             targetContainer.innerHTML = '<p class="empty-message">No contacts unlocked yet. Increase your StreetCred!</p>';
@@ -963,29 +984,35 @@ class UIManager {
     }
 
     _renderContactsAppDetail(contactId) {
+        console.log("UIMGR: Attempting to render ContactAppDetail view for contactId:", contactId);
+        console.log("UIMGR: contactDetailView container:", this.contactDetailView ? "Found" : "NOT FOUND");
+
         if (!this.gameState.contactsManager || !this.gameState.loyaltyManager) {
-            debugLogger.error("UIManager", "ContactsManager or LoyaltyManager not found on gameState!");
-            if(this.contactDetailView) this.contactDetailView.innerHTML = '<p class="error-message">Error: Contact details unavailable.</p>';
-            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contact details unavailable.</p>';
+            debugLogger.error("UIManager", "ContactsManager or LoyaltyManager not found on gameState for contact detail!");
+            const errContainer = this.contactDetailView || this.contactsAppScreen;
+            if(errContainer) errContainer.innerHTML = '<p class="error-message">Error: Contact details unavailable (manager missing).</p>';
             return;
         }
 
         const contact = this.gameState.contactsManager.getContact(contactId);
         if (!contact) {
-            debugLogger.error("UIManager", `Contact with ID ${contactId} not found.`);
-            if(this.contactDetailView) this.contactDetailView.innerHTML = '<p class="error-message">Error: Contact not found.</p>';
-            else if(this.contactsAppScreen) this.contactsAppScreen.innerHTML = '<p class="error-message">Error: Contact not found.</p>';
+            debugLogger.error("UIManager", `Contact with ID ${contactId} not found for detail view.`);
+            const errContainer = this.contactDetailView || this.contactsAppScreen;
+            if(errContainer) errContainer.innerHTML = '<p class="error-message">Error: Contact not found.</p>';
             return;
         }
 
-        const targetContainer = this.contactDetailView || this.contactsAppScreen; // Render to detail view or main app screen
+        const targetContainer = this.contactDetailView || this.contactsAppScreen;
          if (!targetContainer) {
-            debugLogger.error("UIManager", "Target container for contact detail not found.");
+            debugLogger.error("UIManager", "Target container for contact detail not found (_renderContactsAppDetail).");
             return;
         }
-        targetContainer.innerHTML = ''; // Clear previous content
+        if (targetContainer === this.contactsAppScreen && this.contactDetailView) {
+             console.warn("UIMGR: contactDetailView NOT FOUND. Using fallback rendering in contactsAppScreen for Contact Detail.");
+        }
+        targetContainer.innerHTML = '';
 
-        this.setPhoneTitle(contact.name); // Set phone title to contact's name
+        this.setPhoneTitle(contact.name);
 
         // Avatar
         if (this.contactDetailAvatar) { // If dedicated img tag exists
@@ -1073,21 +1100,25 @@ class UIManager {
 
     // --- Map App UI Rendering Methods ---
     _renderMapAppView() {
+        console.log("UIMGR: Attempting to render MapAppView");
+        console.log("UIMGR: mapAppView container:", this.mapAppView ? "Found" : "NOT FOUND");
+        console.log("UIMGR: mapGridContainer container:", this.mapGridContainer ? "Found" : "NOT FOUND");
+
         if (!this.mapAppView) {
-            debugLogger.warn("UIManager", "Map App view container not found.");
+            debugLogger.warn("UIManager", "Map App view container (mapAppView) not found.");
             return;
         }
         if (!this.gameState.mapManager) {
-            debugLogger.error("UIManager", "MapManager not found on gameState!");
-            this.mapAppView.innerHTML = '<p class="error-message">Error: Map data unavailable.</p>';
+            debugLogger.error("UIManager", "MapManager not found on gameState for map display!");
+            this.mapAppView.innerHTML = '<p class="error-message">Error: Map data unavailable (manager missing).</p>';
             return;
         }
 
-        const districts = this.gameState.mapManager.getDiscoveredDistricts(); // Or getAllDistricts() for Phase 1
-        this.mapAppView.innerHTML = ''; // Clear previous content
+        const districts = this.gameState.mapManager.getDiscoveredDistricts();
+        this.mapAppView.innerHTML = '';
 
-        if (this.mapGridContainer) { // Preferred: Render as a simple grid
-            this.mapGridContainer.innerHTML = ''; // Clear grid
+        if (this.mapGridContainer) {
+            this.mapGridContainer.innerHTML = '';
             this.mapGridContainer.style.display = 'grid';
             // Determine grid size (e.g., 2x2 for 4 districts)
             // This is a simplified example; a more robust solution would calculate rows/cols
@@ -1124,6 +1155,7 @@ class UIManager {
             this.mapAppView.appendChild(this.mapGridContainer);
 
         } else { // Fallback: Render as a list if no grid container
+            console.warn("UIMGR: mapGridContainer NOT FOUND. Using fallback list rendering for Map App.");
             const ul = document.createElement('ul');
             ul.className = 'map-district-list';
             if (districts.length === 0) {
@@ -1143,19 +1175,26 @@ class UIManager {
 
     // --- News App UI Rendering Methods ---
     _renderNewsAppList() {
+        console.log("UIMGR: Attempting to render NewsAppList view");
+        console.log("UIMGR: newsAppView container:", this.newsAppView ? "Found" : "NOT FOUND");
+        console.log("UIMGR: newsListContainer container:", this.newsListContainer ? "Found" : "NOT FOUND");
+
         const targetContainer = this.newsListContainer || this.newsAppView;
         if (!targetContainer) {
-            debugLogger.warn("UIManager", "News App list container not found.");
+            debugLogger.warn("UIManager", "News App list target container not found (_renderNewsAppList).");
             return;
         }
         if (!this.gameState.newsManager) {
-            debugLogger.error("UIManager", "NewsManager not found on gameState!");
-            targetContainer.innerHTML = '<p class="error-message">Error: News feed unavailable.</p>';
+            debugLogger.error("UIManager", "NewsManager not found on gameState for news list!");
+            targetContainer.innerHTML = '<p class="error-message">Error: News feed unavailable (manager missing).</p>';
             return;
         }
+        if (targetContainer === this.newsAppView && this.newsListContainer){
+            console.warn("UIMGR: newsListContainer NOT FOUND. Using fallback rendering in newsAppView for News List.");
+        }
 
-        const articles = this.gameState.newsManager.getAllDisplayableArticles(); // Will get static for Phase 1
-        targetContainer.innerHTML = ''; // Clear previous
+        const articles = this.gameState.newsManager.getAllDisplayableArticles();
+        targetContainer.innerHTML = '';
 
         if (articles.length === 0) {
             targetContainer.innerHTML = '<p class="empty-message">No news to report right now.</p>';
@@ -1182,30 +1221,34 @@ class UIManager {
     }
 
     _renderNewsAppArticleDetail(articleId) {
+        console.log("UIMGR: Attempting to render NewsAppArticleDetail view for articleId:", articleId);
+        console.log("UIMGR: newsArticleDetailView container:", this.newsArticleDetailView ? "Found" : "NOT FOUND");
+
         const targetContainer = this.newsArticleDetailView || this.newsAppView;
         if (!targetContainer) {
-            debugLogger.warn("UIManager", "News App article detail container not found.");
+            debugLogger.warn("UIManager", "News App article detail target container not found (_renderNewsAppArticleDetail).");
             return;
         }
         if (!this.gameState.newsManager) {
-            debugLogger.error("UIManager", "NewsManager not found on gameState for article detail!");
-            targetContainer.innerHTML = '<p class="error-message">Error: Could not load article.</p>';
+            debugLogger.error("UIManager", "NewsManager not found for article detail!");
+            targetContainer.innerHTML = '<p class="error-message">Error: Could not load article (manager missing).</p>';
             return;
         }
+        if (targetContainer === this.newsAppView && this.newsArticleDetailView){
+            console.warn("UIMGR: newsArticleDetailView NOT FOUND. Using fallback rendering in newsAppView for News Article Detail.");
+        }
 
-        // In Phase 2, getArticleById might check dynamic and static. For now, just static.
         const article = this.gameState.newsManager.getStaticArticleById(articleId);
 
         if (!article) {
-            debugLogger.error("UIManager", `Article with ID ${articleId} not found.`);
+            debugLogger.error("UIManager", `Article with ID ${articleId} not found for detail view.`);
             targetContainer.innerHTML = '<p class="error-message">Error: Article not found.</p>';
             this.setPhoneTitle("Article Not Found");
             return;
         }
 
-        this.setPhoneTitle(article.category || "News Article"); // Set phone title
+        this.setPhoneTitle(article.category || "News Article");
 
-        // Using dedicated elements if they exist
         if (this.newsArticleHeadline && this.newsArticleBody && this.newsArticleDetailView) {
             this.newsArticleHeadline.textContent = article.headline;
             this.newsArticleBody.textContent = article.body;

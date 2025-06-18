@@ -11,6 +11,7 @@ import { createImage, createEmptyArray, hexToObject, decToHex, waitFor, debugLog
 
 export class SlotGameManager {
     constructor(containerElement, mainGameGetCash, mainGameSetCash) {
+        console.log("MANAGER: SlotGameManager constructor called"); // Added log
         if (!containerElement) {
             throw new Error("SlotGameManager requires a container element.");
         }

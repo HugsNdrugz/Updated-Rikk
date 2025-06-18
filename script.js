@@ -107,24 +107,49 @@ const uiManagerConfig = {
 };
 
 // --- Instantiate Core Classes ---
+console.log("SCRIPT: Instantiating GameState...");
 const game = new GameState(gameStateConfig);
-const uiManager = new UIManager(game, uiManagerConfig);
-const streetCredManager = new StreetCredManager(game);
-const loyaltyManager = new LoyaltyManager(game);
-const worldEventManager = new WorldEventManager(game, uiManager);
-const itemEffectManager = new ItemEffectManager(game);
-const contactsManager = new ContactsManager(game);
-const mapManager = new MapManager(game);
-const newsManager = new NewsManager(game); // Added
+console.log("SCRIPT: GameState instantiated.");
 
-// Make Managers available globally if needed
-game.streetCredManager = streetCredManager;
-game.loyaltyManager = loyaltyManager;
-game.worldEventManager = worldEventManager;
-game.itemEffectManager = itemEffectManager;
-game.contactsManager = contactsManager;
-game.mapManager = mapManager;
-game.newsManager = newsManager; // Added
+console.log("SCRIPT: Instantiating UIManager...");
+const uiManager = new UIManager(game, uiManagerConfig);
+console.log("SCRIPT: UIManager instantiated.");
+
+console.log("SCRIPT: Instantiating StreetCredManager...");
+const streetCredManager = new StreetCredManager(game);
+game.streetCredManager = streetCredManager; // Attach immediately
+console.log("SCRIPT: StreetCredManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating LoyaltyManager...");
+const loyaltyManager = new LoyaltyManager(game);
+game.loyaltyManager = loyaltyManager; // Attach immediately
+console.log("SCRIPT: LoyaltyManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating WorldEventManager...");
+const worldEventManager = new WorldEventManager(game, uiManager);
+game.worldEventManager = worldEventManager; // Attach immediately
+console.log("SCRIPT: WorldEventManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating ItemEffectManager...");
+const itemEffectManager = new ItemEffectManager(game);
+game.itemEffectManager = itemEffectManager; // Attach immediately
+console.log("SCRIPT: ItemEffectManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating ContactsManager...");
+const contactsManager = new ContactsManager(game);
+game.contactsManager = contactsManager; // Attach immediately
+console.log("SCRIPT: ContactsManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating MapManager...");
+const mapManager = new MapManager(game);
+game.mapManager = mapManager; // Attach immediately
+console.log("SCRIPT: MapManager instantiated and attached.");
+
+console.log("SCRIPT: Instantiating NewsManager...");
+const newsManager = new NewsManager(game);
+game.newsManager = newsManager; // Attach immediately
+console.log("SCRIPT: NewsManager instantiated and attached.");
+
 
 // --- State Variables ---
 const localStorageAvailable = isLocalStorageAvailable();
@@ -216,14 +241,17 @@ function loadCustomerTemplates() {
 }
 
 function initializeManagers() {
+    console.log("SCRIPT: initializeManagers() started.");
     loadCustomerTemplates();
     const currentTemplates = game.getCustomerTemplates();
 
+    console.log("SCRIPT: Instantiating CustomerManager...");
     game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    // game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates); // Old
-    // New ContactsManager is already instantiated and attached to game.contactsManager
-    // It doesn't require uiManager.contactsAppView directly in constructor, UIManager handles views.
+    console.log("SCRIPT: CustomerManager instantiated.");
 
+    // game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppView, currentTemplates); // Old
+
+    console.log("SCRIPT: Instantiating SlotGameManager...");
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
         () => game.getCash(),
@@ -281,12 +309,25 @@ function setupEventListeners() {
 
 function initializeUIAndSettings() {
     if (uiManager.splashScreen) {
+        console.log("SCRIPT: Showing splash screen.");
         uiManager.showScreen(uiManager.splashScreen);
         setTimeout(() => {
+            console.log("SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.");
             uiManager.showScreen(uiManager.startScreen);
+            console.log("SCRIPT: startScreen (or mainMenu) displayed.");
             uiManager.activateMainMenuLights(true);
             checkForSavedGame();
         }, SPLASH_SCREEN_DURATION);
+    } else {
+        console.warn("SCRIPT: Splash screen element not found by UIManager. Proceeding without splash timeout.");
+        // If splash is not found, proceed to show startScreen directly after a minimal delay or immediately
+        // This ensures the game doesn't halt if splash is missing.
+        setTimeout(() => {
+            uiManager.showScreen(uiManager.startScreen);
+            console.log("SCRIPT: startScreen (or mainMenu) displayed (no splash).");
+            uiManager.activateMainMenuLights(true);
+            checkForSavedGame();
+        }, 50);
     }
     uiManager.initStyleControls(saveStyleSettings);
     uiManager.loadAndApplyStyleSettings();
@@ -296,21 +337,52 @@ function initializeUIAndSettings() {
 }
 
 function initGame() {
+    console.log("SCRIPT: initGame() started.");
     try {
         uiManager.initDOMReferences();
+        console.log("SCRIPT: uiManager.initDOMReferences() completed.");
         initializeManagers();
+        console.log("SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.");
         initializeUIAndSettings();
+        console.log("SCRIPT: initializeUIAndSettings() completed.");
         setupEventListeners();
+        console.log("SCRIPT: setupEventListeners() completed.");
+        console.log("SCRIPT: initGame() finished successfully.");
     } catch (error) {
         console.error("CRITICAL ERROR during game initialization:", error);
+        // Optionally, display a user-friendly error message on the page
+        const body = document.querySelector('body');
+        if (body) {
+            body.innerHTML = `<div style="color: white; background-color: red; padding: 20px; text-align: center; font-family: sans-serif;"><h1>Game Initialization Failed</h1><p>A critical error occurred. Please check the console (F12) for details and report the issue.</p><p>${error.message}</p></div>`;
+        }
     }
 }
 
 function initializeNewGameState() {
+    console.log("SCRIPT: initializeNewGameState() started.");
     clearSavedGameState();
     game.resetToDefault(gameStateConfig);
-    if (game.customerManager) game.customerManager.reset();
+    console.log("SCRIPT: game.resetToDefault() completed.");
+    if (game.customerManager) {
+        game.customerManager.reset();
+        console.log("SCRIPT: game.customerManager.reset() completed.");
+    }
+    // Managers like ContactsManager and MapManager initialize their GameState parts in their constructor
+    // or through methods called during their instantiation (e.g. ensureInitialPlayerContacts, initializeMapState)
+    // If they require explicit re-initialization for a new game *after* GameState.resetToDefault(),
+    // those calls would go here. For example:
+    if (game.contactsManager) {
+      // game.contactsManager.ensureInitialPlayerContacts(); // This is already called in constructor, but also on getUnlockedContacts.
+                                                          // Repopulates based on current (reset) streetcred.
+      console.log("SCRIPT: contactsManager re-checked/initialized initial contacts.");
+    }
+    if (game.mapManager) {
+      // game.mapManager.initializeMapState(); // Also called in constructor.
+      console.log("SCRIPT: mapManager re-checked/initialized map state.");
+    }
+
     uiManager.updateEventTicker();
+    console.log("SCRIPT: initializeNewGameState() finished.");
 }
 
 function startGameFlow() {
@@ -971,29 +1043,47 @@ function saveGameState() {
 }
 
 function loadGameState() {
-    if (!localStorageAvailable) return false;
+    if (!localStorageAvailable) {
+        console.log("SCRIPT: loadGameState() - localStorage not available.");
+        return false;
+    }
     const savedData = localStorage.getItem(SAVE_KEY);
+    console.log("SCRIPT: loadGameState() attempting to load from localStorage.");
     if (savedData) {
         try {
             const loadedState = JSON.parse(savedData);
+            console.log("SCRIPT: GameState parsed successfully from localStorage.");
             game.fromJSON(loadedState, gameStateConfig);
+            console.log("SCRIPT: game.fromJSON() completed.");
             if (game.customerManager?.loadSaveState && loadedState.customerManagerState) {
                 game.customerManager.loadSaveState(loadedState.customerManagerState);
+                console.log("SCRIPT: Loaded customerManager save state.");
             }
+            // Other managers might need to load state if they save anything specific
+            // For now, ContactsManager, MapManager, etc., re-initialize based on GameState.
+            if (game.contactsManager) game.contactsManager.ensureInitialPlayerContacts(); // Re-check after loading streetcred
+            if (game.mapManager) game.mapManager.initializeMapState(); // Re-check after loading mapState
+
             uiManager.updateEventTicker();
             uiManager.updateHUD();
+            console.log("SCRIPT: GameState loaded and UI updated.");
             return true;
         } catch (e) {
             console.error("Error loading game state:", e);
+            console.log("SCRIPT: Error loading game state. Clearing saved data.");
             clearSavedGameState();
             return false;
         }
     }
+    console.log("SCRIPT: No saved data found in localStorage.");
     return false;
 }
 
 function clearSavedGameState() {
-    if (localStorageAvailable) localStorage.removeItem(SAVE_KEY);
+    if (localStorageAvailable) {
+        localStorage.removeItem(SAVE_KEY);
+        console.log("SCRIPT: Cleared saved game state from localStorage.");
+    }
 }
 
 function checkForSavedGame() {

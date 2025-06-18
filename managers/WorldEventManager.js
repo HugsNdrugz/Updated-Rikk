@@ -6,6 +6,7 @@ import { phoneShowNotification } from '../phone_ambient_ui.js';
 
 class WorldEventManager {
     constructor(gameState, uiManager) {
+        console.log("MANAGER: WorldEventManager constructor called"); // Added log
         this.gameState = gameState;
         this.uiManager = uiManager;
         this.eventDefinitions = possibleWorldEvents; // Load from JSON

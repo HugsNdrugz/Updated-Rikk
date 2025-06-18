@@ -3,6 +3,7 @@ import { debugLogger } from '../utils.js';
 
 class StreetCredManager {
     constructor(gameState) {
+        console.log("MANAGER: StreetCredManager constructor called"); // Added log
         this.gameState = gameState;
         if (this.gameState.DEBUG_MODE) {
             debugLogger.log('StreetCredManager', 'Initialized with gameState:', gameState);
