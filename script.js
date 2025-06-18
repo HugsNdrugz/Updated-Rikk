@@ -546,7 +546,22 @@ function startCustomerInteraction(interaction) {
                 setTimeout(displayNext, CUSTOMER_WAIT_TIME);
             });
         } else {
-            uiManager.displayChoices(interaction.choices, handleChoice);
+            // uiManager.displayChoices(interaction.choices, handleChoice); // Old way
+            if (interaction.choices && interaction.choices.length > 0) {
+                let choiceText = "Choose an option:\n";
+                interaction.choices.forEach((choice, index) => {
+                    choiceText += `${index + 1}. ${choice.text}\n`;
+                });
+                // Store outcomes for later retrieval, associate with game state
+                game.setCurrentChoices(interaction.choices.map(choice => choice.outcome));
+                game.setIsExpectingChoice(true);
+                uiManager.displayPhoneMessage(choiceText, 'narration'); // Using 'narration' for system messages/choices
+            } else {
+                // No choices, end interaction or handle as per existing logic if applicable
+                // This case might not occur if interactions always have choices or an end path
+                console.warn("Interaction ended with no choices to present.");
+                endCustomerInteraction();
+            }
         }
     };
     displayNext();
@@ -1128,3 +1143,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elSettingsLoading) elSettingsLoading.classList.add('hidden');
     if (elSettingsError) elSettingsError.classList.add('hidden');
 });
+
+function processPlayerChoiceInput(inputText) {
+    if (!game.getIsExpectingChoice()) {
+        // Not expecting a choice, could be a general chat message if that feature is ever added
+        // For now, we can just display it as player chat or ignore.
+        // uiManager.displayPhoneMessage(inputText, 'rikk'); // Current behavior of initChatFormListener
+        return; // Or handle as a general message if applicable
+    }
+
+    const choiceOutcomes = game.getCurrentChoices();
+    const choiceNumber = parseInt(inputText.trim(), 10);
+
+    if (!isNaN(choiceNumber) && choiceNumber > 0 && choiceNumber <= choiceOutcomes.length) {
+        const selectedOutcome = choiceOutcomes[choiceNumber - 1];
+        game.clearChoiceExpectation(); // Clear flag and choices
+        uiManager.displayPhoneMessage(`You chose: "${inputText}"`, 'rikk'); // Echo player's choice
+        handleChoice(selectedOutcome); // Call original handler
+    } else {
+        uiManager.displayPhoneMessage("Invalid choice. Please type a number from the list.", 'narration');
+    }
+}
+// Make it globally accessible for UIManager.js for this subtask
+window.processPlayerChoiceInput = processPlayerChoiceInput;

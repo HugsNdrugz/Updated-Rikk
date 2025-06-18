@@ -262,12 +262,34 @@
                             </div>
                             
                             <div id="game-chat-view" class="phone-content-view hidden mockchat">
-                                <header class="phone-header">
-                                    <button class="phone-back-button hidden" data-action="back-to-home"><i class="fas fa-chevron-left"></i></button>
-                                    <h3 id="phone-title-game">Street Talk</h3>
+                                <header class="chat-header">
+                                  <div class="header-left">
+                                    <a href="javascript:void(0);" class="back-button" aria-label="Go back"> <!-- Changed href for game context -->
+                                      <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+                                    </a>
+                                    <div class="avatar" id="chat-header-avatar">L</div> <!-- Added ID for dynamic update -->
+                                    <span class="contact-name" id="chat-header-contact-name">Larry Johansen</span> <!-- Added ID for dynamic update -->
+                                  </div>
+                                  <div class="header-right">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"></path></svg>
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2 2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                                  </div>
                                 </header>
-                                <div id="chat-container-game" class="phone-chat-body" role="log" aria-live="polite"></div>
-                                <footer id="choices-area-game" class="phone-footer-choices" role="toolbar"></footer>
+                                <div id="chat-container-game" class="chat-log" role="log" aria-live="polite"></div>
+                                <footer class="chat-footer">
+                                  <div class="rcs-status" id="chat-footer-rcs-status">RCS chat with Larry</div> <!-- Added ID for dynamic update -->
+                                  <form id="chat-form">
+                                    <div class="input-bar">
+                                      <svg class="icon" id="chat-input-smiley-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM11 17H7v-2h4v-4H7V9h4V5h2v4h4v2h-4v4h4v2h-4z" transform="scale(1.2) translate(-2, -2)"></path></svg>
+                                      <input type="text" id="chat-input" placeholder="RCS message" autocomplete="off">
+                                      <svg class="icon" id="chat-input-emoji-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
+                                      <svg class="icon" id="chat-input-image-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+                                    </div>
+                                    <button type="submit" class="send-button" aria-label="Send message">
+                                      <svg class="icon" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                                    </button>
+                                  </form>
+                                </footer>
                             </div>
                             
                             <div id="contacts-app-view" class="phone-content-view hidden">

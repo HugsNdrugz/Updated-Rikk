@@ -276,172 +276,246 @@
 }
 
 /* === MAIN GAME CHAT UI Styles === */
-#game-chat-view.mockchat {
-    background-color: var(--color-dark-bg);
-    display: flex;
-    flex-direction: column;
-    padding-top: 0;
-}
+#game-chat-view {
+      --bg-color: #1f1f1f;
+      --header-footer-text: #e8eaed;
+      --timestamp-text: #9aa0a6;
+      --sent-bubble-bg: #a8b0bd;
+      --sent-bubble-text: #202124;
+      --received-bubble-bg: #303030;
+      --received-bubble-text: #e8eaed;
+      --avatar-bg: #4fbfad;
+      --input-bar-bg: #303030;
 
-#chat-container-game.phone-chat-body {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1em;
-    overflow-y: auto;
-}
-
-.chat-spacer {
-    flex-grow: 1;
-    min-height: 10px;
-    transition: all 0.3s ease-in-out;
-}
-
-@keyframes mockchat-reply-pop {
-    0% {
-        opacity: 0;
-        transform: translateY(1em) scale(0.7);
+      background-color: var(--bg-color);
+      color: var(--header-footer-text);
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      width: 100%;
+      /*max-width: 412px; /* Let's keep the phone's existing max-width for now */
+      /*height: 892px; /* Let's keep the phone's existing height for now */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      /*border-radius: 1rem; /* Let's keep phone's existing border-radius */
+      position: relative;
     }
-    100% {
+
+    #game-chat-view .chat-header { /* Adjusted from #recreated-android-chat */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0.5rem;
+      flex-shrink: 0;
+    }
+
+    #game-chat-view .header-left { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #game-chat-view .header-right { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-right: 0.5rem;
+    }
+
+    #game-chat-view .icon { /* Adjusted */
+      fill: var(--header-footer-text);
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    #game-chat-view .back-button { /* Adjusted */
+        display: grid;
+        place-items: center;
+    }
+
+    #game-chat-view .avatar { /* Adjusted */
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: var(--avatar-bg);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    #game-chat-view .contact-name { /* Adjusted */
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    #game-chat-view .chat-log { /* Adjusted */
+      flex-grow: 1;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    /* Scrollbar styling */
+    #game-chat-view .chat-log::-webkit-scrollbar { /* Adjusted */
+        width: 6px;
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-track { /* Adjusted */
+        background: var(--bg-color);
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-thumb { /* Adjusted */
+        background: #444;
+        border-radius: 3px;
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-thumb:hover { /* Adjusted */
+        background: #555;
+    }
+
+    #game-chat-view .timestamp { /* Adjusted */
+      text-align: center;
+      color: var(--timestamp-text);
+      font-size: 0.75rem;
+      padding: 0.75rem 0;
+      font-weight: 500;
+    }
+
+    #game-chat-view .message-row { /* Adjusted */
+      display: flex;
+      width: 100%;
+    }
+
+    #game-chat-view .message-row.sent { /* Adjusted */
+      justify-content: flex-end;
+    }
+
+    #game-chat-view .message-row.received { /* Adjusted */
+      justify-content: flex-start;
+    }
+
+    #game-chat-view .message-bubble { /* Adjusted */
+      padding: 0.6rem 0.9rem;
+      max-width: 75%;
+      line-height: 1.4;
+      font-size: 1rem;
+      word-wrap: break-word;
+    }
+
+    #game-chat-view .message-bubble.sent { /* Adjusted */
+      background-color: var(--sent-bubble-bg);
+      color: var(--sent-bubble-text);
+      border-radius: 1.25rem 0.5rem 1.25rem 1.25rem;
+    }
+
+    #game-chat-view .message-bubble.received { /* Adjusted */
+      background-color: var(--received-bubble-bg);
+      color: var(--received-bubble-text);
+      border-radius: 0.5rem 1.25rem 1.25rem 1.25rem;
+    }
+
+    #game-chat-view .message-stack { /* Adjusted */
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        /* align-items: flex-end; /* This might need to be conditional based on sent/received */
+    }
+    /* Added specific alignment for sent message stacks */
+    #game-chat-view .message-row.sent .message-stack {
+        align-items: flex-end;
+    }
+
+    /* Added specific alignment for received message stacks (if ever needed) */
+    #game-chat-view .message-row.received .message-stack {
+        align-items: flex-start;
+    }
+
+    #game-chat-view .message-bubble.stack-top.sent { /* Adjusted and specified for sent */
+        border-radius: 1.25rem 0.5rem 0.5rem 1.25rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-bottom.sent { /* Adjusted and specified for sent */
+        border-radius: 1.25rem 0.5rem 1.25rem 0.5rem; /* TL, TR, BR, BL */
+    }
+
+    #game-chat-view .message-bubble.stack-top.received { /* Added for received */
+        border-radius: 0.5rem 1.25rem 0.5rem 1.25rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-bottom.received { /* Added for received */
+        border-radius: 0.5rem 1.25rem 1.25rem 0.5rem; /* TL, TR, BR, BL */
+    }
+    /* If there's a middle message in a stack */
+    #game-chat-view .message-bubble.stack-middle.sent {
+        border-radius: 1.25rem 0.5rem 0.5rem 0.5rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-middle.received {
+        border-radius: 0.5rem 1.25rem 0.5rem 0.5rem; /* TL, TR, BR, BL */
+    }
+
+
+    #game-chat-view .chat-footer { /* Adjusted */
+      padding: 0.5rem 1rem 1rem 1rem;
+      flex-shrink: 0;
+    }
+
+    #game-chat-view .rcs-status { /* Adjusted */
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--timestamp-text);
+      margin-bottom: 0.5rem;
+    }
+
+    #game-chat-view #chat-form { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #game-chat-view .input-bar { /* Adjusted */
+      flex-grow: 1;
+      background-color: var(--input-bar-bg);
+      border-radius: 2rem;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #game-chat-view #chat-input { /* Adjusted */
+      flex-grow: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--header-footer-text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    #game-chat-view #chat-input::placeholder { /* Adjusted */
+        color: var(--timestamp-text);
         opacity: 1;
-        transform: translateY(0) scale(1);
     }
-}
 
-.chat-bubble {
-    width: fit-content;
-    max-width: 90%;
-    position: relative;
-    padding: 0.8em 1.1em;
-    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.08);
-    font-size: 14px;
-    line-height: 1.5;
-    word-wrap: break-word;
-    font-family: 'Lato', sans-serif;
-    opacity: 0;
-    animation: mockchat-reply-pop cubic-bezier(0.18, 0.89, 0.32, 1.28) 0.4s forwards;
-}
+    #game-chat-view .send-button { /* Adjusted */
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background-color: var(--input-bar-bg);
+      display: grid;
+      place-items: center;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
 
-.chat-bubble strong {
-    font-weight: 700;
-}
+    #game-chat-view .send-button:hover { /* Adjusted */
+        background-color: #404040;
+    }
 
-.chat-bubble.rikk {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    border-radius: 16px;
-    transform-origin: 100% 100%;
-}
-
-.chat-bubble.customer {
-    background: var(--color-surface);
-    color: var(--color-on-surface);
-    border-radius: 16px;
-    transform-origin: 0% 100%;
-}
-
-.chat-bubble.narration {
-    background: none;
-    color: var(--color-grey-mid);
-    text-align: center;
-    font-style: italic;
-    font-size: 0.8rem;
-    padding: var(--spacing-sm) 0;
-    margin: var(--spacing-sm) auto;
-    box-shadow: none;
-    border-top: 1px dashed var(--color-grey-dark);
-    border-bottom: 1px dashed var(--color-grey-dark);
-    border-radius: 0;
-    max-width: 95%;
-}
-
-.chat__conversation-board__message-container {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    margin-bottom: 0.5em;
-    width: 100%;
-}
-
-.chat__conversation-board__message-container.reversed {
-    flex-direction: row-reverse;
-}
-
-.chat__conversation-board__message__person {
-    margin: 0 0.5em 0 0;
-    flex-shrink: 0;
-}
-
-.chat__conversation-board__message-container.reversed .chat__conversation-board__message__person {
-    margin: 0 0 0 0.5em;
-}
-
-.chat__conversation-board__message__person__avatar {
-    height: 32px;
-    width: 32px;
-    overflow: hidden;
-    border-radius: 50%;
-    user-select: none;
-    position: relative;
-}
-
-.chat__conversation-board__message__person__avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.chat__conversation-board__message__context {
-    display: flex;
-    flex-direction: column;
-    max-width: calc(100% - 40px);
-}
-
-.chat__conversation-board__message-container:not(.reversed) .chat__conversation-board__message__context {
-    align-items: flex-start;
-}
-
-.chat-bubble .speaker-name {
-    font-weight: bold;
-    margin-bottom: 4px;
-    font-size: 0.75rem;
-    display: block;
-    opacity: 0.8;
-}
-
-.phone-footer-choices {
-    padding: var(--spacing-sm) var(--spacing-md);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    background-color: var(--color-surface);
-    border-top: 1px solid #3A3A3C;
-    flex-shrink: 0;
-}
-
-#choices-area-game button {
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    border: none;
-    border-radius: var(--button-border-radius, 8px); /* Use existing variable or a default */
-    padding: 12px 18px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
-    flex-grow: 1; /* Allow buttons to share space */
-    margin: 4px; /* Add small margin for wrapped buttons */
-}
-
-#choices-area-game button:hover {
-    background-color: var(--color-hub-action-hover, #018786); /* Using a hover variable, adjust if needed */
-    transform: translateY(-2px);
-}
-
-#choices-area-game button:active {
-    transform: translateY(0px);
-    background-color: var(--color-primary); /* Revert or use a slightly darker shade */
-}
+    #game-chat-view .send-button .icon { /* Adjusted */
+        transform: translateX(1px); /* Optical alignment for send icon */
+    }
 
 /* From REMAINING CORE UI STYLES */
 .phone-header {

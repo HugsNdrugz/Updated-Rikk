@@ -236,6 +236,7 @@ class UIManager {
     console.log("UIMGR: contactsAppScreen element:", this.contactsAppScreen ? "Found" : "NOT FOUND");
     console.log("UIMGR: mapAppView element:", this.mapAppView ? "Found" : "NOT FOUND");
     console.log("UIMGR: newsAppView element:", this.newsAppView ? "Found" : "NOT FOUND");
+    this.initChatFormListener();
     }
 
     // --- HUD Updates ---
@@ -330,6 +331,9 @@ class UIManager {
             case 'chatting':
                 this.rikkPhoneUI.classList.add('chatting-game');
                 this.gameChatView.classList.remove('hidden');
+                if (this.chatContainer) {
+                    this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+                }
                 break;
             case 'home':
                 this.rikkPhoneUI.classList.add('home-screen-active');
@@ -574,88 +578,119 @@ class UIManager {
     // This will be a complex method. For now, a basic structure.
     // Assumes currentCustomerInstance is available via this.gameState
     displayPhoneMessage(messageText, speaker) {
-        if (typeof messageText === 'undefined' || messageText === null) {
-            messageText = "..."; // Default for undefined messages
-        }
-        if (!this.chatContainer || !this.chatSpacerElement) {
-            debugLogger.warn('UIManager', "Chat container not ready for messages.");
-            return;
-        }
+    if (typeof messageText === 'undefined' || messageText === null) {
+        messageText = "..."; // Default for undefined messages
+    }
+    if (!this.chatContainer || !this.chatSpacerElement) {
+        // debugLogger.warn('UIManager', "Chat container not ready for messages."); // Keep original debug style
+        console.warn('UIMgr: Chat container not ready for messages.');
+        return;
+    }
 
-        const messageContainer = document.createElement('div');
-        messageContainer.classList.add('chat__conversation-board__message-container');
+    const customerInstance = this.gameState.getCurrentCustomerInstance(); // For context if needed later
 
-        if (speaker === 'rikk') {
-            messageContainer.classList.add('reversed');
-        }
+    if (speaker === 'narration') {
+        // Create a timestamp element
+        const timestampDiv = document.createElement('div');
+        timestampDiv.className = 'timestamp';
+        timestampDiv.textContent = messageText;
+        this.chatContainer.insertBefore(timestampDiv, this.chatSpacerElement);
+    } else {
+        // Handle 'rikk' (sent) and 'customer' (received)
+        const messageType = (speaker === 'rikk') ? 'sent' : 'received';
 
-        const personDiv = document.createElement('div');
-        personDiv.classList.add('chat__conversation-board__message__person');
-        const avatarDiv = document.createElement('div');
-        avatarDiv.classList.add('chat__conversation-board__message__person__avatar');
-        const avatarImg = document.createElement('img');
+        const messageRow = document.createElement('div');
+        messageRow.className = `message-row ${messageType}`;
 
-        const customerInstance = this.gameState.getCurrentCustomerInstance();
-        const customerAvatars = this.config.customerAvatars || {}; // Get from config
-        const rikkAvatarUrl = this.config.rikkAvatarUrl || '';
-        const systemAvatarUrl = this.config.systemAvatarUrl || '';
+        const messageBubble = document.createElement('div');
+        messageBubble.className = `message-bubble ${messageType}`;
 
-
-        if (speaker === 'customer' && customerInstance?.archetypeKey) {
-            avatarImg.src = customerAvatars[customerInstance.archetypeKey] || 'https://via.placeholder.com/56/555555/FFFFFF?text=?';
-            avatarImg.alt = customerInstance.name || 'Customer';
-        } else if (speaker === 'rikk') {
-            avatarImg.src = rikkAvatarUrl;
-            avatarImg.alt = 'Rikk';
-        } else { // system or narration
-            avatarImg.src = systemAvatarUrl;
-            avatarImg.alt = 'System';
-        }
-        avatarDiv.appendChild(avatarImg);
-
-        // Only add avatar if not narration
-        if (speaker !== 'narration') {
-            personDiv.appendChild(avatarDiv);
-            messageContainer.appendChild(personDiv);
-        }
-
-
-        const contextDiv = document.createElement('div');
-        contextDiv.classList.add('chat__conversation-board__message__context');
-        const bubble = document.createElement('div');
-        bubble.classList.add('chat-bubble', speaker); // Add speaker class for styling
-
-        if (speaker === 'customer' || speaker === 'rikk') {
-            const speakerNameElement = document.createElement('span');
-            speakerNameElement.classList.add('speaker-name');
-            speakerNameElement.textContent = (speaker === 'customer') ? (customerInstance?.name || '[Customer]') : 'Rikk';
-            bubble.appendChild(speakerNameElement);
-        }
-
-        // Handle **bold** text
-        const messageParts = messageText.split(/(\*\*.*?\*\*)/g);
+        // Handle **bold** text (preserved from original)
+        const messageParts = messageText.split(/(\*\*.*?\*\*)/g); // Adjusted regex for subtask context
         messageParts.forEach(part => {
             if (part.startsWith('**') && part.endsWith('**')) {
                 const boldEl = document.createElement('strong');
                 boldEl.textContent = part.slice(2, -2);
-                bubble.appendChild(boldEl);
+                messageBubble.appendChild(boldEl);
             } else {
-                bubble.appendChild(document.createTextNode(part));
+                messageBubble.appendChild(document.createTextNode(part));
             }
         });
 
-        contextDiv.appendChild(bubble);
-        messageContainer.appendChild(contextDiv);
-
-        this.chatContainer.insertBefore(messageContainer, this.chatSpacerElement);
-        this.chatContainer.scrollTop = this.chatContainer.scrollHeight; // Auto-scroll
-
-        // Play sound, but only if not narration (narration sound is handled by game logic before calling this)
-        if (speaker !== 'narration' && this.chatBubbleSound) {
-            this.playSound(this.chatBubbleSound);
-        }
+        messageRow.appendChild(messageBubble);
+        this.chatContainer.insertBefore(messageRow, this.chatSpacerElement);
     }
 
+    this.chatContainer.scrollTop = this.chatContainer.scrollHeight; // Auto-scroll
+
+    // Play sound, but only if not narration
+    // The new design doesn't have a specific sound for narration/timestamp
+    if (speaker !== 'narration' && this.chatBubbleSound) {
+        this.playSound(this.chatBubbleSound);
+    }
+
+    // Update header and footer dynamic content (basic implementation)
+    // This should ideally be done when a chat is initiated or contact changes.
+    // For now, let's update it with every message for simplicity, using placeholders if no customer.
+    const chatHeaderAvatar = document.getElementById('chat-header-avatar');
+    const chatHeaderContactName = document.getElementById('chat-header-contact-name');
+    const rcsStatus = document.getElementById('chat-footer-rcs-status');
+
+    if (customerInstance) {
+        if (chatHeaderAvatar) {
+            // Assuming avatar is just the first letter of the name for simplicity, matching new HTML.
+            // Or, if you have avatar URLs, you'd set an <img> src.
+            // For now, let's use the first letter of the name.
+             chatHeaderAvatar.textContent = customerInstance.name ? customerInstance.name.charAt(0).toUpperCase() : 'C';
+        }
+        if (chatHeaderContactName) {
+            chatHeaderContactName.textContent = customerInstance.name || 'Contact';
+        }
+        if (rcsStatus) {
+            rcsStatus.textContent = `RCS chat with ${customerInstance.name || 'Contact'}`;
+        }
+    } else {
+        // Default/empty state if no customer or for general messages
+        if (chatHeaderAvatar) chatHeaderAvatar.textContent = 'S'; // System/Self
+        if (chatHeaderContactName) chatHeaderContactName.textContent = 'System';
+        if (rcsStatus) rcsStatus.textContent = 'RCS Message';
+    }
+} // This curly brace closes displayPhoneMessage. The next method should be initChatFormListener.
+
+    initChatFormListener() {
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+
+        if (chatForm && chatInput) {
+            chatForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const messageText = chatInput.value.trim();
+
+                if (messageText) {
+                    // Instead of directly calling this.displayPhoneMessage,
+                    // route the input to the game logic in script.js
+                    // We need to ensure processPlayerChoiceInput is accessible.
+                    // This might require making it global or passing a handler from script.js to UIManager.
+                    // For this subtask, assume processPlayerChoiceInput will be made globally accessible from script.js
+                    // or script.js will pass a reference to it.
+                    // For now, let's call it as if it's global.
+                    if (typeof processPlayerChoiceInput === 'function') {
+                        processPlayerChoiceInput(messageText);
+                    } else {
+                        // Fallback or error if script.js function isn't available
+                        console.warn("UIMgr: processPlayerChoiceInput function not found. Displaying message directly.");
+                        this.displayPhoneMessage(messageText, 'rikk'); // Fallback to old behavior
+                    }
+                    chatInput.value = '';
+
+                    // The simulated reply logic should be removed or handled by game logic via processPlayerChoiceInput
+                }
+            });
+        } else {
+            // debugLogger.warn('UIManager', 'Chat form or input not found for event listener.');
+            console.warn('UIMgr: Chat form or input not found for event listener.');
+        }
+    }
     // --- Style Settings Helper Methods ---
     _applySingleStyle(variableName, value) {
         if (typeof variableName === 'string' && typeof value !== 'undefined') {
