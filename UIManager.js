@@ -362,7 +362,7 @@ class UIManager {
                     // content of contactsAppScreen. The argument for contactId must be passed.
                     // This state change itself doesn't call render, the click handler does.
                 }
-                if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
+                // if (this.phoneBackButtons) this.phoneBackButtons.forEach(btn => btn.classList.remove('hidden'));
                 // Phone title will be set by _renderContactsAppDetail
                 break;
             case 'mapAppView': // New state for Map App
