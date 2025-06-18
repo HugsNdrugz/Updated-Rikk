@@ -526,6 +526,81 @@
         transform: translateX(1px); /* Optical alignment for send icon */
     }
 
+#game-chat-view #chat-input:disabled {
+    background-color: var(--input-bar-bg); /* Ensure it keeps its bar background */
+    opacity: 0.6; /* Make it look more clearly disabled */
+    cursor: not-allowed; /* Indicate it's not interactive */
+    /* Remove placeholder text if it looks odd when disabled, or style it */
+}
+
+/* Optional: Style placeholder of disabled input if needed */
+#game-chat-view #chat-input:disabled::placeholder {
+    color: var(--timestamp-text); /* Keep placeholder color or make it fainter */
+    opacity: 0.7; /* Ensure placeholder is also dimmed */
+}
+
+/* Quick Reply Styles */
+#game-chat-view .quick-reply-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap to next line */
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: var(--spacing-xs);    /* Use a small gap (e.g., 4px) */
+    margin-bottom: var(--spacing-sm); /* Space between replies and input bar (e.g., 8px) */
+    padding: 0 var(--spacing-sm); /* Horizontal padding for the container */
+    max-height: 70px; /* Limit height to roughly two rows of buttons */
+    overflow-y: auto; /* Allow scrolling if more choices */
+}
+
+#game-chat-view .quick-reply-button {
+    padding: var(--spacing-sm) var(--spacing-md); /* e.g., 8px 12px */
+    background-color: var(--sent-bubble-bg); /* Match sent bubble style */
+    color: var(--sent-bubble-text);
+    border-radius: 20px; /* Highly rounded */
+    cursor: pointer;
+    border: 1px solid transparent; /* Transparent border initially */
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background-color 0.2s, transform 0.1s;
+    flex-shrink: 0; /* Prevent buttons from shrinking too much if container is constrained */
+}
+
+#game-chat-view .quick-reply-button:hover {
+    background-color: var(--received-bubble-bg); /* Example hover: use received bubble style */
+    color: var(--received-bubble-text);
+    border-color: var(--received-bubble-bg);
+}
+
+#game-chat-view .quick-reply-button:active {
+    transform: scale(0.95);
+}
+
+/* Styling for the scrollbar in quick-reply-container (optional, webkit only) */
+#game-chat-view .quick-reply-container::-webkit-scrollbar {
+    height: 6px; /* Height for horizontal scrollbar if flex-direction was row */
+    width: 6px; /* Width for vertical scrollbar */
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-track {
+    background: transparent; /* Or var(--bg-color) if needed */
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-thumb {
+    background: #444; /* Similar to chat-log scrollbar */
+    border-radius: 3px;
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Disabled state for the main send button */
+#game-chat-view #chat-form .send-button:disabled {
+    background-color: var(--input-bar-bg); /* Match disabled input bar */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+#game-chat-view #chat-form .send-button:disabled .icon {
+    fill: var(--timestamp-text); /* Dim the icon color */
+    opacity: 0.7;
+}
+
 /* From REMAINING CORE UI STYLES */
 .phone-header {
     background-color: #2A2A2E;

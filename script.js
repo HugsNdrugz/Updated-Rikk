@@ -341,7 +341,7 @@ function initGame() {
     console.log("SCRIPT: initGame() started.");
     try {
         uiManager.initDOMReferences();
-        uiManager.setChatInputHandler(processPlayerChoiceInput);
+        // uiManager.setChatInputHandler(processPlayerChoiceInput);
         console.log("SCRIPT: uiManager.initDOMReferences() completed.");
         initializeManagers();
         console.log("SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.");
@@ -1154,6 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elSettingsError) elSettingsError.classList.add('hidden');
 });
 
+/*
 function processPlayerChoiceInput(inputText) {
     if (!game.getIsExpectingChoice()) {
         // Not expecting a choice, could be a general chat message if that feature is ever added
@@ -1174,3 +1175,4 @@ function processPlayerChoiceInput(inputText) {
         uiManager.displayPhoneMessage("Invalid choice. Please type a number from the list.", 'narration');
     }
 }
+*/

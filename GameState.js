@@ -41,8 +41,8 @@ class GameState {
 
         // Current Interaction State
         this.currentCustomerInstance = null;
-        this.currentChoices = [];
-        this.isExpectingChoice = false;
+        // this.currentChoices = [];
+        // this.isExpectingChoice = false;
 
         // Loyalty System
         this.loyalty = {}; // Stores loyalty levels for NPCs: { npcId: { level: 50, ...otherFlags } }
@@ -115,8 +115,8 @@ class GameState {
     getMaxHeat() { return this.MAX_HEAT; }
     getMaxInventorySlots() { return this.MAX_INVENTORY_SLOTS; }
     getDaysArray() { return this.DAYS_ARRAY; }
-    getCurrentChoices() { return this.currentChoices; }
-    getIsExpectingChoice() { return this.isExpectingChoice; }
+    // getCurrentChoices() { return this.currentChoices; }
+    // getIsExpectingChoice() { return this.isExpectingChoice; }
 
     // --- Setters & Modifiers ---
     setCash(amount) { this.cash = amount; }
@@ -197,9 +197,9 @@ class GameState {
 
     setCurrentCustomerInstance(customer) { this.currentCustomerInstance = customer; }
     clearCurrentCustomerInstance() { this.currentCustomerInstance = null; }
-    setCurrentChoices(choices) { this.currentChoices = choices; }
-    setIsExpectingChoice(isExpecting) { this.isExpectingChoice = isExpecting; }
-    clearChoiceExpectation() { this.currentChoices = []; this.isExpectingChoice = false; }
+    // setCurrentChoices(choices) { this.currentChoices = choices; }
+    // setIsExpectingChoice(isExpecting) { this.isExpectingChoice = isExpecting; }
+    // clearChoiceExpectation() { this.currentChoices = []; this.isExpectingChoice = false; }
 
     updateCustomerTemplates(newTemplates) {
         this.customerTemplates = JSON.parse(JSON.stringify(newTemplates));
@@ -236,8 +236,8 @@ class GameState {
         this.playerContacts = {}; // Reset player contacts
         this.mapState = { discoveredDistricts: [], districtHeatLevels: {} }; // Reset map state
         this.currentCustomerInstance = null;
-        this.currentChoices = [];
-        this.isExpectingChoice = false;
+        // this.currentChoices = [];
+        // this.isExpectingChoice = false;
 
         // Constants are typically set at construction and might not need reset unless config changes
         this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? this.MAX_INVENTORY_SLOTS;
@@ -267,8 +267,8 @@ class GameState {
             activeEventModifiers: { ...this.activeEventModifiers }, // Save modifiers
             playerContacts: { ...this.playerContacts }, // Save player contacts
             mapState: JSON.parse(JSON.stringify(this.mapState)), // Deep copy for saving mapState
-            currentChoices: JSON.parse(JSON.stringify(this.currentChoices)),
-            isExpectingChoice: this.isExpectingChoice,
+            // currentChoices: JSON.parse(JSON.stringify(this.currentChoices)),
+            // isExpectingChoice: this.isExpectingChoice,
             // customerTemplates are saved/loaded separately by script.js
             // MAX_INVENTORY_SLOTS, MAX_HEAT, DAYS_ARRAY are part of config, not dynamic state to save
         };
@@ -315,8 +315,8 @@ class GameState {
         this.activeEventModifiers = savedState.activeEventModifiers ? { ...savedState.activeEventModifiers } : { heatGainMultiplier: 1.0, cashGainMultiplier: 1.0, customerSpawnMultiplier: 1.0 }; // Load modifiers
         this.playerContacts = savedState.playerContacts ? { ...savedState.playerContacts } : {}; // Load player contacts
         this.mapState = savedState.mapState ? JSON.parse(JSON.stringify(savedState.mapState)) : { discoveredDistricts: [], districtHeatLevels: {} }; // Load mapState
-        this.currentChoices = savedState.currentChoices ? JSON.parse(JSON.stringify(savedState.currentChoices)) : [];
-        this.isExpectingChoice = savedState.isExpectingChoice ?? false;
+        // this.currentChoices = savedState.currentChoices ? JSON.parse(JSON.stringify(savedState.currentChoices)) : [];
+        // this.isExpectingChoice = savedState.isExpectingChoice ?? false;
 
         // customerTemplates are handled by script.js and ContactsAppManager for persistence
         // MAX_*, DAYS_ARRAY are from config

@@ -108,7 +108,7 @@ class UIManager {
         this.previewPhoneSettingsButton = null;
         this.resetMainSettingsButton = null;
         this.resetPhoneSettingsButton = null;
-        this.chatInputHandler = null;
+        // this.chatInputHandler = null; // Already commented, ensure it stays
     }
 
     initDOMReferences() {
@@ -167,7 +167,7 @@ class UIManager {
         this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
 
         this.chatContainer = document.getElementById('chat-container-game');
-        this.choicesArea = document.getElementById('choices-area-game');
+        // this.choicesArea = document.getElementById('choices-area-game'); // This ID no longer exists for choice presentation
         this.phoneTitleGame = document.getElementById('phone-title-game');
         this.phoneBackButtons = document.querySelectorAll('.phone-back-button');
 
@@ -237,7 +237,7 @@ class UIManager {
     console.log("UIMGR: contactsAppScreen element:", this.contactsAppScreen ? "Found" : "NOT FOUND");
     console.log("UIMGR: mapAppView element:", this.mapAppView ? "Found" : "NOT FOUND");
     console.log("UIMGR: newsAppView element:", this.newsAppView ? "Found" : "NOT FOUND");
-    this.initChatFormListener();
+    // this.initChatFormListener(); // Chat form listener is no longer the primary way to handle choices
     }
 
     // --- HUD Updates ---
@@ -440,10 +440,21 @@ class UIManager {
     }
 
     clearChoices() {
-        if (this.choicesArea) {
-            this.choicesArea.innerHTML = '';
+            // If this.choicesArea was specifically for the old choice buttons,
+            // and quick-reply-container is the new place, we update targeting.
+            // No need to rely on this.choicesArea if it's becoming obsolete.
+            const quickReplyContainer = document.querySelector('#game-chat-view .quick-reply-container');
+            if (quickReplyContainer) {
+                quickReplyContainer.innerHTML = '';
+            } else {
+                // console.warn('UIMgr: Quick reply container not found to clear choices.');
+                // If this.choicesArea was used for other things, adjust accordingly.
+                // For now, assuming it was only for the old buttons.
+                if (this.choicesArea) { // Fallback if old property still used by mistake elsewhere
+                    this.choicesArea.innerHTML = '';
+                }
+            }
         }
-    }
 
     setPhoneTitle(title) {
         if (this.phoneTitleGame) {
@@ -549,31 +560,51 @@ class UIManager {
     // The actual event listener for choice buttons will be attached by script.js,
     // which will pass the handleChoice callback.
     displayChoices(choices, handleChoiceCallback) {
-        if (!this.choicesArea) return;
-        this.clearChoices(); // Clear previous choices
+            const quickReplyContainer = document.querySelector('#game-chat-view .quick-reply-container');
 
-        if (!choices || choices.length === 0) {
-            // debugLogger.warn('UIManager', "No choices to display.");
-            return;
+            if (!quickReplyContainer) {
+                console.warn('UIMgr: Quick reply container not found to display choices.');
+                // Fallback: If the old choicesArea was meant to be a generic footer and still exists for other reasons
+                // if (this.choicesArea) { /* try to append to old area - but this is unlikely now */ }
+                return;
+            }
+
+            this.clearChoices(); // Clear previous quick replies
+
+            if (!choices || choices.length === 0) {
+                // console.warn('UIMgr: No choices to display.');
+                return;
+            }
+
+            choices.forEach(choice => {
+                if (choice.disabled) return; // Skip disabled choices for quick replies
+
+                const button = document.createElement('button'); // Using <button> for better accessibility
+                button.classList.add('quick-reply-button');
+                button.textContent = choice.text;
+
+                if (choice.outcome && choice.outcome.type && choice.outcome.type.startsWith('decline')) {
+                    // Optionally add a specific class for styling decline/negative choices differently
+                    // button.classList.add('decline-choice');
+                }
+
+                if (typeof handleChoiceCallback === 'function') {
+                    button.addEventListener('click', () => {
+                        handleChoiceCallback(choice.outcome);
+                        // Optionally, clear choices immediately after one is clicked,
+                        // or let the game logic handle it via endCustomerInteraction -> clearChoices.
+                        // For now, let game logic handle clearing.
+                    });
+                } else {
+                    console.warn('UIMgr: handleChoiceCallback not provided for active choice button:', choice.text);
+                }
+                quickReplyContainer.appendChild(button);
+            });
+             // Scroll quick replies into view if they overflow and container is scrollable
+            if(quickReplyContainer.scrollHeight > quickReplyContainer.clientHeight) {
+                quickReplyContainer.scrollTop = quickReplyContainer.scrollHeight;
+            }
         }
-
-        choices.forEach(choice => {
-            const button = document.createElement('button');
-            button.classList.add('choice-button');
-            if (choice.outcome && choice.outcome.type && choice.outcome.type.startsWith('decline')) {
-                button.classList.add('decline');
-            }
-            button.textContent = choice.text;
-            button.disabled = choice.disabled || false;
-
-            if (!choice.disabled && typeof handleChoiceCallback === 'function') {
-                button.addEventListener('click', () => handleChoiceCallback(choice.outcome));
-            } else if (!choice.disabled) {
-                // debugLogger.warn('UIManager', "handleChoiceCallback not provided for active choice button:", choice.text);
-            }
-            this.choicesArea.appendChild(button);
-        });
-    }
 
     // --- Phone Message Display (Skeleton) ---
     // This will be a complex method. For now, a basic structure.
@@ -633,6 +664,7 @@ class UIManager {
     // The dynamic header/footer update block is removed from here.
 }
 
+/*
 setChatInputHandler(handlerFunction) {
     if (typeof handlerFunction === 'function') {
         this.chatInputHandler = handlerFunction;
@@ -640,6 +672,7 @@ setChatInputHandler(handlerFunction) {
         console.error('UIMgr: Attempted to set invalid chat input handler.');
     }
 }
+*/
 
 updateChatParticipantInfo(customerNameStr) {
     const chatHeaderAvatar = document.getElementById('chat-header-avatar');
@@ -668,6 +701,7 @@ updateChatParticipantInfo(customerNameStr) {
     }
 }
 
+/*
 initChatFormListener() {
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
@@ -702,6 +736,7 @@ initChatFormListener() {
             console.warn('UIMgr: Chat form or input not found for event listener.');
         }
     }
+*/
     // --- Style Settings Helper Methods ---
     _applySingleStyle(variableName, value) {
         if (typeof variableName === 'string' && typeof value !== 'undefined') {
