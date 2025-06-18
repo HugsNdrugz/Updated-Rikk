@@ -6,7 +6,7 @@ class ItemEffectManager {
     constructor(game) { // Pass the main game object (which contains gameState, managers)
         console.log("MANAGER: ItemEffectManager constructor called"); // Added log
         this.game = game;
-        if (this.game.gameState.DEBUG_MODE) {
+        if (this.game.DEBUG_MODE) {
             debugLogger.log('ItemEffectManager', 'Initialized.');
         }
     }
@@ -19,17 +19,17 @@ class ItemEffectManager {
      */
     processEffects(effectsArray, context = {}) {
         if (!effectsArray || !Array.isArray(effectsArray)) {
-            if (this.game.gameState.DEBUG_MODE) debugLogger.warn('ItemEffectManager', 'processEffects called with invalid effectsArray.');
+            if (this.game.DEBUG_MODE) debugLogger.warn('ItemEffectManager', 'processEffects called with invalid effectsArray.');
             return;
         }
 
         effectsArray.forEach(effect => {
-            if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Processing effect:`, effect);
+            if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Processing effect:`, effect);
 
             // Check for chance
             if (effect.chance !== undefined && typeof effect.chance === 'number') {
                 if (Math.random() > effect.chance) {
-                    if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Effect did not trigger due to chance: ${effect.chance}`);
+                    if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Effect did not trigger due to chance: ${effect.chance}`);
                     return; // Skip this effect
                 }
             }
@@ -43,7 +43,7 @@ class ItemEffectManager {
                 // case 'spawnItem':
                 // case 'dialogueChange':
                 default:
-                    if (this.game.gameState.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown effect type: ${effect.type}`);
+                    if (this.game.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown effect type: ${effect.type}`);
             }
         });
     }
@@ -59,34 +59,34 @@ class ItemEffectManager {
                         const lowProfileSkill = this.game.gameState.getPlayerSkills().lowProfile || 0;
                         const reductionFactor = 1 - (lowProfileSkill * 0.05); // 5% reduction per skill point
                         actualAmount = Math.round(actualAmount * reductionFactor);
-                        if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `LowProfile skill ${lowProfileSkill} reduced heat gain to ${actualAmount}. Factor: ${reductionFactor}`);
+                        if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `LowProfile skill ${lowProfileSkill} reduced heat gain to ${actualAmount}. Factor: ${reductionFactor}`);
                     }
                     this.game.gameState.addHeat(actualAmount);
-                    if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player heat changed by ${actualAmount}. New heat: ${this.game.gameState.getHeat()}`);
+                    if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player heat changed by ${actualAmount}. New heat: ${this.game.gameState.getHeat()}`);
                     if (effect.message) phoneShowNotification(effect.message, "System Alert");
                     break;
                 case 'cash':
                     this.game.gameState.addCash(actualAmount);
-                    if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player cash changed by ${actualAmount}. New cash: ${this.game.gameState.getCash()}`);
+                    if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player cash changed by ${actualAmount}. New cash: ${this.game.gameState.getCash()}`);
                      if (effect.message) phoneShowNotification(effect.message, "System Alert");
                     break;
                 case 'globalStreetCred': // Assuming direct access or via StreetCredManager for global
                     if (this.game.streetCredManager) {
                         this.game.streetCredManager.addStreetCred('global', null, actualAmount);
-                        if (this.game.gameState.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player globalStreetCred changed by ${actualAmount}.`);
+                        if (this.game.DEBUG_MODE) debugLogger.log('ItemEffectManager', `Player globalStreetCred changed by ${actualAmount}.`);
                         if (effect.message) phoneShowNotification(effect.message, "System Alert");
                     } else {
-                         if (this.game.gameState.DEBUG_MODE) debugLogger.warn('ItemEffectManager', 'StreetCredManager not found on game object.');
+                         if (this.game.DEBUG_MODE) debugLogger.warn('ItemEffectManager', 'StreetCredManager not found on game object.');
                     }
                     break;
                 // Add other player stats here if needed (e.g., specific faction/district cred if 'target' becomes more granular)
                 default:
-                    if (this.game.gameState.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown player stat for statChange: ${effect.stat}`);
+                    if (this.game.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown player stat for statChange: ${effect.stat}`);
             }
         }
         // Future: else if (effect.target === 'npc' && context.targetNPC) { ... }
         else {
-            if (this.game.gameState.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown target for statChange: ${effect.target}`);
+            if (this.game.DEBUG_MODE) debugLogger.warn('ItemEffectManager', `Unknown target for statChange: ${effect.target}`);
         }
 
         // Update UI after stat changes
