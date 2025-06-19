@@ -11,7 +11,9 @@ export class AIManager {
     async init() {
         console.log("AI Manager: Initializing... This will download the model (approx. 150MB).");
         try {
-            this.generator = await pipeline('text-generation', 'Xenova/distilgpt2');
+            this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+                dtype: 'q4' // Specify 4-bit quantization
+            });
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
             document.dispatchEvent(new CustomEvent('aiReady'));
