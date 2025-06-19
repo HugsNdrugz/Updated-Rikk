@@ -482,7 +482,6 @@ class UIManager {
             }
         }
     }
-        }
 
     setPhoneTitle(title) {
         if (this.phoneTitleGame) {
