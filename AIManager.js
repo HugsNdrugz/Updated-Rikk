@@ -12,7 +12,7 @@ export class AIManager {
         console.log("AI Manager: Initializing... This will download the model (approx. 150MB).");
         try {
             this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
-                dtype: 'q4' // Specify 4-bit quantization
+                dtype: 'int8' // Specify 8-bit quantization
             });
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
