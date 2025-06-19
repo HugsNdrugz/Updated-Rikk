@@ -1,6 +1,6 @@
 // UIManager.js
 import { debugLogger } from './utils.js';
-import feedbackMessages from '../data/feedback_messages.json';
+import { feedbackMessages } from '../data/feedback_messages.js'; // Updated import
 import { showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 
 class UIManager {
