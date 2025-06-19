@@ -87,20 +87,32 @@ export class AIManager {
             if (accumulatedText.trim() !== "") {
                 generatedText = accumulatedText.trim();
             } else {
-                // Fallback if no text was accumulated via streaming logic, assume responseText itself might be the direct answer
-                // This part specifically addresses the ambiguity of "responseMimeType: text/plain"
-                // by trying to parse the whole responseText if streaming parsing yields nothing.
+                // Fallback: If stream parsing yielded no text, try to parse the whole responseText as a single JSON.
                 try {
-                    const json = JSON.parse(responseText);
-                    if (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text) {
-                        generatedText = json.candidates[0].content.parts[0].text;
+                    const jsonResponse = JSON.parse(responseText);
+                    // Safely navigate the expected path
+                    if (jsonResponse.candidates && Array.isArray(jsonResponse.candidates) && jsonResponse.candidates.length > 0) {
+                        const candidate = jsonResponse.candidates[0];
+                        if (candidate.content && candidate.content.parts && Array.isArray(candidate.content.parts) && candidate.content.parts.length > 0) {
+                            const part = candidate.content.parts[0];
+                            if (part.text && typeof part.text === 'string') {
+                                generatedText = part.text;
+                            } else {
+                                console.warn("AI Manager: JSON path valid up to 'parts[0]', but 'text' is missing or not a string.");
+                                generatedText = "Error: AI response format was unexpected (missing text field).";
+                            }
+                        } else {
+                            console.warn("AI Manager: JSON path valid up to 'candidate.content', but 'parts' is missing or invalid.");
+                            generatedText = "Error: AI response format was unexpected (missing parts array).";
+                        }
                     } else {
-                         // If JSON parseable but not the expected structure, and still no text.
-                        console.warn("AI Manager: Parsed main response as JSON, but expected text path not found. Using raw text if available.");
-                        generatedText = responseText; // Use raw text if JSON structure is not as expected
+                        console.warn("AI Manager: JSON response missing 'candidates' array or it's empty.");
+                        generatedText = "Error: AI response format was unexpected (missing candidates).";
                     }
                 } catch (e) {
-                    // If it's not JSON, use the raw text.
+                    // If JSON.parse(responseText) fails, it means responseText is not valid JSON.
+                    // Treat it as plain text (could be a direct error message from API/proxy or intended plain text).
+                    console.warn("AI Manager: responseText was not valid JSON. Treating as plain text. Error:", e.message);
                     generatedText = responseText;
                 }
             }
