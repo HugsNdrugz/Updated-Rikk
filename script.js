@@ -10,6 +10,7 @@
     
     // --- MODULE IMPORTS ---
 import { initPhoneAmbientUI, showNotification as phoneShowNotification } from './phone_ambient_ui.js';
+import { AIManager } from './AIManager.js';
 import { GameState } from './GameState.js';
 import { UIManager } from './UIManager.js';
 import { StreetCredManager } from './managers/StreetCredManager.js';
@@ -151,6 +152,11 @@ const newsManager = new NewsManager(game);
 game.newsManager = newsManager; // Attach immediately
 console.log("SCRIPT: NewsManager instantiated and attached.");
 
+console.log("SCRIPT: Instantiating AIManager...");
+const aiManager = new AIManager();
+game.aiManager = aiManager; // Attach to game instance
+console.log("SCRIPT: AIManager instantiated and attached to game.");
+aiManager.init(); // IMPORTANT: Kick off the model download
 
 // --- State Variables ---
 const localStorageAvailable = isLocalStorageAvailable();
@@ -247,7 +253,7 @@ function initializeManagers() {
     const currentTemplates = game.getCustomerTemplates();
 
     console.log("SCRIPT: Instantiating CustomerManager...");
-    game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
+    game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS, aiManager);
     console.log("SCRIPT: CustomerManager instantiated.");
 
     game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppScreen, currentTemplates);
@@ -492,7 +498,7 @@ function setupUIForNewInteraction() {
     uiManager.displayKnockEffect(game.getDayOfWeek());
 }
 
-function generateAndStartCustomerInteraction() {
+async function generateAndStartCustomerInteraction() {
     uiManager.hideKnockEffect();
     const combinedWorldEffects = getCombinedActiveEventEffects();
     const gameStateForCustomerManager = {
@@ -502,12 +508,12 @@ function generateAndStartCustomerInteraction() {
         activeWorldEvents: game.getActiveWorldEvents(),
         combinedWorldEffects: combinedWorldEffects
     };
-    const interaction = game.customerManager.generateInteraction(gameStateForCustomerManager);
+    const interaction = await game.customerManager.generateInteraction(gameStateForCustomerManager);
     game.setCurrentCustomerInstance(interaction.instance);
     startCustomerInteraction(interaction);
 }
 
-function nextFiend() {
+async function nextFiend() {
     if (!game.isGameActive() || game.getFiendsLeft() <= 0) {
         endGame("completed");
         return;

@@ -34,10 +34,12 @@ export class CustomerManager {
      * @param {object} itemTypesData - Data from data_items.js.
      * @param {object} itemQualityLevelsData - Data from data_items.js.
      * @param {object} itemQualityModifiersData - Data from data_items.js.
+    * @param {object} aiManager - Instance of AIManager.
      */
-    constructor(customerTemplatesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData) {
+    constructor(customerTemplatesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData, aiManager) {
         console.log("MANAGER: CustomerManager constructor called"); // Added log (using MANAGER prefix for consistency)
         // Store references to all required game data.
+        this.aiManager = aiManager;
         this.customerTemplates = customerTemplatesData;
         this.itemTypes = itemTypesData;
         this.itemQualityLevels = itemQualityLevelsData;
@@ -53,7 +55,7 @@ export class CustomerManager {
      * @param {object} gameState - An object containing relevant state from the main script.
      * @returns {object} A fully-formed interaction object for the main script to use.
      */
-    generateInteraction(gameState) {
+    async generateInteraction(gameState) {
         const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects } = gameState;
         const customerInstance = this._selectOrGenerateCustomerFromPool();
 
@@ -78,9 +80,31 @@ export class CustomerManager {
             return this._createErrorInteraction(customerInstance);
         }
 
-        const greetingResult = this._getDialogue(customerInstance, 'greeting');
+        const useAI = this.aiManager && this.aiManager.isReady && Math.random() < 0.25; // Use AI for 25% of greetings
+        let greetingLine;
+
+        if (useAI) {
+            // Construct a prompt for the AI
+            // Ensure customerInstance is defined here. It's usually defined right before or after the scare check.
+            const prompt = `My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I need to talk to a street dealer named Rikk about getting some [ITEM_NAME]. I say:`;
+
+            // Generate dialogue. This is an async operation!
+            greetingLine = await this.aiManager.generateDialogue(prompt);
+
+            // Add a fallback in case the AI fails or returns unusable text
+            if (!greetingLine || greetingLine.length < 5) { // Check for minimal length
+                console.warn("CustomerManager: AI generation failed or too short, using fallback greeting.");
+                greetingLine = this._getDialogue(customerInstance, 'greeting').line; // Use your old system as a backup
+            } else {
+                console.log("CustomerManager: AI greeting generated successfully.");
+            }
+        } else {
+            // Use your existing procedural/static system
+            greetingLine = this._getDialogue(customerInstance, 'greeting').line;
+        }
+
         let dialogue = [
-            { speaker: "customer", text: greetingResult.line },
+            { speaker: "customer", text: greetingLine },
             { speaker: "rikk", text: this._getRandomElement(["Aight, what's the word?", "Yo. Lay it on me.", "Speak."]) }
         ];
 
