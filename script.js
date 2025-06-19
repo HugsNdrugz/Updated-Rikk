@@ -69,6 +69,7 @@ let activeWorldEvents = [];
 let dayOfWeek = 'Monday';
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+let aiManager; // Declare
 let customersPool = [];
 let nextCustomerId = 1;
 
@@ -194,6 +195,7 @@ function initGame() {
     inventoryModal.addEventListener('click', (e) => { if (e.target === inventoryModal) closeInventoryModal(); });
 
     // Initialize ambient phone UI (time, battery, wallpaper)
+    aiManager = new AIManager();
     initPhoneAmbientUI();
 
     // Attach click listeners for new phone UI app icons and dock icons
@@ -407,6 +409,40 @@ function generateCustomerInteractionData() {
         return;
     }
     const archetype = customerArchetypes[customerData.archetypeKey];
+
+    // --- Start AI Manager Integration for Initial Dialogue ---
+    const initialAiSituation = 'greeting'; // Or determine dynamically based on context
+    const aiContext = {
+        customerMood: customerData.mood,
+        // Add any other relevant context for the AI in the future
+    };
+    const aiDrivenInteraction = aiManager.getDialogue(customerData.id, initialAiSituation, aiContext);
+
+    // Use the AI-driven dialogue and choices IF provided
+    // This is a basic integration; more sophisticated merging might be needed later
+    if (aiDrivenInteraction && aiDrivenInteraction.dialogue && aiDrivenInteraction.choices) {
+        currentCustomer = {
+            data: customerData,
+            name: customerData.name,
+            dialogue: aiDrivenInteraction.dialogue,
+            choices: aiDrivenInteraction.choices,
+            itemContext: null, // AI manager might provide this in the future
+            archetypeKey: customerData.archetypeKey,
+            mood: customerData.mood // AI manager might influence this in the future
+        };
+        console.log("Using AI Manager for initial interaction data for customer:", customerData.name);
+        // Skip the rest of the original dialogue/choice generation in this function FOR NOW
+        // as the AI manager is providing it.
+        // This is a simplification for this step. A full integration would involve
+        // the AI potentially handling different parts (greeting, item offer, etc.)
+        // and script.js handling the parts the AI doesn't.
+        return; // Exit early since AI provided the full interaction object
+    } else {
+        console.warn("AIManager did not return valid data, falling back to original logic for customer:", customerData.name);
+        // If AI doesn't provide data, the original logic below will run (as a fallback)
+        // For this step, we assume AI will always provide something for 'greeting'
+    }
+    // --- End AI Manager Integration ---
 
     let dialogue = [];
     let choices = [];
