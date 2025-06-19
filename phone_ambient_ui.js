@@ -96,10 +96,11 @@ function animateWallpaper() {
 * Shows a notification on the phone screen.
 * @param {string} content - The message content of the notification.
 * @param {string} [title="Notification"] - The title of the notification.
+* @param {string} [type="neutral"] - The type of notification ('positive', 'negative', 'neutral').
 * @param {number} [duration=3000] - How long the notification stays visible in ms.
 */
 let notificationTimeout;
-export function showNotification(content, title = "Notification", duration = 3000) {
+export function showNotification(content, title = "Notification", type = "neutral", duration = 3000) {
     if (!notificationElement || !notificationTitleEl || !notificationContentEl) return;
 
     // Clear any existing timeout to reset the timer if a new notification appears
@@ -107,9 +108,29 @@ export function showNotification(content, title = "Notification", duration = 300
 
     notificationTitleEl.textContent = title;
     notificationContentEl.textContent = content;
-    notificationElement.style.display = "block";
+
+    // Remove previous type classes
+    notificationElement.classList.remove('positive-feedback', 'negative-feedback');
+
+    // Add type class for styling
+    if (type === 'positive') {
+        notificationElement.classList.add('positive-feedback');
+    } else if (type === 'negative') {
+        notificationElement.classList.add('negative-feedback');
+    }
+    // Neutral type doesn't add a special class by default
+
+    notificationElement.style.display = "block"; // Make it visible
+    notificationElement.classList.add('show'); // For potential future CSS animations if display:none/block is too abrupt
 
     notificationTimeout = setTimeout(() => {
+        notificationElement.classList.remove('show');
+        // Hide it again after duration. Using display none for simplicity, could use opacity/transform for animation.
         notificationElement.style.display = "none";
+        if (type === 'positive') {
+            notificationElement.classList.remove('positive-feedback');
+        } else if (type === 'negative') {
+            notificationElement.classList.remove('negative-feedback');
+        }
     }, duration);
 }

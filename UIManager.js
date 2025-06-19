@@ -460,8 +460,9 @@ class UIManager {
      * Displays etiquette-related feedback to the player.
      * Looks up the feedbackId in the loaded feedbackMessages and shows a phone notification.
      * @param {string} feedbackId - The ID of the feedback message to display (from data/feedback_messages.json).
+     * @param {string} feedbackType - Type of feedback ('positive', 'negative', 'neutral').
      */
-    displayEtiquetteFeedback(feedbackId) {
+    displayEtiquetteFeedback(feedbackId, feedbackType = 'neutral') {
         if (!feedbackId) return;
 
         // Retrieve the message string using the feedbackId from the imported JSON data
@@ -470,9 +471,9 @@ class UIManager {
 
         if (message) {
             // Use the imported phoneShowNotification utility to display the message
-            phoneShowNotification(message, title);
+            phoneShowNotification(message, title, feedbackType); // Pass feedbackType
             if (this.gameState && this.gameState.DEBUG_MODE) {
-                debugLogger.log('UIManager', `Displayed etiquette feedback for ID ${feedbackId}: "${message}"`);
+                debugLogger.log('UIManager', `Displayed etiquette feedback for ID ${feedbackId} (type: ${feedbackType}): "${message}"`);
             }
         } else {
             // Log a warning if a feedbackId is provided but no corresponding message is found

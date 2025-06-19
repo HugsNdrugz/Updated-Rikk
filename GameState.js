@@ -87,6 +87,7 @@ class GameState {
         if (this.DEBUG_MODE) {
             debugLogger.log('GameState', 'Initialized with config:', config);
         }
+        this.etiquetteViolations = {};
     }
 
     // --- Getters ---
@@ -245,6 +246,7 @@ class GameState {
         this.MAX_HEAT = config.MAX_HEAT ?? this.MAX_HEAT;
         this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;
         this.customerTemplates = config.defaultCustomerTemplates ? JSON.parse(JSON.stringify(config.defaultCustomerTemplates)) : this.customerTemplates;
+        this.etiquetteViolations = {};
 
         if (this.DEBUG_MODE) debugLogger.log('GameState', 'State reset to defaults.');
     }
@@ -272,6 +274,7 @@ class GameState {
             // isExpectingChoice: this.isExpectingChoice,
             // customerTemplates are saved/loaded separately by script.js
             // MAX_INVENTORY_SLOTS, MAX_HEAT, DAYS_ARRAY are part of config, not dynamic state to save
+            etiquetteViolations: { ...this.etiquetteViolations },
         };
     }
 
@@ -323,6 +326,7 @@ class GameState {
 
         // customerTemplates are handled by script.js and ContactsAppManager for persistence
         // MAX_*, DAYS_ARRAY are from config
+        this.etiquetteViolations = savedState.etiquetteViolations ? { ...savedState.etiquetteViolations } : {};
         if (this.DEBUG_MODE) debugLogger.log('GameState', 'State loaded from saved data.');
     }
 }

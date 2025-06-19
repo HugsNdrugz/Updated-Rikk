@@ -1568,5 +1568,21 @@ export const customerTemplates = {
                 }
             ]
         }
+    },
+    "PASTOR_JONES": {
+        "key": "PASTOR_JONES",
+        "baseName": "Pastor Jones",
+        "baseStats": { "mood": "calm", "loyalty": 50 },
+        "dialogue": {
+            "greeting": [{ "lines": ["Blessings upon you, my child.", "The Spirit led me to your door today."] }],
+            "offerCommunityHelp": [{ "lines": ["The community center needs some supplies for the youth program. Could you help us acquire some... discreetly?"] }],
+            "rikkAgreesToHelpPastor": [{ "lines": ["Consider it done, Pastor. For the kids, of course."] }],
+            "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
+            "pastorDeclinesHelp": [{ "lines": ["I understand. Perhaps another time. May peace be with you."] }]
+        },
+        "itemPool": [],
+        "sellsOnly": false,
+        "priceToleranceFactor": 1.0,
+        "gameplayConfig": { "isUnique": true, "canSpawnNormally": false }
     }
 };

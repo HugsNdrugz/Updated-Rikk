@@ -700,4 +700,89 @@ export class CustomerManager {
             this.reset();
         }
     }
+
+    generatePastorJonesInteraction(gameState) {
+        const archetypeKey = "PASTOR_JONES";
+        const template = this.customerTemplates[archetypeKey];
+        if (!template) {
+            debugLogger.error('CustomerManager', `Pastor Jones template not found!`);
+            return this._createErrorInteraction({ name: "Pastor Jones Error", archetypeKey });
+        }
+
+        // Find or create Pastor Jones instance (should be unique)
+        let pastorInstance = this.customersPool.find(c => c.archetypeKey === archetypeKey);
+        if (!pastorInstance) {
+            const customerId = this.nextCustomerId++;
+            pastorInstance = {
+                id: `customer_${customerId}`,
+                name: template.baseName,
+                archetypeKey: archetypeKey,
+                ...JSON.parse(JSON.stringify(template.baseStats)),
+                cashOnHand: 0, // Pastor Jones is not buying/selling in this interaction
+                hasMetRikkBefore: this.customersPool.some(c => c.archetypeKey === archetypeKey), // Technically true if he was ever in pool
+                addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 },
+                recentlySoldItems: [],
+                metadata: {}
+            };
+            // Add to pool if not already there to manage uniqueness
+            if (!this.customersPool.find(c => c.archetypeKey === archetypeKey)) {
+                 if (this.customersPool.length < CONFIG.MAX_CUSTOMERS_IN_POOL) {
+                    this.customersPool.push(pastorInstance);
+                } else {
+                    // Replace a non-unique customer if pool is full, or handle error
+                    // For now, let's assume there's space or a more robust unique handling is needed
+                    debugLogger.warn("CustomerManager", "Customer pool full, Pastor Jones might not be persisted if not already in pool.");
+                }
+            }
+        }
+        pastorInstance.mood = template.baseStats.mood || 'calm'; // Ensure mood is reset/set
+
+        const greetingResult = this._getDialogue(pastorInstance, 'greeting');
+        const offerResult = this._getDialogue(pastorInstance, 'offerCommunityHelp');
+
+        let dialogue = [
+            { speaker: "customer", text: greetingResult.line },
+            { speaker: "rikk", text: this._getRandomElement(["Pastor Jones. What can I do for you?", "Blessings, Pastor. What's the word?"]) },
+            { speaker: "customer", text: offerResult.line }
+        ];
+
+        let choices = [
+            {
+                text: "I'll help, Pastor.",
+                outcome: {
+                    type: "pastor_jones_interaction_resolved",
+                    etiquetteContext: { "event_type": "pastor_jones_request", "action_taken": "helped", "target_community_figure_id": "pastor_jones" },
+                    followUpDialogueKey: "rikkAgreesToHelpPastor", // Rikk's line
+                    customerFollowUpKey: "pastorThanksForHelp" // Pastor's response
+                }
+            },
+            {
+                text: "Sorry, Pastor, can't do it.",
+                outcome: {
+                    type: "pastor_jones_interaction_resolved",
+                    etiquetteContext: { "event_type": "pastor_jones_request", "action_taken": "declined", "target_community_figure_id": "pastor_jones" },
+                    followUpDialogueKey: "pastorDeclinesHelp", // Rikk's line (which is the Pastor's decline)
+                    customerFollowUpKey: "pastorDeclinesHelp" // Pastor's response (same as Rikk's line here as Pastor states it)
+                }
+            }
+        ];
+
+        // Ensure the instance in the main pool is updated if it was already there
+        const poolIndex = this.customersPool.findIndex(c => c.id === pastorInstance.id);
+        if (poolIndex !== -1) {
+            this.customersPool[poolIndex] = pastorInstance;
+        }
+
+
+        return {
+            instance: pastorInstance,
+            name: pastorInstance.name,
+            dialogue,
+            choices,
+            itemContext: null, // No item transaction in this specific interaction
+            archetypeKey: pastorInstance.archetypeKey,
+            mood: pastorInstance.mood,
+            isSpecialInteraction: true // Flag for script.js if needed
+        };
+    }
 }
