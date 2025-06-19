@@ -74,6 +74,14 @@ const customerArchetypes = {
                     default: ["Yeah, that's the good stuff. **Phew... my soul just sighed in relief.**", "Nice. This'll do. **Now I can finally face... well, probably just another Tuesday. But slightly less horribly.**"]
                 };
                 return lines[mood] ? lines[mood][Math.floor(Math.random() * lines[mood].length)] : lines.default[Math.floor(Math.random() * lines.default.length)];
+            },
+            customerReactsToRudeDismissal: (mood) => { // Added for DESPERATE_FIEND
+                // Specific lines for DESPERATE_FIEND based on issue
+                return [{ lines: ["Whoa, man... no need for that. Just tryin' to make a buck here."] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => { // Added for DESPERATE_FIEND
+                // Specific lines for DESPERATE_FIEND based on issue
+                return [{ lines: ["Aight, respect. Let me know if you change your mind."] }];
             }
         },
         postDealEffect: (success, customerState) => {
@@ -155,6 +163,12 @@ const customerArchetypes = {
                     arrogant: ["Indeed. This meets the standard. **Until our next transaction, Rikk. Maintain the quality.**", "Precisely. **You may inform your... lesser clients that this level of product is reserved.**"]
                 };
                 return lines[mood] ? lines[mood][Math.floor(Math.random() * lines[mood].length)] : lines.arrogant[Math.floor(Math.random() * lines.arrogant.length)];
+            },
+            customerReactsToRudeDismissal: (mood) => {
+                return [{ lines: ["Rikk, your lack of decorum is... noted. And disappointing."] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => {
+                return [{ lines: ["Very well, Rikk. Perhaps another time."] }];
             }
         },
         postDealEffect: (success, customerState) => {
@@ -227,6 +241,12 @@ const customerArchetypes = {
                     chill: ["Nice one, Rikk. **Just what the doctor didn't order, but what my soul needed.**", "Perfect. **Time to kick back and let the good times roll.**"]
                 };
                 return lines[mood] ? lines[mood][Math.floor(Math.random() * lines[mood].length)] : lines.chill[Math.floor(Math.random() * lines.chill.length)];
+            },
+            customerReactsToRudeDismissal: (mood) => {
+                return [{ lines: ["Whoa, harsh vibes, Rikk. Not cool, man."] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => {
+                return [{ lines: ["All good, Rikk. Catch you on the flip side."] }];
             }
         },
         postDealEffect: null,
@@ -272,6 +292,12 @@ const customerArchetypes = {
                     cautious: ["Solid. **Use that wisely, it could save your hide. Or make you a mint.** Keep my number.", "Good. **Remember where you got it. And remember, some doors are best left unopened... unless you have a key. Which I just sold you.**"]
                 };
                 return lines[mood] ? lines[mood][Math.floor(Math.random() * lines[mood].length)] : lines.cautious[Math.floor(Math.random() * lines.cautious.length)];
+            },
+            customerReactsToRudeDismissal: (mood) => {
+                return [{ lines: ["Information has a price, Rikk. So does disrespect."] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => {
+                return [{ lines: ["Your loss, Rikk. This was quality intel."] }];
             }
         },
         postDealEffect: null,
@@ -318,6 +344,12 @@ const customerArchetypes = {
                     nosy: ["Oh, really? Well, alright then. **Just trying to be friendly! One never knows what interesting things are about!**", "Keeping it to yourself, Rikk? **Mysterious! I like a good mystery.**"]
                 };
                 return lines[mood] ? lines[mood][Math.floor(Math.random() * lines[mood].length)] : lines.nosy[Math.floor(Math.random() * lines.nosy.length)];
+            },
+            customerReactsToRudeDismissal: (mood) => {
+                return [{ lines: ["Well, I never! The nerve of some people in this neighborhood!"] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => {
+                return [{ lines: ["Oh, alright dear. I'll just make a note of that for the... *community watch*."] }];
             }
         },
         postDealEffect: (success, customerState) => {
@@ -332,5 +364,33 @@ const customerArchetypes = {
                  displaySystemMessage(`You feel **${customerState.name}'s** beady eyes on you as they leave... **like a human CCTV camera.**`);
             }
         }
+    },
+    PASTOR_JONES: {
+        key: "PASTOR_JONES",
+        baseName: "Pastor Jones",
+        // Add other minimal required fields if any, based on common structure.
+        // For now, keeping it very minimal as per instructions.
+        greeting: (customer, item) => {
+            // Basic greeting, can be expanded later
+            if (customer.hasMetRikkBefore) {
+                return `Ah, Rikk, my son. Blessings be upon you. Still walking the path, I see.`;
+            }
+            return `Young man, they call you Rikk? I am Pastor Jones. The Lord has guided me to your... establishment.`;
+        },
+        initialMood: "calm", // Example, can be adjusted
+        priceToleranceFactor: 1.0, // Example
+        dialogueVariations: {
+            "rikkDeclinesPastor": [{ "lines": ["Sorry, Pastor. Can't get involved right now."] }],
+            "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
+            "pastorDeclinesHelp": [{ "lines": ["I understand, my son. Some burdens are not for everyone to bear."] }],
+            customerReactsToRudeDismissal: (mood) => {
+                return [{ lines: ["My son, such harsh words benefit no one. I shall pray for you."] }];
+            },
+            customerReactsToPoliteDismissal: (mood) => {
+                return [{ lines: ["The Lord understands your position, Rikk. Peace be with you."] }];
+            }
+            // Add other necessary dialogue variations if interaction logic requires them for this customer.
+        }
+        // Add other fields like buyPreference, sellPreference, heatImpact, etc., as needed for full functionality.
     },
 };

@@ -21,14 +21,14 @@ const gameScene = document.getElementById('game-scene');
 const knockEffect = document.getElementById('knock-effect');
 
 // --- Phone UI Elements (Renamed and new additions) ---
-const rikkPhoneUI = document.getElementById('rikk-phone-ui'); // Changed ID from rikk-phone-display
-const androidHomeScreen = document.getElementById('android-home-screen'); // Android Home screen content
-const gameChatView = document.getElementById('game-chat-view'); // Game Chat content
+const rikkPhoneUI = document.getElementById('rikk-phone-display'); // Changed ID from rikk-phone-display
+const androidHomeScreen = document.getElementById('android-ambient-ui'); // Android Home screen content
+const gameChatView = document.getElementById('game-chat-ui'); // Game Chat content
 const gameAppMenuView = document.getElementById('game-app-menu-view'); // Game Apps menu content (new)
 
-const chatContainer = document.getElementById('chat-container-game'); // Renamed ID
-const choicesArea = document.getElementById('choices-area-game'); // Renamed ID
-const phoneTitleGame = document.getElementById('phone-title-game'); // Title for game chat view
+const chatContainer = document.getElementById('chat-container'); // Renamed ID
+const choicesArea = document.getElementById('choices-area'); // Renamed ID
+const phoneTitleGame = document.getElementById('phone-title'); // Title for game chat view
 const phoneTitleGameApps = document.getElementById('phone-title-game-apps'); // Title for game apps view
 const phoneBackButtons = document.querySelectorAll('.phone-back-button'); // Back buttons within phone apps (plural)
 
@@ -657,6 +657,7 @@ function handleChoice(outcome) {
     let selectedCustomerReaction = "";
     let heatChange = 0;
     let credChange = 0;
+    let dialogueContextKey = null; // Added declaration
 
     if (!currentCustomer || !currentCustomer.archetypeKey || !currentCustomer.data || typeof customerArchetypes === 'undefined' || !customerArchetypes[currentCustomer.archetypeKey]) {
         console.error("Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined.", currentCustomer);
@@ -781,10 +782,35 @@ function handleChoice(outcome) {
             }, 1500);
             return;
 
-        case "decline_offer_to_buy":
+        case "decline_offer_to_buy_rude":
+            dealSuccess = false;
+            credChange = -2; // More severe reaction for rudeness
+            narrationText = "Rikk rudely passes on the offer.";
+            playSound(deniedSound);
+            dialogueContextKey = 'customerReactsToRudeDismissal';
+            // Assuming customerState and archetype are available
+            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.[dialogueContextKey], customerState.mood, "Wow, Rikk. Harsh much?");
+            customerState.mood = "angry"; customerState.loyaltyToRikk -=2;
+            customerState.lastInteractionWithRikk = { type: "rikk_declined_buy_rude", item: outcome.item?.name };
+            break;
+        case "decline_offer_to_buy_polite":
+            dealSuccess = false;
+            credChange = 0; // Polite decline might not lose cred, or less
+            narrationText = "Rikk politely passes on the offer.";
+            playSound(deniedSound);
+            dialogueContextKey = 'customerReactsToPoliteDismissal';
+            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.[dialogueContextKey], customerState.mood, "Oh, okay Rikk. No worries.");
+            customerState.mood = "neutral"; // Or less severe than "annoyed"
+            customerState.loyaltyToRikk -=0; // No loyalty change or minimal
+            customerState.lastInteractionWithRikk = { type: "rikk_declined_buy_polite", item: outcome.item?.name };
+            break;
+        case "decline_offer_to_buy": // This is the existing/standard decline
+            dealSuccess = false;
+            credChange = -1; // Declined to buy from them
             narrationText = `Rikk ain't interested in their junk. Told 'em to bounce with that "${outcome.item.name}".`;
-            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkDeclinesToBuy, customerState.mood, "Damn, Rikk! My stuff ain't good enough for ya?");
-            credChange = -1;
+            // selectedCustomerReaction = getReaction(archetype.dialogueVariations?.rikkDeclinesToBuy, customerState.mood, "Damn, Rikk! My stuff ain't good enough for ya?");
+            dialogueContextKey = 'rikkDeclinesToBuy'; // Standard customer reaction key
+            selectedCustomerReaction = getReaction(archetype.dialogueVariations?.[dialogueContextKey], customerState.mood, "Damn, Rikk! My stuff ain't good enough for ya?");
             customerState.mood = "annoyed"; customerState.loyaltyToRikk -=1;
             playSound(deniedSound);
             customerState.lastInteractionWithRikk = { type: "rikk_declined_buy", item: outcome.item.name };
