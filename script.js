@@ -548,9 +548,9 @@ function startCustomerInteraction(interaction) {
     let dialogueIndex = 0;
     const displayNext = () => {
         if (dialogueIndex < interaction.dialogue.length) {
-            const msg = interaction.dialogue[dialogueIndex];
+            const msg = interaction.dialogue[dialogueIndex]; // msg is now an object {text, speaker, isAI}
             dialogueIndex++;
-            queueNextMessage(msg.text, msg.speaker, () => {
+            queueNextMessage(msg, () => { // Pass the whole msg object
                 setTimeout(displayNext, CUSTOMER_WAIT_TIME);
             });
         } else { // This is after all dialogue messages are displayed
@@ -599,7 +599,7 @@ function handleContinueGameClick() {
     if (loadGameState()) {
         startGameFlow();
     } else {
-        uiManager.displayPhoneMessage("System: No saved game found.", "narration");
+        uiManager.displayPhoneMessage({ text: "System: No saved game found.", speaker: "narration", isAI: false });
         initializeNewGameState();
         startGameFlow();
     }
@@ -659,8 +659,9 @@ function handlePhoneAppClick(event) {
     }
 }
 
-function queueNextMessage(message, speaker, callback) {
-    audioQueue.push({ message, speaker, callback });
+// queueNextMessage now expects a full message object (or a simple string for narration)
+function queueNextMessage(messageObject, callback) { // speaker is now part of messageObject
+    audioQueue.push({ messageObject, callback }); // Store the whole object
     if (!isPlayingAudio) {
         processAudioQueue();
     }
@@ -672,18 +673,25 @@ function processAudioQueue() {
         return;
     }
     isPlayingAudio = true;
-    const { message, speaker, callback } = audioQueue.shift();
-    if (!TTS_ENABLED || speaker === 'narration' || !ELEVENLABS_API_KEY) {
+    const { messageObject, callback } = audioQueue.shift(); // messageObject is {text, speaker, isAI} or string
+
+    // Determine text and speaker for TTS, if messageObject is an object
+    const textForTTS = (typeof messageObject === 'object' && messageObject.text) ? messageObject.text : messageObject;
+    const speakerForTTS = (typeof messageObject === 'object' && messageObject.speaker) ? messageObject.speaker : 'narration';
+
+    if (!TTS_ENABLED || speakerForTTS === 'narration' || !ELEVENLABS_API_KEY) {
         uiManager.playSound(uiManager.chatBubbleSound);
-        uiManager.displayPhoneMessage(message, speaker);
+        uiManager.displayPhoneMessage(messageObject); // Pass the whole object or string
         if (callback) callback();
         setTimeout(() => processAudioQueue(), 400);
         return;
     }
-    const voiceId = speaker === 'customer' ? ELEVENLABS_VOICE_ID_CUSTOMER : ELEVENLABS_VOICE_ID_RIKK;
+
+    const voiceId = speakerForTTS === 'customer' ? ELEVENLABS_VOICE_ID_CUSTOMER : ELEVENLABS_VOICE_ID_RIKK;
     const url = `${ELEVENLABS_API_ENDPOINT_BASE}${voiceId}`;
     const headers = { "xi-api-key": ELEVENLABS_API_KEY, "Content-Type": "application/json", "Accept": "audio/mpeg" };
-    const ttsPayload = { text: message.replace(/\*\*|[\*_]/g, ''), model_id: "eleven_monolingual_v1", voice_settings: { stability: 0.5, similarity_boost: 0.75 } };
+    const ttsPayload = { text: textForTTS.replace(/\*\*|[\*_]/g, ''), model_id: "eleven_monolingual_v1", voice_settings: { stability: 0.5, similarity_boost: 0.75 } };
+
     fetch(url, { method: "POST", headers: headers, body: JSON.stringify(ttsPayload) })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -691,7 +699,7 @@ function processAudioQueue() {
         })
         .then(audioBlob => {
             const audioUrl = URL.createObjectURL(audioBlob);
-            uiManager.displayPhoneMessage(message, speaker);
+            uiManager.displayPhoneMessage(messageObject); // Pass the whole object
             const audio = new Audio(audioUrl);
             audio.volume = 0.8;
             audio.play().catch(e => { console.error("TTS Audio Playback Error:", e); });
@@ -703,17 +711,17 @@ function processAudioQueue() {
         })
         .catch(err => {
             console.error("Error with ElevenLabs TTS:", err);
-            uiManager.displayPhoneMessage(`TTS service failed. Displaying text only.`, "narration");
+            uiManager.displayPhoneMessage({ text: `TTS service failed. Displaying text only.`, speaker: "narration", isAI: false });
             uiManager.playSound(uiManager.chatBubbleSound);
-            uiManager.displayPhoneMessage(message, speaker);
+            uiManager.displayPhoneMessage(messageObject); // Display original intended message (object or string)
             if (callback) callback();
             processAudioQueue();
         });
 }
 
-function displaySystemMessage(message) {
-    uiManager.displayPhoneMessage(message, 'narration');
-    phoneShowNotification(message, "System Alert");
+function displaySystemMessage(messageText) {
+    uiManager.displayPhoneMessage({ text: messageText, speaker: 'narration', isAI: false });
+    phoneShowNotification(messageText, "System Alert");
 }
 
 function handleChoice(outcome) {
@@ -728,7 +736,7 @@ function handleChoice(outcome) {
         const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_scared", "end_interaction_no_item"];
         if (!nonDealOutcomes.includes(outcome.type) && combinedWorldEffects.dealFailChance > 0 && Math.random() < combinedWorldEffects.dealFailChance) {
             const failMsg = game.getCurrentCustomerInstance() ? `${game.getCurrentCustomerInstance().name} suddenly gets spooked and calls it off!` : "The deal just fell through... damn.";
-            uiManager.displayPhoneMessage(failMsg, "narration");
+            uiManager.displayPhoneMessage({ text: failMsg, speaker: "narration", isAI: false });
             game.decrementFiendsLeft();
             uiManager.updateHUD();
             setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
@@ -808,14 +816,14 @@ function handleChoice(outcome) {
 
                         if (game.DEBUG_MODE) debugLogger.log('Negotiate_Sell', `Original Offer: ${outcome.originalOffer}, Proposed: ${outcome.proposedPrice}, Price Improvement: ${priceImprovement}, Final Price: ${finalNegotiatedPrice}`);
                         // Note: showCashChangeAnimation will be called when handleChoice processes the "sell_to_customer" type
-                        queueNextMessage(`Negotiation successful! ${negoSuccessResult.line}`, 'customer', () => {
+                        queueNextMessage({ text: `Negotiation successful! ${negoSuccessResult.line}`, speaker: 'customer', isAI: false }, () => { // Assume nego result is not AI
                             handleChoice({ type: "sell_to_customer", item: outcome.item, price: finalNegotiatedPrice });
                         });
                     } else {
                         // Failed Haggle: For Phase 1, no additional direct penalty beyond not getting the better price.
                         // Future: negotiator skill could reduce any negative sentiment from a failed haggle.
                         const negoFailResult = game.customerManager.getOutcomeDialogue(currentCustomer, 'negotiationFail');
-                        queueNextMessage(`They ain't having it. ${negoFailResult.line}`, 'customer', () => {
+                        queueNextMessage({ text: `They ain't having it. ${negoFailResult.line}`, speaker: 'customer', isAI: false }, () => { // Assume nego result is not AI
                             const choices = [{ text: `Sell ($${outcome.originalOffer})`, outcome: { type: "sell_to_customer", item: outcome.item, price: outcome.originalOffer } }, { text: `Decline`, outcome: { type: "decline_offer_to_sell" } }];
                             uiManager.displayChoices(choices, handleChoice);
                         });
@@ -889,7 +897,8 @@ function handleChoice(outcome) {
 
         const followUp = () => {
             if (outcomeResult.line && outcomeResult.line.trim() !== "") {
-                queueNextMessage(outcomeResult.line, 'customer', () => {
+                // Assume outcomeResult.line from _getDialogue is not AI-generated unless specified otherwise
+                queueNextMessage({ text: outcomeResult.line, speaker: 'customer', isAI: false }, () => {
                     setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
                 });
             } else {
@@ -898,7 +907,7 @@ function handleChoice(outcome) {
         };
 
         if (narrationText.trim() !== "") {
-            queueNextMessage(narrationText, 'narration', followUp);
+            queueNextMessage({ text: narrationText, speaker: 'narration', isAI: false }, followUp);
         } else {
             followUp();
         }
@@ -1014,7 +1023,7 @@ function processPayload(payload, dealSuccess) {
                         game.addHeat(heatValue);
                         message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
                     }
-                    if (message) uiManager.displayPhoneMessage(message, "narration");
+                    if (message) uiManager.displayPhoneMessage({ text: message, speaker: "narration", isAI: false });
                 }
                 break;
             default:

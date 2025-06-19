@@ -606,61 +606,61 @@ class UIManager {
 
     // --- Phone Message Display (Skeleton) ---
     // This will be a complex method. For now, a basic structure.
-    // Assumes currentCustomerInstance is available via this.gameState
-    displayPhoneMessage(messageText, speaker) {
-    if (typeof messageText === 'undefined' || messageText === null) {
-        messageText = "..."; // Default for undefined messages
-    }
-    if (!this.chatContainer || !this.chatSpacerElement) {
-        // debugLogger.warn('UIManager', "Chat container not ready for messages."); // Keep original debug style
-        console.warn('UIMgr: Chat container not ready for messages.');
-        return;
-    }
+    displayPhoneMessage(messageObject) {
+        let messageText = typeof messageObject === 'string' ? messageObject : messageObject.text;
+        const speaker = typeof messageObject === 'string' ? 'narration' : messageObject.speaker; // Default to narration if simple string
+        const isAI = typeof messageObject === 'object' && messageObject.isAI === true;
 
-    // const customerInstance = this.gameState.getCurrentCustomerInstance(); // THIS LINE IS REMOVED
+        if (typeof messageText === 'undefined' || messageText === null) {
+            messageText = "..."; // Default for undefined messages
+        }
+        if (!this.chatContainer || !this.chatSpacerElement) {
+            console.warn('UIMgr: Chat container not ready for messages.');
+            return;
+        }
 
-    if (speaker === 'narration') {
-        // Create a timestamp element
-        const timestampDiv = document.createElement('div');
-        timestampDiv.className = 'timestamp';
-        timestampDiv.textContent = messageText;
-        this.chatContainer.insertBefore(timestampDiv, this.chatSpacerElement);
-    } else {
-        // Handle 'rikk' (sent) and 'customer' (received)
-        const messageType = (speaker === 'rikk') ? 'sent' : 'received';
+        if (speaker === 'narration') {
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'timestamp';
+            timestampDiv.textContent = messageText;
+            this.chatContainer.insertBefore(timestampDiv, this.chatSpacerElement);
+        } else {
+            const messageType = (speaker === 'rikk') ? 'sent' : 'received';
+            const messageRow = document.createElement('div');
+            messageRow.className = `message-row ${messageType}`;
 
-        const messageRow = document.createElement('div');
-        messageRow.className = `message-row ${messageType}`;
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `message-bubble ${messageType}`;
 
-        const messageBubble = document.createElement('div');
-        messageBubble.className = `message-bubble ${messageType}`;
+            const messageContent = document.createElement('p'); // Create a <p> for the text content
 
-        // Handle **bold** text (preserved from original)
-        const messageParts = messageText.split(/(\*\*.*?\*\*)/g); // Adjusted regex for subtask context
-        messageParts.forEach(part => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-                const boldEl = document.createElement('strong');
-                boldEl.textContent = part.slice(2, -2);
-                messageBubble.appendChild(boldEl);
-            } else {
-                messageBubble.appendChild(document.createTextNode(part));
+            // Handle **bold** text
+            const messageParts = messageText.split(/(\*\*.*?\*\*)/g);
+            messageParts.forEach(part => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                    const boldEl = document.createElement('strong');
+                    boldEl.textContent = part.slice(2, -2);
+                    messageContent.appendChild(boldEl);
+                } else {
+                    messageContent.appendChild(document.createTextNode(part));
+                }
+            });
+
+            if (isAI) {
+                messageContent.style.color = 'red'; // Apply inline style for AI messages
             }
-        });
 
-        messageRow.appendChild(messageBubble);
-        this.chatContainer.insertBefore(messageRow, this.chatSpacerElement);
+            messageBubble.appendChild(messageContent);
+            messageRow.appendChild(messageBubble);
+            this.chatContainer.insertBefore(messageRow, this.chatSpacerElement);
+        }
+
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight; // Auto-scroll
+
+        if (speaker !== 'narration' && this.chatBubbleSound) {
+            this.playSound(this.chatBubbleSound);
+        }
     }
-
-    this.chatContainer.scrollTop = this.chatContainer.scrollHeight; // Auto-scroll
-
-    // Play sound, but only if not narration
-    // The new design doesn't have a specific sound for narration/timestamp
-    if (speaker !== 'narration' && this.chatBubbleSound) {
-        this.playSound(this.chatBubbleSound);
-    }
-
-    // The dynamic header/footer update block is removed from here.
-}
 
 /*
 setChatInputHandler(handlerFunction) {

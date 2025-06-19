@@ -80,32 +80,38 @@ export class CustomerManager {
             return this._createErrorInteraction(customerInstance);
         }
 
-        const useAI = this.aiManager && this.aiManager.isReady && Math.random() < 0.25; // Use AI for 25% of greetings
-        let greetingLine;
+        const useAI = this.aiManager && this.aiManager.isReady; // Use AI 100% if ready
+        let greetingInfo = { text: '', isAI: false };
 
         if (useAI) {
-            // Construct a prompt for the AI
-            // Ensure customerInstance is defined here. It's usually defined right before or after the scare check.
-            const prompt = `My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I need to talk to a street dealer named Rikk about getting some [ITEM_NAME]. I say:`;
+            const gameTone = "This is a gritty, urban setting where people hustle to get by.";
+            const rikkDescription = "Rikk is a street-wise dealer.";
+            const customerGoal = "I'm looking to score something."; // Generic for initial greeting
 
-            // Generate dialogue. This is an async operation!
-            greetingLine = await this.aiManager.generateDialogue(prompt);
+            const prompt = `
+Setting: ${gameTone}
+My Persona: My name is ${customerInstance.name}. People say I'm usually ${customerInstance.mood}. I'm trying to act natural, but I need to talk to a local street dealer named Rikk.
+Task: I need to start a conversation with Rikk to see what he's got or if he can help me out. I should sound like I belong in this environment.
+I walk up to Rikk and say:`;
+            let aiText = await this.aiManager.generateDialogue(prompt);
 
-            // Add a fallback in case the AI fails or returns unusable text
-            if (!greetingLine || greetingLine.length < 5) { // Check for minimal length
+            if (!aiText || aiText.length < 5) {
                 console.warn("CustomerManager: AI generation failed or too short, using fallback greeting.");
-                greetingLine = this._getDialogue(customerInstance, 'greeting').line; // Use your old system as a backup
+                greetingInfo.text = this._getDialogue(customerInstance, 'greeting').line;
+                greetingInfo.isAI = false;
             } else {
                 console.log("CustomerManager: AI greeting generated successfully.");
+                greetingInfo.text = aiText;
+                greetingInfo.isAI = true;
             }
         } else {
-            // Use your existing procedural/static system
-            greetingLine = this._getDialogue(customerInstance, 'greeting').line;
+            greetingInfo.text = this._getDialogue(customerInstance, 'greeting').line;
+            greetingInfo.isAI = false; // Explicitly false
         }
 
         let dialogue = [
-            { speaker: "customer", text: greetingLine },
-            { speaker: "rikk", text: this._getRandomElement(["Aight, what's the word?", "Yo. Lay it on me.", "Speak."]) }
+            { speaker: "customer", text: greetingInfo.text, isAI: greetingInfo.isAI },
+            { speaker: "rikk", text: this._getRandomElement(["Aight, what's the word?", "Yo. Lay it on me.", "Speak."]), isAI: false }
         ];
 
         let choices = [];
@@ -123,13 +129,13 @@ export class CustomerManager {
 
             if (!itemContext) {
                 const noItemDialogue = this._getDialogue(customerInstance, 'customerHasNothingToSell') || { line: `${customerInstance.name} shrugs. "Ain't got nothin' for ya today, chief."`, payload: null };
-                dialogue.push({ speaker: "customer", text: noItemDialogue.line });
+                dialogue.push({ speaker: "customer", text: noItemDialogue.line, isAI: false });
                 choices.push({ text: "Aight.", outcome: { type: "end_interaction_no_item", payload: noItemDialogue.payload } });
             } else {
                 customerInstance.currentItemName = itemContext.name;
                 const customerDemandsPrice = this._calculateItemValue(itemContext, true, { playerSkills, activeWorldEvents, customerInstance, combinedWorldEffects });
                 const offerText = `Yo Rikk, peep this. Got a ${itemContext.quality} ${itemContext.name}. How's $${customerDemandsPrice} sound?`;
-                dialogue.push({ speaker: "customer", text: offerText });
+                dialogue.push({ speaker: "customer", text: offerText, isAI: false });
                 itemContext.itemInstanceId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
                 const declineResultOriginal = this._getDialogue(customerInstance, 'rikkDeclinesToBuy');
@@ -274,8 +280,8 @@ export class CustomerManager {
 
             if (!itemContext) {
                 const customerResponse = this._getDialogue(customerInstance, 'rikkHasNothingCustomerWants') || { line: "Aight, guess you ain't got what I need today.", payload: null};
-                dialogue.push({ speaker: "rikk", text: "So, what are you looking for?"});
-                dialogue.push({ speaker: "customer", text: customerResponse.line });
+                dialogue.push({ speaker: "rikk", text: "So, what are you looking for?", isAI: false });
+                dialogue.push({ speaker: "customer", text: customerResponse.line, isAI: false });
                 choices.push({ text: "My bad.", outcome: { type: "end_interaction_no_desired_item", payload: customerResponse.payload } });
             } else {
                 customerInstance.currentItemName = itemContext.name;
@@ -283,7 +289,7 @@ export class CustomerManager {
                 let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
                 customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
                 const askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
-                dialogue.push({ speaker: "customer", text: askText });
+                dialogue.push({ speaker: "customer", text: askText, isAI: false });
                 const declineResult = this._getDialogue(customerInstance, 'rikkDeclinesToSell');
                 if (customerInstance.cashOnHand >= customerOfferPrice) {
                     choices.push({ text: `Serve 'em ($${customerOfferPrice})`, outcome: { type: "sell_to_customer", item: itemContext, price: customerOfferPrice } });
@@ -299,8 +305,8 @@ export class CustomerManager {
         } else {
             const rikkLine = "Stash is drier than a popcorn fart, G. Nothin' to move right now.";
             const customerResponse = this._getDialogue(customerInstance, 'acknowledge_empty_stash');
-            dialogue.push({ speaker: "rikk", text: rikkLine });
-            dialogue.push({ speaker: "customer", text: customerResponse.line });
+            dialogue.push({ speaker: "rikk", text: rikkLine, isAI: false });
+            dialogue.push({ speaker: "customer", text: customerResponse.line, isAI: false });
             choices.push({ text: "Later.", outcome: { type: "end_interaction", payload: customerResponse.payload } });
         }
 
