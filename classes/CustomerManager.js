@@ -90,7 +90,7 @@ export class CustomerManager {
 
             if (persona) {
                 const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-                // const rikkDescription = "Rikk is a street-wise dealer."; // Can remain generic or be tailored if needed later.
+                const rikkDescription = "Rikk is a street-wise dealer."; // Defined for use in prompt
 
                 prompt = `
 Setting: ${gameTone}
@@ -99,14 +99,14 @@ Persona Overview: ${persona.description}.
 My Dialogue Style: ${persona.dialogueStyle}.
 My Typical Goal When I See Rikk: ${persona.typicalGoal}.
 Keywords I Might Use: ${persona.keywords ? persona.keywords.join(", ") : "various street slang"}.
-Interaction Context: I am approaching Rikk, a local street dealer, to initiate a transaction or conversation.
-Task: Generate a natural-sounding opening line that I would say to Rikk. It should reflect my detailed persona and goal. I'm trying to see what he's got or if he can help me out.
+Interaction Context: I am approaching Rikk, a local street dealer (${rikkDescription}) in a ${gameTone}. My current mood is ${customerInstance.mood}.
+Task: Craft a characteristic opening line for me, ${customerInstance.name}, to say to Rikk. The line should be approximately 1-2 sentences long. It MUST vividly reflect my persona (overview: ${persona.description}), my specific dialogue style (${persona.dialogueStyle}), my typical goal with Rikk (${persona.typicalGoal}), and incorporate some of my keywords (${persona.keywords ? persona.keywords.join(", ") : "street slang"}). The greeting should also be consistent with my current mood of '${customerInstance.mood}'. It needs to naturally start a conversation or transaction.
 I walk up to Rikk and say:`;
             } else {
                 console.warn(`CustomerManager: AI Persona not found for archetypeKey: ${archetypeKey}. Using fallback prompt.`);
                 // Fallback to original generic prompt
                 const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-                // const rikkDescription = "Rikk is a street-wise dealer.";
+                // const rikkDescription = "Rikk is a street-wise dealer."; // Not needed for this fallback prompt
                 // const customerGoal = "I'm looking to score something."; // Generic for initial greeting
                 prompt = `
 Setting: ${gameTone}

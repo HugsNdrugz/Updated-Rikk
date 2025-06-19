@@ -31,9 +31,9 @@ export class AIManager {
         console.log("AI Manager: Generating dialogue with prompt:", prompt);
         try {
             const result = await this.generator(prompt, {
-                max_new_tokens: 35,
+                max_new_tokens: 55, // Increased
                 num_return_sequences: 1,
-                temperature: 0.8,
+                temperature: 0.85, // Slightly increased
                 repetition_penalty: 1.2,
                 do_sample: true
             });
