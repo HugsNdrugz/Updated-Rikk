@@ -156,7 +156,6 @@ console.log("SCRIPT: Instantiating AIManager...");
 const aiManager = new AIManager();
 game.aiManager = aiManager; // Attach to game instance
 console.log("SCRIPT: AIManager instantiated and attached to game.");
-aiManager.init(); // IMPORTANT: Kick off the model download
 
 // --- State Variables ---
 const localStorageAvailable = isLocalStorageAvailable();
