@@ -23,7 +23,8 @@ class GameState {
                 warrens: 0
             },
             communityFigures: {
-                mama_carter: 0
+                mama_carter: 0, // Reputation with Mama Carter
+                pastor_jones: 0  // Reputation with Pastor Jones
             }
         };
         this.playerSkills = {
@@ -218,7 +219,7 @@ class GameState {
             global: config.STARTING_STREET_CRED ?? 0,
             factions: { police: 0, zetas_cartel: 0 },
             districts: { downtown: 0, warrens: 0 },
-            communityFigures: { mama_carter: 0 }
+            communityFigures: { mama_carter: 0, pastor_jones: 0 } // Ensure Pastor Jones is reset
         };
         this.playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
         this.inventory = [];
@@ -294,15 +295,17 @@ class GameState {
                     warrens: savedState.streetCred.districts?.warrens ?? 0
                 },
                 communityFigures: {
-                    mama_carter: savedState.streetCred.communityFigures?.mama_carter ?? 0
+                    mama_carter: savedState.streetCred.communityFigures?.mama_carter ?? 0,
+                    pastor_jones: savedState.streetCred.communityFigures?.pastor_jones ?? 0 // Handles if pastor_jones is not in an older save
                 }
             };
         } else {
+             // Handles very old saves where streetCred might have been just a number
              this.streetCred = {
-                global: typeof savedState.streetCred === 'number' ? savedState.streetCred : (config.STARTING_STREET_CRED ?? 0), // Handle old save format
+                global: typeof savedState.streetCred === 'number' ? savedState.streetCred : (config.STARTING_STREET_CRED ?? 0),
                 factions: { police: 0, zetas_cartel: 0 },
                 districts: { downtown: 0, warrens: 0 },
-                communityFigures: { mama_carter: 0 }
+                communityFigures: { mama_carter: 0, pastor_jones: 0 }
             };
         }
         this.playerSkills = savedState.playerSkills ? { ...this.playerSkills, ...savedState.playerSkills } : this.playerSkills;

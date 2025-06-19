@@ -1,12 +1,23 @@
 // managers/StreetCredManager.js
 import { debugLogger } from '../utils.js';
+import etiquetteRules from '../data/etiquette_rules.json';
 
 class StreetCredManager {
     constructor(gameState) {
-        console.log("MANAGER: StreetCredManager constructor called"); // Added log
+        console.log("MANAGER: StreetCredManager constructor called");
         this.gameState = gameState;
+        this.etiquetteRules = etiquetteRules;
+
         if (this.gameState.DEBUG_MODE) {
             debugLogger.log('StreetCredManager', 'Initialized with gameState:', gameState);
+            if (this.etiquetteRules && Array.isArray(this.etiquetteRules)) { // Check if array
+                debugLogger.log('StreetCredManager', `Loaded ${this.etiquetteRules.length} etiquette rules.`);
+            } else {
+                debugLogger.warn('StreetCredManager', 'Etiquette rules did not load correctly or is not an array!', this.etiquetteRules);
+                this.etiquetteRules = []; // Ensure it's an array to prevent errors
+            }
+        } else if (!this.etiquetteRules || !Array.isArray(this.etiquetteRules)) { // Ensure array in non-debug
+            this.etiquetteRules = [];
         }
     }
 
@@ -72,6 +83,85 @@ class StreetCredManager {
      */
     getAllStreetCred() {
         return this.gameState.getAllStreetCred();
+    }
+
+    /**
+     * Processes a player's action against the defined street etiquette rules.
+     * If a rule's trigger conditions match the provided actionContext, its impacts
+     * (like StreetCred and Loyalty changes) are applied to the game state.
+     *
+     * @param {object} actionContext - An object containing details about the player's action
+     *                                 and relevant game state. Properties should align with
+     *                                 trigger conditions in `data/etiquette_rules.json`.
+     *                                 Example: {
+     *                                   event_type: "decline_deal_from_customer",
+     *                                   customer_is_new: true,
+     *                                   choice_style: "rude",
+     *                                   target_customer_id: "customer_123",
+     *                                   customer_mood: "neutral"
+     *                                 }
+     * @returns {object|null} An object containing a `feedback_message_id` if a rule is matched
+     *                        and has feedback defined, otherwise null.
+     *                        Example: { feedback_message_id: "feedback_decline_rude_new_customer" }
+     */
+    processEtiquetteAction(actionContext) {
+        if (this.gameState.DEBUG_MODE) {
+            debugLogger.log('StreetCredManager.processEtiquetteAction', 'Processing action:', actionContext);
+        }
+
+        for (const rule of this.etiquetteRules) {
+            let conditionsMet = true;
+            // Check if all trigger conditions in the rule are met by the actionContext
+            for (const key in rule.trigger) {
+                if (rule.trigger[key] !== actionContext[key]) {
+                    conditionsMet = false; // If any condition doesn't match, this rule is not triggered
+                    break;
+                }
+            }
+
+            if (conditionsMet) {
+                if (this.gameState.DEBUG_MODE) {
+                    debugLogger.log('StreetCredManager.processEtiquetteAction', `Matched etiquette rule: ${rule.id}`, rule);
+                }
+
+                // Apply defined impacts
+                if (rule.impacts.streetCred_global_change) {
+                    this.addStreetCred('global', null, rule.impacts.streetCred_global_change);
+                }
+
+                // Apply loyalty change if specified and a target customer is provided
+                if (rule.impacts.loyalty_change && actionContext.target_customer_id) {
+                    if (this.gameState.loyaltyManager) {
+                        this.gameState.loyaltyManager.addLoyalty(actionContext.target_customer_id, rule.impacts.loyalty_change);
+                    } else {
+                        if (this.gameState.DEBUG_MODE) {
+                            debugLogger.warn('StreetCredManager.processEtiquetteAction', 'LoyaltyManager not found on gameState. Cannot apply loyalty change for rule:', rule.id);
+                        }
+                    }
+                }
+
+                // Apply faction-specific StreetCred change
+                if (rule.impacts.streetCred_faction_change && actionContext.target_faction_id) {
+                    this.addStreetCred('factions', actionContext.target_faction_id, rule.impacts.streetCred_faction_change);
+                }
+                // Apply community figure-specific StreetCred change
+                if (rule.impacts.streetCred_community_figure_change && actionContext.target_community_figure_id) {
+                     this.addStreetCred('communityFigures', actionContext.target_community_figure_id, rule.impacts.streetCred_community_figure_change);
+                }
+
+                if (this.gameState.DEBUG_MODE) {
+                    debugLogger.log('StreetCredManager.processEtiquetteAction', `Applied impacts for rule ${rule.id}:`, rule.impacts);
+                }
+
+                // Return feedback message ID; stop after the first matched rule.
+                return { feedback_message_id: rule.impacts.feedback_message_id };
+            }
+        }
+
+        if (this.gameState.DEBUG_MODE) {
+            debugLogger.log('StreetCredManager.processEtiquetteAction', 'No etiquette rule matched for action:', actionContext);
+        }
+        return null; // No rule was matched
     }
 }
 

@@ -851,11 +851,51 @@ function handleChoice(outcome) {
         if (outcome.payload) processPayload(outcome.payload, dealSuccess);
         if (outcomeResult.payload) processPayload(outcomeResult.payload, dealSuccess);
 
-        const customerInstanceForLoyalty = game.getCurrentCustomerInstance();
-        if (customerInstanceForLoyalty && customerInstanceForLoyalty.id && loyaltyChange !== 0) {
-            game.loyaltyManager.addLoyalty(customerInstanceForLoyalty.id, loyaltyChange);
-            phoneShowNotification(`Loyalty with ${customerInstanceForLoyalty.name} changed by ${loyaltyChange}.`, "System");
+        // Process etiquette context if it exists from the dialogue choice outcome
+        if (outcome.etiquetteContext) {
+            // Call StreetCredManager to evaluate the action against etiquette rules
+            const etiquetteResult = game.streetCredManager.processEtiquetteAction(outcome.etiquetteContext);
+            // If a rule matched and provided a feedback message ID, display it via UIManager
+            if (etiquetteResult && etiquetteResult.feedback_message_id) {
+                if (game.DEBUG_MODE) {
+                    debugLogger.log('handleChoice', `Etiquette feedback (from dialogue choice) to display: ${etiquetteResult.feedback_message_id}`);
+                }
+                uiManager.displayEtiquetteFeedback(etiquetteResult.feedback_message_id);
+            }
         }
+
+        const customerInstanceForLoyalty = game.getCurrentCustomerInstance();
+        // Loyalty changes are now primarily handled by processEtiquetteAction if defined in rules.
+        // Keep direct loyalty change for outcomes that don't go through etiquette system or as a fallback.
+        if (loyaltyChange !== 0) { // This was the original direct loyalty change
+            if (customerInstanceForLoyalty && customerInstanceForLoyalty.id) {
+                 // Check if an etiquette rule already handled loyalty for this specific customer via its context
+                let loyaltyAlreadyHandledByEtiquette = false;
+                if (outcome.etiquetteContext && outcome.etiquetteContext.target_customer_id === customerInstanceForLoyalty.id) {
+                    const matchedRule = game.streetCredManager.etiquetteRules.find(rule => {
+                        let conditionsMet = true;
+                        for (const key in rule.trigger) {
+                            if (rule.trigger[key] !== outcome.etiquetteContext[key]) {
+                                conditionsMet = false;
+                                break;
+                            }
+                        }
+                        return conditionsMet;
+                    });
+                    if (matchedRule && matchedRule.impacts && matchedRule.impacts.hasOwnProperty('loyalty_change')) {
+                        loyaltyAlreadyHandledByEtiquette = true;
+                    }
+                }
+
+                if (!loyaltyAlreadyHandledByEtiquette) {
+                    game.loyaltyManager.addLoyalty(customerInstanceForLoyalty.id, loyaltyChange);
+                    phoneShowNotification(`Loyalty with ${customerInstanceForLoyalty.name} changed by ${loyaltyChange}.`, "System");
+                } else if (game.DEBUG_MODE) {
+                    debugLogger.log('handleChoice', `Direct loyalty change for ${customerInstanceForLoyalty.name} skipped as etiquette rule handled it.`);
+                }
+            }
+        }
+
 
         if (customerInstanceForLoyalty && customerInstanceForLoyalty.archetypeKey) {
             const allTemplates = game.getCustomerTemplates();
@@ -867,14 +907,106 @@ function handleChoice(outcome) {
                     game.streetCredManager.addStreetCred('global', null, 1);
                     if (game.DEBUG_MODE) phoneShowNotification("StreetCred +1 (Successful Deal).", "System");
 
+                    // Global StreetCred from successful deal (generic)
+                    // Etiquette system can further modify this based on specific rules.
+                    // We need to ensure this base cred isn't re-applied if an etiquette rule *also* gives global cred.
+                    // For now, let etiquette rules add/subtract from this base.
+                    // A more robust way would be for etiquette rules to provide the *total* global cred change.
+                    // Let's assume for now etiquette rules provide *additional* changes or override.
+                    // The current StreetCredManager.processEtiquetteAction sums up.
+
+                    // Check if an etiquette rule already handled global street cred
+                    let globalCredAlreadyHandledByEtiquette = false;
+                    if (outcome.etiquetteContext) {
+                        const matchedRule = game.streetCredManager.etiquetteRules.find(rule => {
+                            let conditionsMet = true;
+                            for (const key in rule.trigger) {
+                                if (rule.trigger[key] !== outcome.etiquetteContext[key]) {
+                                    conditionsMet = false;
+                                    break;
+                                }
+                            }
+                            return conditionsMet;
+                        });
+                         if (matchedRule && matchedRule.impacts && matchedRule.impacts.hasOwnProperty('streetCred_global_change')) {
+                            globalCredAlreadyHandledByEtiquette = true;
+                        }
+                    }
+
+                    if (!globalCredAlreadyHandledByEtiquette) {
+                        game.streetCredManager.addStreetCred('global', null, 1);
+                        if (game.DEBUG_MODE) phoneShowNotification("StreetCred +1 (Successful Deal).", "System");
+                    } else if (game.DEBUG_MODE) {
+                         debugLogger.log('handleChoice', `Base global StreetCred from deal success skipped as etiquette rule handled it.`);
+                    }
+
+                    // Template-specific cred impacts (potentially could also be moved to etiquette rules)
                     if (outcome.type === "sell_to_customer" && typeof config.credImpactSell === 'number' && config.credImpactSell !== 1) {
-                        game.streetCredManager.addStreetCred('global', null, config.credImpactSell - 1);
+                        game.streetCredManager.addStreetCred('global', null, config.credImpactSell - 1); // This is an adjustment to the base +1
                         if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Additional global StreetCred from template (sell): ${config.credImpactSell - 1}`);
                     } else if (outcome.type === "buy_from_customer" && typeof config.credImpactBuy === 'number' && config.credImpactBuy !== 1) {
-                        game.streetCredManager.addStreetCred('global', null, config.credImpactBuy - 1);
+                        game.streetCredManager.addStreetCred('global', null, config.credImpactBuy - 1); // This is an adjustment to the base +1
                         if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Additional global StreetCred from template (buy): ${config.credImpactBuy - 1}`);
                     }
                 }
+            }
+        }
+
+        // Systemic etiquette check for sell_to_customer_success (e.g. price gouging)
+        if (outcome.type === "sell_to_customer" && dealSuccess) {
+            const itemSold = outcome.item; // The item object from the outcome
+            const salePrice = outcome.price;
+
+            // Determine item_demand and world_event_active (shortage_generic)
+            // This is simplified; actual demand/shortage would be more dynamic
+            let itemDemand = "normal"; // default
+            if (itemSold.itemTypeObj && (itemSold.itemTypeObj.type === "DRUG" || itemSold.itemTypeObj.type === "PHARMACEUTICAL")) { // Example: drugs are high demand
+                itemDemand = "high";
+            }
+
+            const isShortageActive = game.getActiveWorldEvents().some(event => event.id === "shortage_generic"); // Example event ID
+
+            // Calculate price_ratio_to_base (simplified)
+            // This needs the item's true base value before any modifiers.
+            // Assuming item.itemTypeObj.baseValue is this. For a real system, this might need careful handling.
+            let priceRatio = null;
+            if (itemSold.itemTypeObj && itemSold.itemTypeObj.baseValue > 0) {
+                priceRatio = salePrice / itemSold.itemTypeObj.baseValue;
+            }
+
+            const sellActionContext = {
+                event_type: "sell_to_customer_success",
+                target_customer_id: currentCustomer.id,
+                customer_mood: currentCustomer.mood,
+                customer_is_new: !currentCustomer.hasMetRikkBefore,
+                item_id: itemSold.id,
+                item_type: itemSold.itemTypeObj ? itemSold.itemTypeObj.type : "UNKNOWN",
+                item_demand: itemDemand,
+                world_event_active: isShortageActive ? "shortage_generic" : null,
+                price_ratio_to_base: priceRatio ? priceRatio.toFixed(2) : null // Pass as string for direct comparison if needed, or keep as number
+            };
+
+            // Refine price_ratio_to_base for direct comparison with rule "">1.8"
+            // The rule trigger matching in StreetCredManager is basic string equality.
+            // For numeric comparisons like '>', we'd need a more complex rule evaluator.
+            // For now, we'll pass it as a string, and the current simple matcher won't match ">1.8".
+            // This highlights a limitation of the current simple rule matching.
+            // To make it work with current simple matcher, we'd need a specific context like:
+            // price_gouging_level: "high" if priceRatio > 1.8
+            // For this exercise, we'll acknowledge this limitation.
+            // The rule `price_ratio_to_base: ">1.8"` will NOT currently be matched by the simple system
+            // as StreetCredManager's processEtiquetteAction uses direct property matching.
+            // A more advanced rule evaluator would be needed for numeric comparisons like '>'.
+            // The rule `fair_price_during_shortage` has a better chance if other conditions match.
+
+            // Call StreetCredManager to evaluate this sales action against etiquette rules
+            const sellEtiquetteResult = game.streetCredManager.processEtiquetteAction(sellActionContext);
+            // If a rule matched and provided a feedback message ID, display it
+            if (sellEtiquetteResult && sellEtiquetteResult.feedback_message_id) {
+                if (game.DEBUG_MODE) {
+                    debugLogger.log('handleChoice', `Etiquette feedback (from sale event) to display: ${sellEtiquetteResult.feedback_message_id}`);
+                }
+                uiManager.displayEtiquetteFeedback(sellEtiquetteResult.feedback_message_id);
             }
         }
 

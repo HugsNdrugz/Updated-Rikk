@@ -1,5 +1,7 @@
 // UIManager.js
 import { debugLogger } from './utils.js';
+import feedbackMessages from '../data/feedback_messages.json';
+import { showNotification as phoneShowNotification } from './phone_ambient_ui.js';
 
 class UIManager {
     constructor(gameStateInstance, config = {}) {
@@ -99,6 +101,7 @@ class UIManager {
         this.originalSettingsBeforePreview = {};
         this.defaultStyleSettings = config.defaultStyleSettings || {};
         this.styleSettingsKey = config.styleSettingsKey || 'rikkGameStyleSettingsV1_fallback'; // Fallback key
+        this.feedbackMessages = feedbackMessages;
 
         // Add references for preview/reset buttons if UIManager will manage their text.
         // These will be populated in initDOMReferences.
@@ -452,6 +455,32 @@ class UIManager {
                     this.choicesArea.innerHTML = '';
                 }
             }
+
+    /**
+     * Displays etiquette-related feedback to the player.
+     * Looks up the feedbackId in the loaded feedbackMessages and shows a phone notification.
+     * @param {string} feedbackId - The ID of the feedback message to display (from data/feedback_messages.json).
+     */
+    displayEtiquetteFeedback(feedbackId) {
+        if (!feedbackId) return;
+
+        // Retrieve the message string using the feedbackId from the imported JSON data
+        const message = this.feedbackMessages[feedbackId];
+        const title = "Word on the Street"; // Generic title for etiquette feedback notifications
+
+        if (message) {
+            // Use the imported phoneShowNotification utility to display the message
+            phoneShowNotification(message, title);
+            if (this.gameState && this.gameState.DEBUG_MODE) {
+                debugLogger.log('UIManager', `Displayed etiquette feedback for ID ${feedbackId}: "${message}"`);
+            }
+        } else {
+            // Log a warning if a feedbackId is provided but no corresponding message is found
+            if (this.gameState && this.gameState.DEBUG_MODE) {
+                debugLogger.warn('UIManager', `No feedback message found for ID: ${feedbackId}`);
+            }
+        }
+    }
         }
 
     setPhoneTitle(title) {

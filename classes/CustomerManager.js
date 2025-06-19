@@ -118,42 +118,48 @@ export class CustomerManager {
                     // Note: The original instruction mentioned merging with 'customerReactsToRudeDismissal' payload.
                     // For this pass, creating a fresh payload as per simplified instruction.
                     // If 'customerReactsToRudeDismissal' also has a payload, it would be merged here or its effects added.
-                    rudeDismissalPayload.effects.push({ type: "statChange", target: "player", stat: "globalStreetCred", amount: -1 });
-                    rudeDismissalPayload.effects.push({ type: "statChange", target: "player", stat: "loyalty", npcId: customerInstance.id, amount: -2 });
 
+                    // RUDE DECLINE - No direct stat changes here, etiquette system will handle it.
                     choices.push({
                         text: "That's junk. Get lost.", // More dismissive text
                         outcome: {
-                            type: "rikkDeclinesToBuy",
-                            payload: rudeDismissalPayload,
+                            type: "rikkDeclinesToBuy", // This is the event_type for the rule
+                            etiquetteContext: { // NEW: Context for StreetCredManager
+                                event_type: "decline_deal_from_customer",
+                                customer_is_new: true,
+                                choice_style: "rude",
+                                target_customer_id: customerInstance.id,
+                                customer_mood: customerInstance.mood // Example of existing state
+                            },
+                            // payload: rudeDismissalPayload, // Old direct payload removed/modified
                             followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToRudeDismissal') || {}).line || "Hmph. Whatever."
                         }
                     });
 
-                    // GOOD ETIQUETTE / NEUTRAL DECLINE
-                    const politeDeclinePayload = {
-                        type: "EFFECT",
-                        effects: [
-                            { type: "statChange", target: "player", stat: "globalStreetCred", amount: 1 },
-                            { type: "statChange", target: "player", stat: "loyalty", npcId: customerInstance.id, amount: 2 }
-                        ]
-                    };
+                    // POLITE DECLINE - No direct stat changes here, etiquette system will handle it.
                     choices.push({
                         text: "Not for me. Good looks tho.", // Polite decline
                         outcome: {
-                            type: "rikkDeclinesToBuy",
-                            payload: politeDeclinePayload,
+                            type: "rikkDeclinesToBuy", // This is the event_type for the rule
+                            etiquetteContext: { // NEW: Context for StreetCredManager
+                                event_type: "decline_deal_from_customer",
+                                customer_is_new: true,
+                                choice_style: "polite",
+                                target_customer_id: customerInstance.id,
+                                customer_mood: customerInstance.mood
+                            },
+                            // payload: politeDeclinePayload, // Old direct payload removed/modified
                             followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToPoliteDismissal') || {}).line || "Aight. Respect."
                         }
                     });
 
                 } else {
-                    // Original "Nah, pass." choice for returning customers
+                    // Original "Nah, pass." choice for returning customers (no special etiquette context for now)
                     choices.push({
                         text: "Nah, pass.",
                         outcome: {
                             type: "rikkDeclinesToBuy",
-                            payload: declineResultOriginal.payload,
+                            payload: declineResultOriginal.payload, // Keep existing payload if any
                             followUpDialogue: declineResultOriginal.line
                         }
                     });
