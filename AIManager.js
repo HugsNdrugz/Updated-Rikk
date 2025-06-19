@@ -9,10 +9,10 @@ export class AIManager {
     }
 
     async init() {
-        console.log("AI Manager: Initializing... This will download the model (approx. 150MB).");
+        console.log("AI Manager: Initializing... This will download DialoGPT-small model (approx. 350MB) and attempt 8-bit quantization.");
         try {
-            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA', {
-                dtype: 'q4f16' // Specify 4-bit float16 quantization for Gemma
+            this.generator = await pipeline('text-generation', 'microsoft/DialoGPT-small', {
+                dtype: 'q8' // Attempt 8-bit quantization
             });
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
