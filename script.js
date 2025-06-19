@@ -359,7 +359,7 @@ function selectOrGenerateCustomerFromPool() {
             returningCustomer.cashOnHand = Math.floor(Math.random() * 80) + 20;
             returningCustomer.mood = "neutral";
         }
-        console.log("Returning customer:", returningCustomer.name, "New Mood:", returningCustomer.mood);
+        // console.log("Returning customer:", returningCustomer.name, "New Mood:", returningCustomer.mood);
         return returningCustomer;
     }
 
@@ -390,7 +390,7 @@ function selectOrGenerateCustomerFromPool() {
     } else {
         customersPool[Math.floor(Math.random() * MAX_CUSTOMERS_IN_POOL)] = newCustomer;
     }
-    console.log("New customer generated:", newCustomer.name, "Archetype:", newCustomer.archetypeKey, "Initial Mood:", newCustomer.mood);
+    // console.log("New customer generated:", newCustomer.name, "Archetype:", newCustomer.archetypeKey, "Initial Mood:", newCustomer.mood);
     return newCustomer;
 }
 
@@ -496,10 +496,9 @@ function generateCustomerInteractionData() {
             choices.push({ text: `Cop it ($${customerDemandsPrice})`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice } });
         } else {
             let rikkNoCashText = "(Damn, stash is low for that.)";
-            if (archetype.dialogueVariations?.lowCashRikk) {
-                const moodReaction = archetype.dialogueVariations.lowCashRikk(customerData.mood);
-                rikkNoCashText = Array.isArray(moodReaction) ? getRandomElement(moodReaction) : moodReaction;
-            }
+            // Use getReaction for robustness and consistency
+            const moodReaction = getReaction(archetype.dialogueVariations?.lowCashRikk, customerData.mood, rikkNoCashText);
+            rikkNoCashText = moodReaction; // getReaction handles array and fallback
             dialogue.push({ speaker: "rikk", text: `(To self: ${rikkNoCashText}) Customer hears: "Yo, $${customerDemandsPrice} is a bit steep for my pockets right now, G. Wallet's lookin' anorexic."` });
             choices.push({ text: `Cop it (Need $${customerDemandsPrice - cash} more)`, outcome: { type: "buy_from_customer", item: itemContext, price: customerDemandsPrice }, disabled: true });
         }
@@ -652,6 +651,22 @@ function displaySystemMessage(message) { displayPhoneMessage(message, 'narration
 function displayChoices(choices) { choicesArea.innerHTML = ''; choices.forEach(choice => { const button = document.createElement('button'); button.classList.add('choice-button'); button.textContent = choice.text; if (choice.outcome.type.startsWith('decline') || choice.outcome.type.includes('kick_rocks')) button.classList.add('decline'); button.disabled = choice.disabled || false; if (!choice.disabled) { button.addEventListener('click', () => handleChoice(choice.outcome)); } choicesArea.appendChild(button); }); }
 
 function handleChoice(outcome) {
+    if (!currentCustomer || !currentCustomer.data || !currentCustomer.archetypeKey || typeof customerArchetypes === 'undefined' || !customerArchetypes[currentCustomer.archetypeKey]) {
+        console.error("Critical Error in handleChoice: currentCustomer, currentCustomer.data, archetypeKey, or customerArchetypes invalid/undefined.", {
+            customerExists: !!currentCustomer,
+            customerDataExists: !!(currentCustomer && currentCustomer.data),
+            archetypeKeyExists: !!(currentCustomer && currentCustomer.archetypeKey),
+            customerArchetypesExist: typeof customerArchetypes !== 'undefined',
+            archetypeInArchetypesExists: !!(currentCustomer && currentCustomer.archetypeKey && customerArchetypes && customerArchetypes[currentCustomer.archetypeKey])
+        });
+        displaySystemMessage("System Error: Critical customer data missing. Interaction cannot proceed.");
+        // Potentially call endCustomerInteraction() or a similar cleanup if appropriate
+        // For now, just prevent further execution in this choice handling.
+        clearChoices(); // Clear any displayed choices
+        setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME); // End interaction after a delay
+        return; // Stop further processing of this choice
+    }
+
     clearChoices();
     let narrationText = "";
     let selectedCustomerReaction = "";
@@ -659,22 +674,26 @@ function handleChoice(outcome) {
     let credChange = 0;
     let dialogueContextKey = null; // Added declaration
 
-    if (!currentCustomer || !currentCustomer.archetypeKey || !currentCustomer.data || typeof customerArchetypes === 'undefined' || !customerArchetypes[currentCustomer.archetypeKey]) {
-        console.error("Critical Error: currentCustomer, archetypeKey, data, or customerArchetypes undefined.", currentCustomer);
-        displaySystemMessage("System Error: Customer data missing or type undefined. Ending interaction.");
-        setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME);
-        return;
-    }
     const archetype = customerArchetypes[currentCustomer.archetypeKey];
     const customerState = currentCustomer.data;
     let dealSuccess = false;
 
     const getReaction = (variationFn, mood, fallback) => {
-        if (variationFn) {
-            const reactionOutput = variationFn(mood);
-            if (Array.isArray(reactionOutput)) return getRandomElement(reactionOutput);
-            return reactionOutput || fallback; // Ensure it returns fallback if output is empty string
+        if (typeof variationFn === 'function') { // Check if it's actually a function
+            try {
+                const reactionOutput = variationFn(mood);
+                if (Array.isArray(reactionOutput)) {
+                    // Ensure getRandomElement doesn't fail with an empty array, though it already handles it.
+                    return getRandomElement(reactionOutput) || fallback;
+                }
+                return reactionOutput || fallback;
+            } catch (e) {
+                console.error(`Error executing variationFn for mood '${mood}':`, e);
+                return fallback; // Fallback if the function call itself errors
+            }
         }
+        // If variationFn is not a function (e.g., missing from archetype), provide a generic console warning.
+        // console.warn(`Missing or invalid variationFn. Mood: '${mood}'. Using fallback.`);
         return fallback;
     };
 
@@ -983,7 +1002,7 @@ function saveGameState() {
     };
     try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
-        console.log("Game state saved.");
+        // console.log("Game state saved.");
     } catch (e) { console.error("Error saving game state:", e); }
 }
 
@@ -1003,7 +1022,7 @@ function loadGameState() {
             customersPool = Array.isArray(loadedState.customersPool) ? loadedState.customersPool : [];
             nextCustomerId = loadedState.nextCustomerId || 1;
             updateEventTicker();
-            console.log("Game state loaded.");
+            // console.log("Game state loaded.");
             return true;
         } catch (e) {
             console.error("Error parsing saved game state:", e);
@@ -1015,7 +1034,7 @@ function loadGameState() {
 }
 function clearSavedGameState() {
     localStorage.removeItem(SAVE_KEY);
-    console.log("Saved game state cleared.");
+    // console.log("Saved game state cleared.");
 }
 function checkForSavedGame() {
     if (localStorage.getItem(SAVE_KEY)) {

@@ -364,33 +364,33 @@ const customerArchetypes = {
                  displaySystemMessage(`You feel **${customerState.name}'s** beady eyes on you as they leave... **like a human CCTV camera.**`);
             }
         }
-    },
-    PASTOR_JONES: {
-        key: "PASTOR_JONES",
-        baseName: "Pastor Jones",
-        // Add other minimal required fields if any, based on common structure.
-        // For now, keeping it very minimal as per instructions.
-        greeting: (customer, item) => {
-            // Basic greeting, can be expanded later
-            if (customer.hasMetRikkBefore) {
-                return `Ah, Rikk, my son. Blessings be upon you. Still walking the path, I see.`;
-            }
-            return `Young man, they call you Rikk? I am Pastor Jones. The Lord has guided me to your... establishment.`;
-        },
-        initialMood: "calm", // Example, can be adjusted
-        priceToleranceFactor: 1.0, // Example
-        dialogueVariations: {
-            "rikkDeclinesPastor": [{ "lines": ["Sorry, Pastor. Can't get involved right now."] }],
-            "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
-            "pastorDeclinesHelp": [{ "lines": ["I understand, my son. Some burdens are not for everyone to bear."] }],
-            customerReactsToRudeDismissal: (mood) => {
-                return [{ lines: ["My son, such harsh words benefit no one. I shall pray for you."] }];
-            },
-            customerReactsToPoliteDismissal: (mood) => {
-                return [{ lines: ["The Lord understands your position, Rikk. Peace be with you."] }];
-            }
-            // Add other necessary dialogue variations if interaction logic requires them for this customer.
-        }
-        // Add other fields like buyPreference, sellPreference, heatImpact, etc., as needed for full functionality.
-    },
+    // }, // This comma is important, it separates SNITCH from PASTOR_JONES
+    // PASTOR_JONES: {
+    //     key: "PASTOR_JONES",
+    //     baseName: "Pastor Jones",
+    //     // Add other minimal required fields if any, based on common structure.
+    //     // For now, keeping it very minimal as per instructions.
+    //     greeting: (customer, item) => {
+    //         // Basic greeting, can be expanded later
+    //         if (customer.hasMetRikkBefore) {
+    //             return `Ah, Rikk, my son. Blessings be upon you. Still walking the path, I see.`;
+    //         }
+    //         return `Young man, they call you Rikk? I am Pastor Jones. The Lord has guided me to your... establishment.`;
+    //     },
+    //     initialMood: "calm", // Example, can be adjusted
+    //     priceToleranceFactor: 1.0, // Example
+    //     dialogueVariations: {
+    //         "rikkDeclinesPastor": [{ "lines": ["Sorry, Pastor. Can't get involved right now."] }],
+    //         "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
+    //         "pastorDeclinesHelp": [{ "lines": ["I understand, my son. Some burdens are not for everyone to bear."] }],
+    //         customerReactsToRudeDismissal: (mood) => {
+    //             return [{ lines: ["My son, such harsh words benefit no one. I shall pray for you."] }];
+    //         },
+    //         customerReactsToPoliteDismissal: (mood) => {
+    //             return [{ lines: ["The Lord understands your position, Rikk. Peace be with you."] }];
+    //         }
+    //         // Add other necessary dialogue variations if interaction logic requires them for this customer.
+    //     }
+    //     // Add other fields like buyPreference, sellPreference, heatImpact, etc., as needed for full functionality.
+    // },
 };
