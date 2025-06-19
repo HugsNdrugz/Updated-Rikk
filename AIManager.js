@@ -21,7 +21,7 @@ export class AIManager {
         // For production, use a secure backend proxy to make API calls.
         // Do NOT commit your real API key to version control.
         const apiKey = "YOUR_GEMINI_API_KEY_HERE";
-        const modelId = "gemini-1.5-flash-lite-preview-06-17"; // Using the specified model
+        const modelId = "gemini-2.5-flash-lite-preview-06-17"; // Using the specified model
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?key=${apiKey}`;
 
         const requestBody = {
