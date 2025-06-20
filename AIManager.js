@@ -9,10 +9,10 @@ export class AIManager {
     }
 
     async init() {
-        console.log("AI Manager: Initializing... This will download the Gemma ONNX model. This may take some time.");
+        console.log("AI Manager: Initializing AI model... This may take some time depending on model size and connection speed.");
         try {
             const progressCallback = (progress) => { console.log('AI Manager: Model loading progress:', progress); };
-            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA', { progress_callback: progressCallback });
+            this.generator = await pipeline('text-generation', 'onnx-community/Phi-3.5-mini-instruct-onnx-web', { progress_callback: progressCallback });
             console.log('AI Manager: Pipeline assignment complete. Generator object:', this.generator);
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
