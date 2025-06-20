@@ -84,43 +84,20 @@ export class CustomerManager {
         let greetingInfo = { text: '', isAI: false };
 
         if (useAI) {
-            const archetypeKey = customerInstance.archetypeKey;
-            const persona = this.customerTemplates[archetypeKey]?.aiPromptPersona;
-            let prompt;
+            const gameTone = "This is a gritty, urban setting where people hustle to get by.";
+            const rikkDescription = "Rikk is a street-wise dealer.";
+            const customerGoal = "I'm looking to score something."; // Generic for initial greeting
 
-            if (persona) {
-                const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-                const rikkDescription = "Rikk is a street-wise dealer."; // Defined for use in prompt
-
-                prompt = `
-Setting: ${gameTone}
-My Character: My name is ${customerInstance.name}.
-Persona Overview: ${persona.description}.
-My Dialogue Style: ${persona.dialogueStyle}.
-My Typical Goal When I See Rikk: ${persona.typicalGoal}.
-Keywords I Might Use: ${persona.keywords ? persona.keywords.join(", ") : "various street slang"}.
-Interaction Context: I am approaching Rikk, a local street dealer (${rikkDescription}) in a ${gameTone}. My current mood is ${customerInstance.mood}.
-Task: Craft a characteristic opening line for me, ${customerInstance.name}, to say to Rikk. The line should be approximately 1-2 sentences long. It MUST vividly reflect my persona (overview: ${persona.description}), my specific dialogue style (${persona.dialogueStyle}), my typical goal with Rikk (${persona.typicalGoal}), and incorporate some of my keywords (${persona.keywords ? persona.keywords.join(", ") : "street slang"}). The greeting should also be consistent with my current mood of '${customerInstance.mood}'. It needs to naturally start a conversation or transaction.
-I walk up to Rikk and say:`;
-            } else {
-                console.warn(`CustomerManager: AI Persona not found for archetypeKey: ${archetypeKey}. Using fallback prompt.`);
-                // Fallback to original generic prompt
-                const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-                // const rikkDescription = "Rikk is a street-wise dealer."; // Not needed for this fallback prompt
-                // const customerGoal = "I'm looking to score something."; // Generic for initial greeting
-                prompt = `
+            const prompt = `
 Setting: ${gameTone}
 My Persona: My name is ${customerInstance.name}. People say I'm usually ${customerInstance.mood}. I'm trying to act natural, but I need to talk to a local street dealer named Rikk.
 Task: I need to start a conversation with Rikk to see what he's got or if he can help me out. I should sound like I belong in this environment.
 I walk up to Rikk and say:`;
-            }
-
             let aiText = await this.aiManager.generateDialogue(prompt);
 
-            if (!aiText || aiText.length < 5) { // Basic validation for AI output
-                console.warn("CustomerManager: AI generation failed or too short, using fallback greeting from template.");
-                const fallbackDialogue = this._getDialogue(customerInstance, 'greeting');
-                greetingInfo.text = fallbackDialogue ? fallbackDialogue.line : "Hey Rikk, what's good?"; // Further fallback if _getDialogue fails
+            if (!aiText || aiText.length < 5) {
+                console.warn("CustomerManager: AI generation failed or too short, using fallback greeting.");
+                greetingInfo.text = this._getDialogue(customerInstance, 'greeting').line;
                 greetingInfo.isAI = false;
             } else {
                 console.log("CustomerManager: AI greeting generated successfully.");
@@ -128,8 +105,7 @@ I walk up to Rikk and say:`;
                 greetingInfo.isAI = true;
             }
         } else {
-            const fallbackDialogue = this._getDialogue(customerInstance, 'greeting');
-            greetingInfo.text = fallbackDialogue ? fallbackDialogue.line : "Yo Rikk, you around?"; // Further fallback
+            greetingInfo.text = this._getDialogue(customerInstance, 'greeting').line;
             greetingInfo.isAI = false; // Explicitly false
         }
 

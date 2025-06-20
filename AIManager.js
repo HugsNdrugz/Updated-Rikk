@@ -1,74 +1,66 @@
 // AIManager.js
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
 
 export class AIManager {
     constructor() {
-        // !!! IMPORTANT SECURITY WARNING !!!
-        // The API key below is a placeholder. If you replace it with a real API key
-        // and deploy this code to a client-side application (runs in the browser),
-        // your API key will be exposed and can be misused, potentially incurring charges.
-        // For production, use a secure backend proxy to make API calls.
-        // Do NOT commit your real API key to version control.
-        this.apiKey = "YOUR_GEMINI_API_KEY_HERE";
-
-        this.genAI = null;
+        this.generator = null;
         this.isReady = false;
+        console.log("MANAGER: AIManager constructor called.");
+    }
 
-        if (this.apiKey === "YOUR_GEMINI_API_KEY_HERE" || !this.apiKey) {
-            console.warn("AI Manager: API key is a placeholder or missing. SDK will not be initialized. Please provide a valid API key.");
-            this.isReady = false;
-        } else {
-            try {
-                this.genAI = new GoogleGenerativeAI(this.apiKey);
-                this.isReady = true;
-                console.log("MANAGER: AIManager constructor called. Configured for Google Gemini API via @google/genai SDK.");
-            } catch (error) {
-                console.error("AI Manager: Error initializing GoogleGenerativeAI SDK. Ensure API key is valid and SDK is loaded/installed.", error);
-                this.isReady = false;
-                this.genAI = null;
-            }
+    async init() {
+        console.log("AI Manager: Initializing... This will download the model (approx. 150MB).");
+        try {
+            this.generator = await pipeline('text-generation', 'Xenova/distilgpt2');
+            this.isReady = true;
+            console.log("AI Manager: Model loaded and ready!");
+            document.dispatchEvent(new CustomEvent('aiReady'));
+        } catch (error) {
+            console.error("AI Manager: Failed to load model.", error);
         }
     }
 
-    async generateDialogue(prompt_text) {
-        if (!this.isReady || !this.genAI) {
-            console.warn("AI Manager: generateDialogue called but SDK not ready (SDK not initialized or API key missing/placeholder).");
-            return "AI system not ready (SDK not initialized or API key missing/placeholder).";
+    async generateDialogue(prompt) {
+        if (!this.isReady) {
+            console.warn("AI Manager: generateDialogue called before model was ready.");
+            return "Uh... what was I saying?";
         }
 
-        console.log("AI Manager: Generating dialogue via @google/genai SDK with prompt:", prompt_text);
-        const modelId = "gemini-2.5-flash-lite-preview-06-17";
-
+        console.log("AI Manager: Generating dialogue with prompt:", prompt);
         try {
-            const model = this.genAI.getGenerativeModel({ model: modelId });
-            // For a single string prompt, sending it directly is simplest.
-            // The SDK will wrap it as { role: "user", parts: [{ text: prompt_text }] }
-            // To include generationConfig (like temperature, maxOutputTokens), it would be:
-            // const generationConfig = {
-            //   temperature: 0.85,
-            //   maxOutputTokens: 55,
-            // };
-            // const result = await model.generateContent({
-            //   contents: [{ role: "user", parts: [{ text: prompt_text }] }],
-            //   generationConfig,
-            // });
-            // For simplicity as per current instructions, sending prompt_text directly:
-            const result = await model.generateContent(prompt_text);
-            const response = result.response;
+            const result = await this.generator(prompt, {
+                max_new_tokens: 35,
+                num_return_sequences: 1,
+                temperature: 0.8,
+                repetition_penalty: 1.2,
+                do_sample: true
+            });
 
-            if (!response) {
-                console.error("AI Manager: Gemini SDK returned an undefined response. Full result:", result);
-                return "My mind just blanked, man. (SDK Error: Empty response)";
+            let generatedText = result[0].generated_text;
+
+            // Remove the prompt from the beginning of the generated text
+            if (generatedText.startsWith(prompt)) {
+                generatedText = generatedText.substring(prompt.length);
             }
 
-            const generatedText = response.text();
+            // Remove incomplete sentences at the end
+            const lastPunctuationIndex = Math.max(
+                generatedText.lastIndexOf('.'),
+                generatedText.lastIndexOf('?'),
+                generatedText.lastIndexOf('!')
+            );
 
-            console.log("AI Manager: Gemini SDK generated text:", generatedText);
-            return generatedText.trim();
+            if (lastPunctuationIndex > -1 && lastPunctuationIndex < generatedText.length - 1) {
+                generatedText = generatedText.substring(0, lastPunctuationIndex + 1);
+            }
+
+            generatedText = generatedText.trim();
+
+            console.log("AI Manager: Generated text:", generatedText);
+            return generatedText;
         } catch (error) {
-            console.error("AI Manager: Error during @google/genai SDK call:", error);
-            const errorMessage = error.message || "Unknown error during API call.";
-            return `My mind just blanked, man. (SDK Error: ${errorMessage})`;
+            console.error("AI Manager: Error during text generation.", error);
+            return "My mind just blanked, man.";
         }
     }
 }
