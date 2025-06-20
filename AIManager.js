@@ -1,5 +1,5 @@
 // AIManager.js
-import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2';
 
 export class AIManager {
     constructor() {
@@ -11,20 +11,14 @@ export class AIManager {
     async init() {
         console.log("AI Manager: Initializing... This will download the Gemma ONNX model. This may take some time.");
         try {
-            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA', {
-                progress_callback: (data) => {
-                    console.log("AI Manager: Model loading progress:", {
-                        status: data.status,
-                        file: data.file,
-                        progress: data.progress,
-                        loaded: data.loaded,
-                    });
-                }
-            });
+            const progressCallback = (progress) => { console.log('AI Manager: Model loading progress:', progress); };
+            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA', { progress_callback: progressCallback });
+            console.log('AI Manager: Pipeline assignment complete. Generator object:', this.generator);
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
             document.dispatchEvent(new CustomEvent('aiReady'));
         } catch (error) {
+            console.log("AI Manager: Full model initialization FAILED in try block.");
             console.error("AI Manager: Failed to load model.", error);
         }
     }
