@@ -314,27 +314,48 @@ function setupEventListeners() {
     });
 }
 
+function setupAIEventListeners() {
+    const aiLoadStatus = document.getElementById('ai-load-status');
+    const aiProgressBar = document.getElementById('ai-progress-bar');
+
+    document.addEventListener('aiLoadingProgress', (event) => {
+        if (event.detail) {
+            const progress = event.detail;
+            let percentage = progress.progress ? Math.round(progress.progress) : (progress.loaded && progress.total ? Math.round((progress.loaded / progress.total) * 100) : 0);
+            if (aiLoadStatus) {
+                aiLoadStatus.textContent = `Loading: ${progress.file} (${percentage}%)`;
+            }
+            if (aiProgressBar) {
+                aiProgressBar.style.width = percentage + '%';
+                aiProgressBar.textContent = percentage + '%';
+            }
+        }
+    });
+
+    document.addEventListener('aiReady', () => {
+        console.log("SCRIPT: AI Ready event received! Proceeding to start screen.");
+        if (aiLoadStatus) {
+            aiLoadStatus.textContent = 'AI Ready. Starting game...';
+        }
+        // Transition to start screen
+        uiManager.showScreen(uiManager.startScreen);
+        uiManager.activateMainMenuLights(true);
+        checkForSavedGame();
+    });
+}
+
 function initializeUIAndSettings() {
     if (uiManager.splashScreen) {
         console.log("SCRIPT: Showing splash screen.");
         uiManager.showScreen(uiManager.splashScreen);
-        setTimeout(() => {
-            console.log("SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.");
-            uiManager.showScreen(uiManager.startScreen);
-            console.log("SCRIPT: startScreen (or mainMenu) displayed.");
-            uiManager.activateMainMenuLights(true);
-            checkForSavedGame();
-        }, SPLASH_SCREEN_DURATION);
+        // Removed setTimeout for automatic transition. Transition now handled by aiReady event.
     } else {
-        console.warn("SCRIPT: Splash screen element not found by UIManager. Proceeding without splash timeout.");
-        // If splash is not found, proceed to show startScreen directly after a minimal delay or immediately
-        // This ensures the game doesn't halt if splash is missing.
-        setTimeout(() => {
-            uiManager.showScreen(uiManager.startScreen);
-            console.log("SCRIPT: startScreen (or mainMenu) displayed (no splash).");
-            uiManager.activateMainMenuLights(true);
-            checkForSavedGame();
-        }, 50);
+        console.warn("SCRIPT: Splash screen element not found by UIManager. Proceeding to show startScreen directly.");
+        // If splash is not found, show startScreen directly. This could be an issue if AI isn't ready.
+        // However, aiReady listener should still eventually fire and ensure correct state.
+        uiManager.showScreen(uiManager.startScreen);
+        uiManager.activateMainMenuLights(true);
+        checkForSavedGame();
     }
     uiManager.initStyleControls(saveStyleSettings);
     uiManager.loadAndApplyStyleSettings();
@@ -347,8 +368,8 @@ function initGame() {
     console.log("SCRIPT: initGame() started.");
     try {
         uiManager.initDOMReferences();
-        // uiManager.setChatInputHandler(processPlayerChoiceInput);
         console.log("SCRIPT: uiManager.initDOMReferences() completed.");
+        setupAIEventListeners(); // Call this early
         initializeManagers();
         console.log("SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.");
         initializeUIAndSettings();

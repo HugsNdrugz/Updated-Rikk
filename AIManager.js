@@ -11,7 +11,10 @@ export class AIManager {
     async init() {
         console.log("AI Manager: Initializing AI model... This may take some time depending on model size and connection speed.");
         try {
-            const progressCallback = (progress) => { console.log('AI Manager: Model loading progress:', progress); };
+            const progressCallback = (progress) => {
+                console.log('AI Manager: Model loading progress:', progress); // Keep the log
+                document.dispatchEvent(new CustomEvent('aiLoadingProgress', { detail: progress }));
+            };
             this.generator = await pipeline('text-generation', 'onnx-community/Phi-3.5-mini-instruct-onnx-web', { progress_callback: progressCallback });
             console.log('AI Manager: Pipeline assignment complete. Generator object:', this.generator);
             this.isReady = true;
