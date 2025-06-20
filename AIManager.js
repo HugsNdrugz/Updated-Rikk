@@ -15,7 +15,7 @@ export class AIManager {
                 console.log('AI Manager: Model loading progress:', progress); // Keep the log
                 document.dispatchEvent(new CustomEvent('aiLoadingProgress', { detail: progress }));
             };
-            this.generator = await pipeline('text-generation', 'Xenova/flan-t5-small', { progress_callback: progressCallback });
+            this.generator = await pipeline('text-generation', 'Xenova/flan-t5-small/onnx/', { progress_callback: progressCallback });
             console.log('AI Manager: Pipeline assignment complete. Generator object:', this.generator);
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
