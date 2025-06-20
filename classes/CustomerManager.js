@@ -84,15 +84,37 @@ export class CustomerManager {
         let greetingInfo = { text: '', isAI: false };
 
         if (useAI) {
-            const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-            const rikkDescription = "Rikk is a street-wise dealer.";
-            const customerGoal = "I'm looking to score something."; // Generic for initial greeting
+            const archetypeKey = customerInstance.archetypeKey;
+            const persona = this.customerTemplates[archetypeKey]?.aiPromptPersona;
+            let constructedPrompt = "";
 
-            const prompt = `
+            if (persona) {
+                const gameTone = "This is a gritty, urban street setting where people hustle to get by. You are interacting with Rikk, a street-wise dealer.";
+                constructedPrompt = `
+SYSTEM INSTRUCTION: You are an AI role-playing as a character in a game.
+Your Character: ${customerInstance.name}.
+Character Description: ${persona.description}.
+Dialogue Style: ${persona.dialogueStyle}. Speak in the first person as this character.
+Typical Goal / Current Task: Your current goal is to ${persona.typicalGoal}. For this initial interaction, you need to greet Rikk and initiate conversation based on this goal and your personality.
+Keywords to consider or subtly weave in, if natural: ${persona.keywords ? persona.keywords.join(', ') : 'None'}.
+Game Setting: ${gameTone}
+
+You approach Rikk. What do you say to start the conversation?
+${customerInstance.name}: "`; // AI completes from here
+            } else {
+                console.warn(`CustomerManager: AI prompt persona not found for archetypeKey: ${archetypeKey}. Using generic prompt.`);
+                // Fallback to the previous generic prompt if persona is missing
+                const gameTone = "This is a gritty, urban setting where people hustle to get by.";
+                // const rikkDescription = "Rikk is a street-wise dealer."; // Already in gameTone
+                // const customerGoal = "I'm looking to score something."; // Generic for initial greeting
+                constructedPrompt = `
+My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I need to talk to a street dealer named Rikk about getting some [ITEM_NAME].
 Setting: ${gameTone}
-My Persona: My name is ${customerInstance.name}. People say I'm usually ${customerInstance.mood}. I'm trying to act natural, but I need to talk to a local street dealer named Rikk.
-Task: I need to start a conversation with Rikk to see what he's got or if he can help me out. I should sound like I belong in this environment.
+I should sound like I belong in this environment.
 I walk up to Rikk and say:`;
+            }
+
+            const prompt = constructedPrompt;
             let aiText = await this.aiManager.generateDialogue(prompt);
 
             if (!aiText || aiText.length < 5) {

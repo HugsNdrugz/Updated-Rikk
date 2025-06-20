@@ -9,9 +9,9 @@ export class AIManager {
     }
 
     async init() {
-        console.log("AI Manager: Initializing... This will download the model (approx. 150MB).");
+        console.log("AI Manager: Initializing... This will download the Gemma ONNX model. This may take some time.");
         try {
-            this.generator = await pipeline('text-generation', 'Xenova/distilgpt2');
+            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA');
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
             document.dispatchEvent(new CustomEvent('aiReady'));

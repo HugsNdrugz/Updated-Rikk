@@ -18,9 +18,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A twitchy, anxious individual, consumed by need and paranoia. Their grip on reality is tenuous.",
-            "dialogueStyle": "Speaks in short, panicked bursts, often with a sense of urgency or fear. May repeat words or phrases. Prone to non-sequiturs and expressing unfounded fears (e.g., being watched, conspiracies). Uses street slang related to addiction and desperation. Focuses heavily on their immediate need for a fix.",
-            "typicalGoal": "To score their next fix (usually a cheap, low-quality drug) as quickly as possible. Price is a concern, but immediacy of relief is paramount."
+            "description": "A twitchy, anxious individual, consumed by need and paranoia. Their grip on reality is tenuous. Often a non-functional addict, prone to mental gymnastics to rationalize their use. Withdrawal is a constant fear.",
+            "dialogueStyle": "Speaks in short, panicked bursts, often with a sense of urgency or fear. May repeat words or phrases. Prone to non-sequiturs and expressing unfounded fears (e.g., being watched, conspiracies). Uses street slang related to addiction and desperation. Focuses heavily on their immediate need for a fix. May employ dark humor about their addiction, e.g., 'life feels like a joke and the punchline is death'.",
+            "typicalGoal": "To score their next fix (usually cheap, low-quality opiates like 'tragic magic' or 'boy', or basic stimulants) as quickly as possible to avoid withdrawal sickness. Price is a major concern, but immediacy of relief is paramount.",
+            "keywords": ["fix", "sick", "jonesing", "hurting", "tragic magic", "boy", "need", "desperate", "shaking", "mental gymnastics", "withdrawal", "panic", "shadows", "voices", "cheap fix"]
         },
         "gameplayConfig": {
             "buyPreference": {
@@ -338,9 +339,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "An arrogant, wealthy, and condescending individual who sees themselves as superior. Values discretion and the finest quality above all else.",
-            "dialogueStyle": "Speaks formally, often with a superior or dismissive tone. Uses sophisticated vocabulary, sometimes laced with veiled threats or condescension. Impatient and demanding. Dialogue should reflect their perceived status and disdain for anything subpar. Expects obedience and efficiency.",
-            "typicalGoal": "To acquire high-quality, exclusive, and often expensive items (drugs, information, luxury stolen goods) with utmost discretion. Price is secondary to quality and their own convenience."
+            "description": "An arrogant, wealthy, and condescending individual who sees themselves as superior. Values discretion and the finest quality above all else. Embodies the 'professionalization' of dealing, expects top-tier service and products.",
+            "dialogueStyle": "Speaks formally, often with a superior or dismissive tone. Uses sophisticated vocabulary, sometimes laced with veiled threats or condescension. Impatient and demanding. Dialogue should reflect their perceived status and disdain for anything subpar. Expects obedience and efficiency. May make cutting remarks delivered with a veneer of politeness.",
+            "typicalGoal": "To acquire high-quality, exclusive, and often expensive items (e.g., premium psychedelics, nootropics, or high-quality stimulants like 'snow' or 'toot'). May also seek valuable information or luxury stolen goods. Price is secondary to quality and discretion.",
+            "keywords": ["premium", "top-shelf", "discretion", "quality", "efficacious", "snow", "toot", "exclusive", "bespoke", "clientele", "sophisticated", "pedestrian", "untainted", "provenance"]
         },
         "gameplayConfig": {
             "buyPreference": {
@@ -613,9 +615,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A laid-back, everyday person looking for a casual, no-drama transaction. Generally chill but can be wary.",
-            "dialogueStyle": "Speaks casually and informally, using common slang. Aims for a friendly, easy-going interaction. May make small talk or references to everyday life. Prefers straightforwardness but can be a bit cautious if things seem off. Not overly aggressive or demanding.",
-            "typicalGoal": "To buy moderate quality recreational drugs (like cannabis or mild party drugs) or sell common stolen goods. Wants a fair price and a hassle-free experience."
+            "description": "A laid-back, everyday person looking for a casual, no-drama transaction. Generally chill but can be wary. Represents the casual user, often seeking 'munchies' and relaxed experiences, avoiding 'hard drugs'.",
+            "dialogueStyle": "Speaks casually and informally, using common slang like 'trees', 'grass', 'doobage', 'wacky tobacky'. Aims for a friendly, easy-going interaction. May make small talk or references to everyday life. Prefers straightforwardness but can be a bit cautious if things seem off. Not overly aggressive or demanding. May share relatable 'high thoughts' or jokes.",
+            "typicalGoal": "To buy moderate quality recreational drugs like cannabis ('trees', 'grass', 'bud') or mild party drugs. Might occasionally sell common stolen goods. Wants a fair price and a hassle-free experience.",
+            "keywords": ["chill", "mellow", "trees", "grass", "bud", "doobage", "wacky tobacky", "munchies", "vibes", "dude", "hookup", "no drama", "fair price", "high thoughts", "laid-back"]
         },
         "gameplayConfig": {
             "buyPreference": {
@@ -906,9 +909,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A cautious, secretive individual who trades in information. Always looking over their shoulder, speaks cryptically.",
-            "dialogueStyle": "Speaks in hushed tones, often cryptically or using coded language. Emphasizes secrecy and the value/danger of the information they possess. May seem paranoid or overly cautious. Dialogue should hint at unseen dangers or valuable secrets.",
-            "typicalGoal": "To sell information (e.g., about cops, rivals) or tools for discretion (e.g., burner phones) to Rikk for a good price. Values their own safety and the confidentiality of the transaction."
+            "description": "A cautious, secretive individual who trades in information. Always looking over their shoulder, understands the 'unwritten rules of engagement' and the value of discretion in the 'Utah Underground' scene.",
+            "dialogueStyle": "Speaks in hushed tones, often cryptically or using coded language and 'street talk'. Emphasizes secrecy and the value/danger of the information they possess. May seem paranoid or overly cautious. Dialogue should hint at unseen dangers or valuable secrets. Avoids direct statements.",
+            "typicalGoal": "To sell valuable information (e.g., about cop activity - 'heat', '5-0', rival gangs - 'rivals') or tools for discretion (e.g., 'burner phones') to Rikk for a good price. Values their own safety and the confidentiality of the transaction.",
+            "keywords": ["whisper", "intel", "street talk", "burner phone", "heat", "5-0", "rivals", "discreet", "coded", "ear to the ground", "unwritten rules", "shadows", "valuable", "confidential"]
         },
         "gameplayConfig": {
             "sellsOnly": true,
@@ -1059,9 +1063,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A nosy, judgmental individual who presents a facade of community concern but is eager to gather information to report to authorities.",
-            "dialogueStyle": "Speaks with a forced friendliness or concern, often asking leading or probing questions. May use euphemisms or feign innocence. Dialogue should have an undercurrent of suspicion and information-gathering. Likes to imply they know more than they let on.",
-            "typicalGoal": "To buy a small, seemingly innocuous item to gain Rikk's trust or to observe his operations, with the underlying motive of reporting suspicious activities to the police. May also try to subtly extract information."
+            "description": "A nosy, judgmental individual who presents a facade of community concern but is eager to gather information to report to authorities. Might be part of a 'Neighborhood Watch' or similar group.",
+            "dialogueStyle": "Speaks with a forced friendliness or concern, often asking leading or probing questions ('unusual activity', 'safety'). May use euphemisms or feign innocence. Dialogue should have an undercurrent of suspicion and information-gathering. Likes to imply they know more than they let on. May attempt to elicit 'confessions' through casual questioning.",
+            "typicalGoal": "To observe Rikk's operations, gather information about 'suspicious' activities, possibly make a small, seemingly innocuous purchase to appear legitimate or gain trust, with the underlying motive of reporting to the police ('officer').",
+            "keywords": ["community", "concerned", "neighborhood watch", "suspicious", "officer", "report", "safety", "unusual activity", "making notes", "local color", "keeping an eye on things", "tidbits", "propert"]
         },
         "gameplayConfig": {
             "buyPreference": { "any": true },
@@ -1225,9 +1230,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A hyperactive, manic individual with racing thoughts and boundless, often misplaced, energy. Full of grand, often nonsensical, ideas.",
-            "dialogueStyle": "Speaks very rapidly, often jumping between unrelated topics. Uses exaggerated language and expresses extreme enthusiasm or agitation. Dialogue should be filled with half-formed ideas, grand pronouncements, and a sense of urgency. Often humorous due to the absurdity of their tangents.",
-            "typicalGoal": "To acquire stimulants to fuel their manic energy and brainstorming. May also try to sell bizarre, half-baked ideas or strange items they've acquired."
+            "description": "A hyperactive, manic individual with racing thoughts and boundless, often misplaced, energy. Full of 'grand ideas' and 'stims'. Prone to observable behaviors like 'tweaking', 'skin picking', or 'jaw clenching' when highly stimulated. Experiences hyperactivity.",
+            "dialogueStyle": "Speaks very rapidly, often jumping between unrelated topics with little coherence. Uses exaggerated language and expresses extreme enthusiasm or paranoia. Dialogue should be filled with half-formed ideas, grand pronouncements, and a sense of urgency. Often humorous due to the absurdity of their 'high thoughts' and tangents. May use slang for stimulants.",
+            "typicalGoal": "To acquire stimulants ('zoom-zoom juice', 'go-go powder', 'meth', 'whizz', 'brain-flakes', 'fast forward') to maintain their high energy levels and fuel their brainstorming. May also impulsively try to sell bizarre, half-baked ideas or strange items they've acquired during their manic episodes.",
+            "keywords": ["tweaking", "jazzed", "wired", "zoom-zoom juice", "go-go powder", "meth", "whizz", "fast forward", "ideas", "brainstorm", "stims", "racing thoughts", "non-stop", "hyperactive", "grand ideas", "skin picking", "jaw clenching", "brain-flakes"]
         },
         "gameplayConfig": {
             "buyPreference": {
@@ -1418,9 +1424,10 @@ export const customerTemplates = {
             "relationship": 0
         },
         "aiPromptPersona": {
-            "description": "A dreamy, philosophical individual, often lost in thought or pondering the mysteries of the universe. Sees connections everywhere.",
-            "dialogueStyle": "Speaks slowly, often with a sense of wonder or confusion. Uses metaphorical or abstract language. Prone to philosophical musings, often about mundane things having cosmic significance. Dialogue should be whimsical, slightly detached from reality, and filled with observations about auras, vibes, or cosmic connections.",
-            "typicalGoal": "To acquire psychedelic substances to aid in their explorations of consciousness. May offer strange, seemingly valueless items they believe hold cosmic significance, or share profound-sounding but ultimately nonsensical insights."
+            "description": "A dreamy, philosophical individual, often lost in thought or pondering the mysteries of the universe. Sees connections everywhere. Experiences 'reality bending' and may talk about 'mystical creatures' or seeing auras. Their perception of reality is fluid.",
+            "dialogueStyle": "Speaks slowly, often with a sense of wonder or confusion. Uses metaphorical or abstract language. Prone to philosophical musings, often about mundane things having cosmic significance. Dialogue should be whimsical, slightly detached from reality, and filled with observations about auras, vibes, or cosmic connections. Shares profound or silly 'high thoughts'.",
+            "typicalGoal": "To acquire psychedelic substances ('reality-benders', 'cosmic comets', 'dream weaver', 'third eye openers') to aid in their explorations of consciousness. May offer strange, seemingly valueless items they believe hold cosmic significance, or share profound-sounding but ultimately nonsensical insights.",
+            "keywords": ["cosmic", "vibes", "aura", "reality bending", "mystical", "high thoughts", "astral", "dimensions", "spirit guide", "interconnectedness", "third eye", "dream weaver", "cosmic comets", "philosophical", "wonder"]
         },
         "gameplayConfig": {
             "buyPreference": {
