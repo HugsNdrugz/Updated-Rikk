@@ -87,36 +87,30 @@ export class CustomerManager {
             const archetypeKey = customerInstance.archetypeKey;
             const persona = this.customerTemplates[archetypeKey]?.aiPromptPersona;
             console.log(`CustomerManager: Attempting to generate AI greeting for ${customerInstance.name} (Archetype: ${archetypeKey}). Persona found: ${!!persona}`);
-            let constructedPrompt = "";
+            let messages = [];
 
             if (persona) {
-                const gameTone = "This is a gritty, urban street setting where people hustle to get by. You are interacting with Rikk, a street-wise dealer.";
-                constructedPrompt = `
-SYSTEM INSTRUCTION: You are an AI role-playing as a character in a game.
-Your Character: ${customerInstance.name}.
-Character Description: ${persona.description}.
-Dialogue Style: ${persona.dialogueStyle}. Speak in the first person as this character.
-Typical Goal / Current Task: Your current goal is to ${persona.typicalGoal}. For this initial interaction, you need to greet Rikk and initiate conversation based on this goal and your personality.
-Keywords to consider or subtly weave in, if natural: ${persona.keywords ? persona.keywords.join(', ') : 'None'}.
-Game Setting: ${gameTone}
-
-You approach Rikk. What do you say to start the conversation?
-${customerInstance.name}: "`; // AI completes from here
+                const systemMessageContent = `You are an AI role-playing as a character in a game. Your character is named ${customerInstance.name}. You are in a gritty, urban street setting interacting with Rikk, a street-wise dealer. Speak in the first person, embodying your character's personality, dialogue style, and typical goal. Your current task is to greet Rikk and initiate a conversation.`;
+                let userMessageContent = `Character Profile:\nName: ${customerInstance.name}\nDescription: ${persona.description}\nDialogue Style: ${persona.dialogueStyle}\nTypical Goal: ${persona.typicalGoal}\nCurrent Mood: ${customerInstance.mood}.\n`;
+                if (persona.keywords && persona.keywords.length > 0) {
+                    userMessageContent += `Subtly include themes or words like: ${persona.keywords.join(', ')}.\n`;
+                }
+                userMessageContent += `\nBased on this profile, what is the first thing you say to Rikk as you approach him to start a conversation?`;
+                messages = [
+                  { role: 'system', content: systemMessageContent },
+                  { role: 'user', content: userMessageContent }
+                ];
             } else {
                 console.warn(`CustomerManager: AI prompt persona not found for archetypeKey: ${archetypeKey}. Using generic prompt.`);
-                // Fallback to the previous generic prompt if persona is missing
-                const gameTone = "This is a gritty, urban setting where people hustle to get by.";
-                // const rikkDescription = "Rikk is a street-wise dealer."; // Already in gameTone
-                // const customerGoal = "I'm looking to score something."; // Generic for initial greeting
-                constructedPrompt = `
-My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I'm looking to see what's happening, maybe do some business with a street dealer named Rikk.
-Setting: ${gameTone}
-I should sound like I belong in this environment.
-I walk up to Rikk and say:`;
+                const systemMessageContent = "You are an AI role-playing a character in a game. You are in a gritty, urban street setting interacting with Rikk, a street-wise dealer. Speak in the first person.";
+                const userMessageContent = `My character name is ${customerInstance.name} and I am currently feeling ${customerInstance.mood}. I need to greet Rikk and start a conversation. What's the first thing I say?`;
+                messages = [
+                  { role: 'system', content: systemMessageContent },
+                  { role: 'user', content: userMessageContent }
+                ];
             }
 
-            const prompt = constructedPrompt;
-            let aiText = await this.aiManager.generateDialogue(prompt);
+            let aiText = await this.aiManager.generateDialogue(messages);
 
             if (!aiText || aiText.length < 5) {
                 console.warn("CustomerManager: AI generation failed or too short, using fallback greeting.");
