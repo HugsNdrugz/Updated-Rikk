@@ -11,7 +11,16 @@ export class AIManager {
     async init() {
         console.log("AI Manager: Initializing... This will download the Gemma ONNX model. This may take some time.");
         try {
-            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA');
+            this.generator = await pipeline('text-generation', 'onnx-community/gemma-3-1b-it-ONNX-GQA', {
+                progress_callback: (data) => {
+                    console.log("AI Manager: Model loading progress:", {
+                        status: data.status,
+                        file: data.file,
+                        progress: data.progress,
+                        loaded: data.loaded,
+                    });
+                }
+            });
             this.isReady = true;
             console.log("AI Manager: Model loaded and ready!");
             document.dispatchEvent(new CustomEvent('aiReady'));
@@ -26,6 +35,7 @@ export class AIManager {
             return "Uh... what was I saying?";
         }
 
+        console.log("AI Manager: Starting text generation...");
         console.log("AI Manager: Generating dialogue with prompt:", prompt);
         try {
             const result = await this.generator(prompt, {
@@ -56,10 +66,10 @@ export class AIManager {
 
             generatedText = generatedText.trim();
 
-            console.log("AI Manager: Generated text:", generatedText);
+            console.log("AI Manager: Text generation completed. Result:", generatedText);
             return generatedText;
         } catch (error) {
-            console.error("AI Manager: Error during text generation.", error);
+            console.error(`AI Manager: Error during text generation for prompt "${prompt}":`, error);
             return "My mind just blanked, man.";
         }
     }

@@ -86,6 +86,7 @@ export class CustomerManager {
         if (useAI) {
             const archetypeKey = customerInstance.archetypeKey;
             const persona = this.customerTemplates[archetypeKey]?.aiPromptPersona;
+            console.log(`CustomerManager: Attempting to generate AI greeting for ${customerInstance.name} (Archetype: ${archetypeKey}). Persona found: ${!!persona}`);
             let constructedPrompt = "";
 
             if (persona) {
@@ -108,7 +109,7 @@ ${customerInstance.name}: "`; // AI completes from here
                 // const rikkDescription = "Rikk is a street-wise dealer."; // Already in gameTone
                 // const customerGoal = "I'm looking to score something."; // Generic for initial greeting
                 constructedPrompt = `
-My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I need to talk to a street dealer named Rikk about getting some [ITEM_NAME].
+My name is ${customerInstance.name}. I am feeling ${customerInstance.mood}. I'm looking to see what's happening, maybe do some business with a street dealer named Rikk.
 Setting: ${gameTone}
 I should sound like I belong in this environment.
 I walk up to Rikk and say:`;
