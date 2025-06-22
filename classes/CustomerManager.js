@@ -123,16 +123,14 @@ export class CustomerManager {
                     choices.push({
                         text: "That's junk. Get lost.", // More dismissive text
                         outcome: {
-                            type: "rikkDeclinesToBuy", // This is the event_type for the rule
-                            etiquetteContext: { // NEW: Context for StreetCredManager
+                            type: "decline_offer_to_buy_rude",
+                            etiquetteContext: {
                                 event_type: "decline_deal_from_customer",
                                 customer_is_new: true,
                                 choice_style: "rude",
                                 target_customer_id: customerInstance.id,
-                                customer_mood: customerInstance.mood // Example of existing state
-                            },
-                            // payload: rudeDismissalPayload, // Old direct payload removed/modified
-                            followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToRudeDismissal') || {}).line || "Hmph. Whatever."
+                                customer_mood: customerInstance.mood
+                            }
                         }
                     });
 
@@ -140,16 +138,14 @@ export class CustomerManager {
                     choices.push({
                         text: "Not for me. Good looks tho.", // Polite decline
                         outcome: {
-                            type: "rikkDeclinesToBuy", // This is the event_type for the rule
-                            etiquetteContext: { // NEW: Context for StreetCredManager
+                            type: "decline_offer_to_buy_polite",
+                            etiquetteContext: {
                                 event_type: "decline_deal_from_customer",
                                 customer_is_new: true,
                                 choice_style: "polite",
                                 target_customer_id: customerInstance.id,
                                 customer_mood: customerInstance.mood
-                            },
-                            // payload: politeDeclinePayload, // Old direct payload removed/modified
-                            followUpDialogue: (this._getDialogue(customerInstance, 'customerReactsToPoliteDismissal') || {}).line || "Aight. Respect."
+                            }
                         }
                     });
 
@@ -158,9 +154,8 @@ export class CustomerManager {
                     choices.push({
                         text: "Nah, pass.",
                         outcome: {
-                            type: "rikkDeclinesToBuy",
-                            payload: declineResultOriginal.payload, // Keep existing payload if any
-                            followUpDialogue: declineResultOriginal.line
+                            type: "decline_offer_to_buy",
+                            payload: declineResultOriginal.payload
                         }
                     });
                 }
@@ -761,8 +756,8 @@ export class CustomerManager {
                 outcome: {
                     type: "pastor_jones_interaction_resolved",
                     etiquetteContext: { "event_type": "pastor_jones_request", "action_taken": "declined", "target_community_figure_id": "pastor_jones" },
-                    followUpDialogueKey: "pastorDeclinesHelp", // Rikk's line (which is the Pastor's decline)
-                    customerFollowUpKey: "pastorDeclinesHelp" // Pastor's response (same as Rikk's line here as Pastor states it)
+                    followUpDialogueKey: "rikkDeclinesPastor",
+                    customerFollowUpKey: "pastorDeclinesHelp"
                 }
             }
         ];

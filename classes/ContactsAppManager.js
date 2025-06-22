@@ -303,6 +303,7 @@ export class ContactsAppManager {
              this.newCustomerFlowState.data.key = formattedKey; // Update the data with the corrected key
              // It's important to re-render here so the user sees the corrected key in the input field.
              this.renderNewCustomerFlow();
+             this._displayValidationMessage('new-customer-step1-validation-msg', `Key format was invalid. It has been corrected to: <strong>${formattedKey}</strong>. Please review and continue.`);
              return false; // Return false to prevent advancing, user must click next again.
         }
         return true;

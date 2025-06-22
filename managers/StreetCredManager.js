@@ -124,22 +124,6 @@ class StreetCredManager {
                     debugLogger.log('StreetCredManager.processEtiquetteAction', `Matched etiquette rule: ${rule.id}`, rule);
                 }
 
-                // Increment persistent etiquette violation counter if specified in the rule
-                if (rule.impacts.violation_type_to_increment) {
-                    const violationType = rule.impacts.violation_type_to_increment;
-                    if (!this.gameState.etiquetteViolations) {
-                        this.gameState.etiquetteViolations = {}; // Initialize if somehow not present
-                    }
-                    if (this.gameState.etiquetteViolations.hasOwnProperty(violationType)) {
-                        this.gameState.etiquetteViolations[violationType]++;
-                    } else {
-                        this.gameState.etiquetteViolations[violationType] = 1;
-                    }
-                    if (this.gameState.DEBUG_MODE) {
-                        debugLogger.log('StreetCredManager.processEtiquetteAction', `Incremented etiquetteViolation: ${violationType}. New count: ${this.gameState.etiquetteViolations[violationType]}`);
-                    }
-                }
-
                 // Apply defined impacts
                 if (rule.impacts.streetCred_global_change) {
                     this.addStreetCred('global', null, rule.impacts.streetCred_global_change);
@@ -169,18 +153,8 @@ class StreetCredManager {
                     debugLogger.log('StreetCredManager.processEtiquetteAction', `Applied impacts for rule ${rule.id}:`, rule.impacts);
                 }
 
-                let feedback_type = 'neutral';
-                if (rule.impacts.streetCred_global_change > 0) {
-                    feedback_type = 'positive';
-                } else if (rule.impacts.streetCred_global_change < 0) {
-                    feedback_type = 'negative';
-                }
-
-                // Return feedback message ID and type; stop after the first matched rule.
-                return {
-                    feedback_message_id: rule.impacts.feedback_message_id,
-                    feedback_type: feedback_type
-                };
+                // Return feedback message ID; stop after the first matched rule.
+                return { feedback_message_id: rule.impacts.feedback_message_id };
             }
         }
 

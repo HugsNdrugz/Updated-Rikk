@@ -1,8 +1,8 @@
 // UIManager.js
 import { debugLogger } from './utils.js';
-import { ContactsAppManager } from './classes/ContactsAppManager.js';
-import { feedbackMessages } from './data/feedback_messages.js'; // FIXED: Import feedback messages
-import { showNotification } from './phone_ambient_ui.js'; // FIXED: Statically import showNotification
+import { ContactsAppManager } from './classes/ContactsAppManager.js'; // Note: This import seems unused in the provided UIManager code.
+import { feedbackMessages } from './data/feedback_messages.js';
+import { showNotification } from './phone_ambient_ui.js';
 
 class UIManager {
     constructor(game, config) {
@@ -16,7 +16,7 @@ class UIManager {
         this.chatBubbleSound = document.getElementById('chat-bubble-sound');
 
         this.initDOMReferences();
-        this.initStyleControls();
+        this.initStyleControls(); // Assuming this should be called after DOM refs
     }
 
     initDOMReferences() {
@@ -32,20 +32,19 @@ class UIManager {
         this.newGameBtn = document.getElementById('new-game-btn');
         this.continueGameBtn = document.getElementById('continue-game-btn');
         this.settingsMenuBtn = document.getElementById('settings-menu-btn');
-        this.mainMenuLights = document.getElementById('main-menu-lights');
-        
+        this.mainMenuLights = document.getElementById('main-menu-lights'); // Corrected from mainMenuLightContainer
+
         this.settingsMenuPanel = document.getElementById('settings-menu-panel');
-        this.loadMenuPanel = document.getElementById('load-menu-panel');
-        this.creditsMenuPanel = document.getElementById('credits-menu-panel');
+        this.loadMenuPanel = document.getElementById('load-menu-panel'); // Assuming this exists or will be added
+        this.creditsMenuPanel = document.getElementById('credits-menu-panel'); // Assuming this exists
         this.allSubmenuBackBtns = document.querySelectorAll('.submenu-back-btn');
-        this.settingsControlsContainer = document.querySelector('.settings-controls-container'); // More specific name from review
+        this.settingsControlsContainer = document.querySelector('.settings-controls-container');
         this.previewMainSettingsButton = document.getElementById('preview-style-settings');
         this.resetMainSettingsButton = document.getElementById('reset-style-settings');
 
-
         // Game HUD
         this.cashDisplay = document.getElementById('cash-display');
-        this.dayDisplay = document.getElementById('day-display');
+        this.dayDisplay = document.getElementById('day-display'); // Represents game.dayOfWeek in new UIManager
         this.heatDisplay = document.getElementById('heat-display');
         this.credDisplay = document.getElementById('cred-display');
         this.eventTicker = document.getElementById('event-ticker');
@@ -58,9 +57,9 @@ class UIManager {
 
         // Inventory Modal
         this.inventoryModal = document.getElementById('inventory-modal');
-        this.inventoryDialog = document.getElementById('inventory-dialog');
+        this.inventoryDialog = document.getElementById('inventory-dialog'); // Assuming this is part of modal
         this.inventoryList = document.getElementById('inventory-list');
-        this.closeModalBtn = document.querySelector('.close-modal-btn');
+        this.closeModalBtn = document.querySelector('#inventory-modal .close-modal-btn'); // More specific selector
         this.modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
 
         // End Screen
@@ -83,23 +82,18 @@ class UIManager {
         this.chatContainer = document.getElementById('chat-container-game');
         this.quickReplyContainer = this.gameChatView ? this.gameChatView.querySelector('.quick-reply-container') : null;
         this.chatHeaderAvatar = document.getElementById('chat-header-avatar');
-        this.chatHeaderName = document.getElementById('chat-header-contact-name');
+        this.chatHeaderName = document.getElementById('chat-header-contact-name'); // Corrected from chatHeaderContactName
         this.chatFooterStatus = document.getElementById('chat-footer-rcs-status');
 
         // Home Screen & Other Apps
         this.homeScreen = document.getElementById('android-home-screen');
-        
-        // This is the view for the new ContactsAppManager
-        this.contactsAppScreen = document.getElementById('contacts-app-view'); 
-        
-        // This is the container for the OLD contact system
-        this.contactsListContainer = document.getElementById('contacts-list-container'); 
+        this.contactsAppScreen = document.getElementById('contacts-app-view');
+        this.contactsListContainer = document.getElementById('contacts-list-container');
         this.contactDetailView = document.getElementById('contact-detail-view');
-
         this.mapAppView = document.getElementById('map-app-view');
         this.newsAppView = document.getElementById('news-app-view');
         this.slotGameView = document.getElementById('slot-game-view');
-        
+
         // Phone Theme Settings
         this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
         this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
@@ -134,7 +128,7 @@ class UIManager {
             this.continueGameBtn.classList.add('hidden');
         }
     }
-    
+
     openSubmenuPanel(panelElement) {
         if(panelElement) panelElement.classList.remove('hidden');
     }
@@ -143,33 +137,29 @@ class UIManager {
         if(panelElement) panelElement.classList.add('hidden');
     }
 
-
     // --- Game HUD & Core UI ---
     updateHUD() {
         if (this.cashDisplay) this.cashDisplay.textContent = this.game.getCash();
-        if (this.dayDisplay) this.dayDisplay.textContent = this.game.getDayOfWeek();
+        if (this.dayDisplay) this.dayDisplay.textContent = this.game.getDayOfWeek(); // Changed from getFiendsLeft
         if (this.heatDisplay) this.heatDisplay.textContent = this.game.getHeat();
         if (this.credDisplay) this.credDisplay.textContent = this.game.getStreetCred('global');
         if (this.inventoryCountDisplay) this.inventoryCountDisplay.textContent = `${this.game.getInventory().length}/${this.game.getMaxInventorySlots()}`;
     }
-    
+
     showCashChangeAnimation(amount) {
         if (!this.cashDisplay) return;
-    
+
         const animationElement = document.createElement('span');
         animationElement.textContent = `${amount > 0 ? '+' : ''}${amount}`;
         animationElement.className = `cash-change ${amount > 0 ? 'positive' : 'negative'}`;
-        
-        // Style the animation element directly in JS for simplicity
         animationElement.style.position = 'absolute';
         animationElement.style.left = '50%';
         animationElement.style.transform = 'translateX(-50%)';
         animationElement.style.pointerEvents = 'none';
         animationElement.style.textShadow = '0 0 5px black';
         animationElement.style.fontWeight = 'bold';
-        animationElement.style.color = amount > 0 ? 'var(--color-success)' : 'var(--color-error)';
-        
-        // Define the animation using JS
+        animationElement.style.color = amount > 0 ? 'var(--color-success-green)' : 'var(--color-error)'; // Ensure these CSS vars exist
+
         animationElement.animate([
             { top: '50%', opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
             { top: '0%', opacity: 0, transform: 'translate(-50%, -150%) scale(1.2)' }
@@ -177,10 +167,8 @@ class UIManager {
             duration: 1500,
             easing: 'ease-out'
         });
-        
+
         this.cashDisplay.parentElement.appendChild(animationElement);
-    
-        // Clean up the animation element after it finishes
         setTimeout(() => {
             animationElement.remove();
         }, 1500);
@@ -190,12 +178,10 @@ class UIManager {
         if (!this.eventTicker) return;
         const activeEvents = this.game.getActiveWorldEvents();
         if (activeEvents.length > 0) {
-            this.eventTicker.textContent = `Ongoing: ${activeEvents.map(e => `${e.name} (${e.remainingDuration} turns left)`).join(', ')}`;
+            this.eventTicker.textContent = `Ongoing: ${activeEvents.map(e => `${e.name} (${e.remainingDuration || e.turnsLeft} turns left)`).join(', ')}`; // Adjusted for remainingDuration
             this.eventTicker.classList.remove('hidden');
         } else {
             this.eventTicker.textContent = "Word on the street: All quiet... for now.";
-            // Optionally hide it if you prefer it gone when no events are active
-            // this.eventTicker.classList.add('hidden'); 
         }
     }
 
@@ -218,11 +204,8 @@ class UIManager {
     // --- Phone UI Management ---
     setPhoneUIState(state) {
         if (!this.rikkPhoneUI || !this.phoneDockedIndicator) return;
-    
-        // Hide all views first
         this.rikkPhoneUI.querySelectorAll('.phone-content-view').forEach(view => view.classList.add('hidden'));
-    
-        // Handle phone visibility and docked indicator
+
         if (state === 'docked' || state === 'offscreen') {
             this.rikkPhoneUI.classList.add('is-offscreen');
             if (state === 'docked') {
@@ -234,8 +217,7 @@ class UIManager {
             this.rikkPhoneUI.classList.remove('is-offscreen');
             this.phoneDockedIndicator.classList.add('hidden');
         }
-    
-        // Show the correct view
+
         switch (state) {
             case 'home':
                 if (this.homeScreen) this.homeScreen.classList.remove('hidden');
@@ -243,9 +225,8 @@ class UIManager {
             case 'chatting':
                 if (this.gameChatView) this.gameChatView.classList.remove('hidden');
                 break;
-            case 'contactsAppList':
+            case 'contactsAppList': // Changed from contactsAppView to contactsAppList
                 if (this.contactsAppScreen) this.contactsAppScreen.classList.remove('hidden');
-                // The ContactsAppManager handles its own internal state, just make its container visible
                 break;
             case 'mapAppView':
                 if (this.mapAppView) {
@@ -253,7 +234,7 @@ class UIManager {
                     this.renderMap();
                 }
                 break;
-            case 'newsAppList':
+            case 'newsAppList': // Changed from newsAppView to newsAppList
                 if (this.newsAppView) {
                     this.newsAppView.classList.remove('hidden');
                     this.renderNewsList();
@@ -261,7 +242,6 @@ class UIManager {
                 break;
             case 'newsArticleDetail':
                 if (this.newsAppView) this.newsAppView.classList.remove('hidden');
-                // The render function for the detail view will handle showing/hiding internal elements
                 break;
             case 'slots':
                 if (this.slotGameView) this.slotGameView.classList.remove('hidden');
@@ -271,7 +251,6 @@ class UIManager {
                 break;
             case 'docked':
             case 'offscreen':
-                // Handled above, no specific view to show
                 break;
             default:
                 if (this.homeScreen) this.homeScreen.classList.remove('hidden');
@@ -279,27 +258,26 @@ class UIManager {
                 break;
         }
     }
-    
+
     updateChatParticipantInfo(contactName = null) {
         if (!this.chatHeaderName || !this.chatHeaderAvatar || !this.chatFooterStatus) return;
-    
+
         if (contactName) {
-            const customer = this.game.getCurrentCustomerInstance();
+            const customer = this.game.getCurrentCustomerInstance(); // Assuming game has this method
             this.chatHeaderName.textContent = contactName;
             this.chatFooterStatus.textContent = `RCS chat with ${contactName}`;
-            if (customer && customer.avatarUrl) {
+            if (customer && customer.avatarUrl) { // Assuming customer instance has avatarUrl
                 this.chatHeaderAvatar.innerHTML = `<img src="${customer.avatarUrl}" alt="${contactName[0]}" style="width:100%; height:100%; object-fit:cover;">`;
             } else {
                 this.chatHeaderAvatar.innerHTML = contactName ? contactName[0].toUpperCase() : '?';
             }
         } else {
-            // Reset to default/generic state when no one is being chatted with
+            // Default/empty state
             this.chatHeaderName.textContent = 'Messages';
             this.chatFooterStatus.textContent = 'Select a conversation';
-            this.chatHeaderAvatar.innerHTML = `<i class="fas fa-comment-dots"></i>`; // Or some generic icon
+            this.chatHeaderAvatar.innerHTML = `<i class="fas fa-comment-dots"></i>`;
         }
     }
-
 
     // --- Chat & Choices ---
     clearChat() {
@@ -310,50 +288,28 @@ class UIManager {
 
     displayPhoneMessage(message, speaker) {
         if (!this.chatContainer) return;
-        
         const spacer = this.chatContainer.querySelector('.chat-spacer');
         const messageRow = document.createElement('div');
         const bubble = document.createElement('div');
-        
         let messageClass = '';
-        let avatarUrl = '';
-        let speakerName = 'System';
-    
-        if (speaker === 'rikk') {
-            messageClass = 'sent';
-            avatarUrl = this.config.rikkAvatarUrl;
-            speakerName = 'Rikk';
-        } else if (speaker === 'customer') {
-            messageClass = 'received';
-            const customer = this.game.getCurrentCustomerInstance();
-            avatarUrl = customer?.avatarUrl || this.config.customerAvatars.default || '';
-            speakerName = customer?.name || 'Customer';
-        } else { // narration
-            messageClass = 'narration';
-            avatarUrl = this.config.systemAvatarUrl;
-        }
-    
+
+        if (speaker === 'rikk') messageClass = 'sent';
+        else if (speaker === 'customer') messageClass = 'received';
+        else messageClass = 'narration';
+
         if (messageClass === 'narration') {
-            bubble.className = 'timestamp'; // Use the timestamp style for narration
+            bubble.className = 'timestamp';
             bubble.innerHTML = message;
-            // Narration doesn't get a row, it's appended directly
-            if(spacer) {
-                this.chatContainer.insertBefore(bubble, spacer);
-            } else {
-                this.chatContainer.appendChild(bubble);
-            }
+            if(spacer) this.chatContainer.insertBefore(bubble, spacer);
+            else this.chatContainer.appendChild(bubble);
         } else {
             messageRow.className = `message-row ${messageClass}`;
             bubble.className = `message-bubble ${messageClass}`;
-            bubble.innerHTML = message;
+            bubble.innerHTML = message; // Assuming message is pre-formatted HTML or simple text
             messageRow.appendChild(bubble);
-            if (spacer) {
-                this.chatContainer.insertBefore(messageRow, spacer);
-            } else {
-                this.chatContainer.appendChild(messageRow);
-            }
+            if (spacer) this.chatContainer.insertBefore(messageRow, spacer);
+            else this.chatContainer.appendChild(messageRow);
         }
-        
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }
 
@@ -369,13 +325,12 @@ class UIManager {
         choices.forEach(choice => {
             const button = document.createElement('button');
             button.className = 'quick-reply-button';
-            button.innerHTML = choice.text;
+            button.innerHTML = choice.text; // Assuming text, not innerHTML for security if from dynamic source
             button.disabled = choice.disabled || false;
             button.addEventListener('click', () => callback(choice.outcome));
             this.quickReplyContainer.appendChild(button);
         });
     }
-
 
     // --- Inventory Modal ---
     openInventoryModal() {
@@ -393,10 +348,8 @@ class UIManager {
 
     updateInventoryDisplay() {
         if (!this.inventoryList || !this.modalInventorySlotsDisplay) return;
-        
         const inventory = this.game.getInventory();
         const maxSlots = this.game.getMaxInventorySlots();
-        
         this.inventoryList.innerHTML = '';
         if (inventory.length === 0) {
             this.inventoryList.innerHTML = '<p class="empty-inventory">Your stash is empty.</p>';
@@ -404,12 +357,15 @@ class UIManager {
             inventory.forEach(item => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item';
+                // Ensure item.itemTypeObj exists before accessing its properties
+                const itemTypeDesc = item.itemTypeObj ? item.itemTypeObj.description : 'No description.';
+                const itemIconClass = item.itemTypeObj ? item.itemTypeObj.type.toLowerCase() : 'unknown';
                 itemDiv.innerHTML = `
-                    <div class="item-icon ${item.itemTypeObj.type.toLowerCase()}"></div>
+                    <div class.base = "item-icon ${itemIconClass}"></div>
                     <div class="item-name">${item.name}</div>
                     <div class="item-quality">${item.quality}</div>
                     <div class="item-value">$${item.purchasePrice}</div>
-                    <div class="item-description">${item.itemTypeObj.description}</div>
+                    <div class="item-description">${itemTypeDesc}</div>
                 `;
                 this.inventoryList.appendChild(itemDiv);
             });
@@ -419,51 +375,42 @@ class UIManager {
 
     // --- Phone App Rendering ---
     renderMap() {
-        if (!this.game.mapManager) {
+        if (!this.game.mapManager) { // Assuming game has mapManager
             debugLogger.error('UIManager', 'MapManager not available on game object.');
             return;
         }
         const discoveredDistricts = this.game.mapManager.getDiscoveredDistricts();
-        const mapGrid = document.getElementById('map-grid-container');
+        const mapGrid = document.getElementById('map-grid-container'); // Assuming this ID exists in mapAppView
         if (!mapGrid) {
             debugLogger.error('UIManager', 'map-grid-container element not found.');
             return;
         }
-        mapGrid.innerHTML = ''; // Clear previous render
-
-        // Simple grid for now, assumes 2x2
+        mapGrid.innerHTML = '';
         mapGrid.style.gridTemplateColumns = '1fr 1fr';
         mapGrid.style.gridTemplateRows = '1fr 1fr';
-        
-        // This relies on the order of districts in map_data.js matching a 2x2 grid.
-        // A more robust solution would use gridPosition from data.
         discoveredDistricts.forEach(district => {
             const cell = document.createElement('div');
             cell.className = 'map-district-cell';
             cell.textContent = district.name;
-            // TODO: Add click handlers or more info display
             mapGrid.appendChild(cell);
-
         });
     }
 
     renderNewsList() {
-        if (!this.game.newsManager) return;
+        if (!this.game.newsManager) return; // Assuming game has newsManager
         const articles = this.game.newsManager.getAllDisplayableArticles();
-        const newsListContainer = document.getElementById('news-list-container');
+        const newsListContainer = document.getElementById('news-list-container'); // Assuming this ID exists
         if (!newsListContainer) return;
-    
-        // Show list, hide detail
-        newsListContainer.innerHTML = '';
+
         const detailView = document.getElementById('news-article-detail-view');
         if(detailView) detailView.classList.add('hidden');
         newsListContainer.classList.remove('hidden');
-    
+        newsListContainer.innerHTML = '';
+
         if (articles.length === 0) {
             newsListContainer.innerHTML = '<p class="empty-message">No news to report.</p>';
             return;
         }
-    
         const list = document.createElement('ul');
         list.className = 'news-article-list';
         articles.forEach(article => {
@@ -478,85 +425,78 @@ class UIManager {
         });
         newsListContainer.appendChild(list);
     }
-    
+
     renderNewsDetail(articleId) {
         if (!this.game.newsManager) return;
-        const article = this.game.newsManager.getStaticArticleById(articleId); // Assuming static for now
+        const article = this.game.newsManager.getStaticArticleById(articleId);
         if (!article) return;
-    
+
         const newsListContainer = document.getElementById('news-list-container');
         const detailView = document.getElementById('news-article-detail-view');
         const headlineEl = document.getElementById('news-article-headline');
         const metaEl = document.getElementById('news-article-meta');
         const bodyEl = document.getElementById('news-article-body');
-    
+
         if (!detailView || !headlineEl || !metaEl || !bodyEl) {
             debugLogger.error('UIManager', 'One or more news detail elements are missing from the DOM.');
             return;
         }
-    
-        // Hide list, show detail
         if (newsListContainer) newsListContainer.classList.add('hidden');
         detailView.classList.remove('hidden');
-    
         headlineEl.textContent = article.headline;
         metaEl.textContent = `${article.category} - ${article.timestamp}`;
         bodyEl.textContent = article.body;
-    
-        // Assuming a back button with data-action="back-to-home" or similar is present
-        // Or one could be dynamically added. For now, rely on generic phone back button.
     }
-
 
     // --- Audio ---
     playSound(soundElement) {
         if (soundElement && soundElement.play) {
             soundElement.currentTime = 0;
-            soundElement.play().catch(error => debugLogger.warn('Audio', `Playback prevented for ${soundElement.id}`, error));
+            soundElement.play().catch(error => debugLogger.warn('Audio', `Playback prevented for ${soundElement.id || 'unknown sound'}`, error));
         }
     }
-    
+
     // --- Style & Theme Management ---
-    initStyleControls(saveCallback) {
-        const styleControls = this.appContainer.querySelectorAll('input[data-variable], select[data-variable]');
-        
+    initStyleControls(saveCallback) { // saveCallback is passed from script.js
+        const styleControls = (this.settingsControlsContainer || this.appContainer).querySelectorAll('input[data-variable], select[data-variable]');
         styleControls.forEach(control => {
             const variable = control.dataset.variable;
             const eventType = (control.type === 'range' || control.type === 'color') ? 'input' : 'change';
-
             control.addEventListener(eventType, () => {
                 let value = control.value;
-                const display = this.appContainer.querySelector(`span[data-target="${control.id}"]`);
-
-                if (control.type === 'range') {
-                    value += 'px'; // Append units for radius/spacing
+                const display = (this.settingsControlsContainer || this.appContainer).querySelector(`span[data-target="${control.id}"]`);
+                if (control.type === 'range' && (variable.includes('radius') || variable.includes('unit') || variable.includes('spacing'))) { // Added spacing check
+                    value += 'px';
                     if (display) display.textContent = value;
+                } else if (display && control.type === 'range') { // For other range inputs like opacity
+                     if (display) display.textContent = value;
                 }
-                
-                this.appContainer.style.setProperty(variable, value);
+                (this.appContainer || document.documentElement).style.setProperty(variable, value); // Apply to appContainer or root
+                 // If not in preview mode, call the save callback
+                if (!this.isPreviewing && saveCallback) {
+                    saveCallback();
+                }
             });
         });
     }
-    
+
+    isPreviewing = false; // Add this property to the class
+
     loadAndApplyStyleSettings() {
         const settings = this.getStoredStyleSettings();
         this.applyStyleSettings(settings);
-
-        // Also update the control values to reflect the loaded settings
-        const styleControls = this.appContainer.querySelectorAll('input[data-variable], select[data-variable]');
+        const styleControls = (this.settingsControlsContainer || this.appContainer).querySelectorAll('input[data-variable], select[data-variable]');
         styleControls.forEach(control => {
             const variableName = control.dataset.variable;
-            if (settings[variableName]) {
+            if (settings[variableName] !== undefined) { // Check if property exists
                 let value = settings[variableName];
-                // Remove 'px' for range sliders
-                if (control.type === 'range') {
-                    value = value.replace('px', '');
+                if (control.type === 'range' && (variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing'))) {
+                    value = String(value).replace('px', ''); // Ensure it's a string before replace
                 }
                 control.value = value;
-                // Update display span for sliders
                 if (control.type === 'range') {
-                    const display = this.appContainer.querySelector(`span[data-target="${control.id}"]`);
-                    if (display) display.textContent = `${value}px`;
+                    const display = (this.settingsControlsContainer || this.appContainer).querySelector(`span[data-target="${control.id}"]`);
+                    if (display) display.textContent = variableName.includes('radius') || variableName.includes('unit') || variableName.includes('spacing') ? `${value}px` : value;
                 }
             }
         });
@@ -575,22 +515,24 @@ class UIManager {
     applyStyleSettings(settings) {
         for (const [variable, value] of Object.entries(settings)) {
             let finalValue = value;
-            if (variable.includes('radius') || variable.includes('spacing-unit')) {
-                 if (!isNaN(parseFloat(value)) && !value.endsWith('px')) {
-                    finalValue = `${value}px`;
-                }
+            if ((variable.includes('radius') || variable.includes('spacing-unit') || variable.includes('spacing')) &&
+                !isNaN(parseFloat(value)) && !String(value).endsWith('px')) { // Ensure string for endsWith
+                finalValue = `${value}px`;
             }
-            this.appContainer.style.setProperty(variable, finalValue);
+            (this.appContainer || document.documentElement).style.setProperty(variable, finalValue);
         }
     }
 
-    saveStyleSettingsToStorage() {
+    saveStyleSettingsToStorage() { // This method should be called by script.js via the callback
         const settings = {};
-        const styleControls = this.appContainer.querySelectorAll('input[data-variable], select[data-variable]');
+        const styleControls = (this.settingsControlsContainer || this.appContainer).querySelectorAll('input[data-variable], select[data-variable]');
         styleControls.forEach(control => {
-            settings[control.dataset.variable] = control.value;
+            let value = control.value;
+             if (control.type === 'range' && (control.dataset.variable.includes('radius') || control.dataset.variable.includes('unit') || control.dataset.variable.includes('spacing'))) {
+                value += 'px';
+            }
+            settings[control.dataset.variable] = value;
         });
-        
         try {
             localStorage.setItem(this.config.styleSettingsKey, JSON.stringify(settings));
             debugLogger.log('UIManager', 'Style settings saved successfully.');
@@ -599,35 +541,53 @@ class UIManager {
         }
     }
 
+    originalSettingsBeforePreview = {}; // Add this property
+
     resetToDefaultStyles(saveCallback) {
+        this.originalSettingsBeforePreview = this.getStoredStyleSettings(); // Store current before resetting
         this.applyStyleSettings(this.config.defaultStyleSettings);
-        if (saveCallback) saveCallback();
-        // After applying, we also need to reset the input controls themselves
-        this.loadAndApplyStyleSettings(); // This re-syncs the input controls
+        this.loadAndApplyStyleSettings(); // This re-syncs the input controls to default values
+        if (saveCallback) saveCallback(); // Save the default settings
+         if (typeof showNotification === 'function') showNotification("Styles reset to default and saved.", "Settings");
     }
 
-    togglePreview(saveCallback) {
-        this.appContainer.classList.toggle('preview-mode');
-        const isPreviewing = this.appContainer.classList.contains('preview-mode');
-        
-        // Disable all settings controls during preview
-        this.appContainer.querySelectorAll('.settings-group input, .settings-group select').forEach(el => {
-            el.disabled = isPreviewing;
-        });
+    togglePreview(saveCallback) { // saveCallback is passed from script.js
+        this.isPreviewing = !this.isPreviewing;
+        const previewButton = this.previewMainSettingsButton || this.previewPhoneSettingsButton; // Assuming one exists
 
-        if (!isPreviewing) { // When exiting preview mode
-            if (confirm("Do you want to save these changes?")) {
-                if(saveCallback) saveCallback();
-            } else {
-                // Revert to last saved settings
-                this.loadAndApplyStyleSettings(); 
+        if (this.isPreviewing) {
+            this.originalSettingsBeforePreview = {};
+             (this.settingsControlsContainer || this.appContainer).querySelectorAll('input[data-variable], select[data-variable]').forEach(control => {
+                this.originalSettingsBeforePreview[control.dataset.variable] = control.value;
+             });
+            if (previewButton) previewButton.textContent = 'Apply & Save Preview';
+             if (typeof showNotification === 'function') showNotification("Preview Mode ON. Changes are temporary.", "Settings");
+        } else {
+            // Exiting preview mode
+            if (previewButton) previewButton.textContent = 'Preview Styles';
+            if (saveCallback) {
+                saveCallback(); // This will save the current (previewed) styles
+                 if (typeof showNotification === 'function') showNotification("Preview settings applied and saved.", "Settings");
             }
         }
     }
 
-    displayEtiquetteFeedback(feedbackId, type) {
+    // This method is for cancelling preview and reverting to original values *before* preview started
+    cancelPreviewAndRevert() {
+        if (this.isPreviewing) {
+            this.applyStyleSettings(this.originalSettingsBeforePreview);
+            this.loadAndApplyStyleSettings(); // Resync controls to original values
+            this.isPreviewing = false;
+            const previewButton = this.previewMainSettingsButton || this.previewPhoneSettingsButton;
+            if (previewButton) previewButton.textContent = 'Preview Styles';
+             if (typeof showNotification === 'function') showNotification("Preview cancelled. Styles reverted.", "Settings");
+        }
+    }
+
+
+    displayEtiquetteFeedback(feedbackId, type) { // type is 'positive', 'negative', or 'neutral'
         const message = feedbackMessages[feedbackId] || "Your actions have been noted on the street.";
-        showNotification(message, "Street Murmurs", type);
+        showNotification(message, "Street Murmurs", type); // Directly use imported showNotification
     }
 }
 

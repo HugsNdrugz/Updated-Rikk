@@ -319,6 +319,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -589,6 +595,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -877,6 +889,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -1025,6 +1043,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -1186,6 +1210,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -1374,6 +1404,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -1566,6 +1602,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
+            ],
+            "customerReactsToRudeDismissal": [
+                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+            ],
+            "customerReactsToPoliteDismissal": [
+                { "lines": ["Aight, respect. Let me know if you change your mind."] }
             ]
         }
     },
@@ -1578,7 +1620,8 @@ export const customerTemplates = {
             "offerCommunityHelp": [{ "lines": ["The community center needs some supplies for the youth program. Could you help us acquire some... discreetly?"] }],
             "rikkAgreesToHelpPastor": [{ "lines": ["Consider it done, Pastor. For the kids, of course."] }],
             "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
-            "pastorDeclinesHelp": [{ "lines": ["I understand. Perhaps another time. May peace be with you."] }]
+            "pastorDeclinesHelp": [{ "lines": ["I understand. Perhaps another time. May peace be with you."] }],
+            "rikkDeclinesPastor": [{ "lines": ["Sorry, Pastor. Can't get involved right now."] }]
         },
         "itemPool": [],
         "sellsOnly": false,

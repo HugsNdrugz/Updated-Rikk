@@ -11,8 +11,7 @@
       "streetCred_global_change": -2,
       "loyalty_change": -5,
       "target_type": "customer",
-      "feedback_message_id": "feedback_decline_rude_new_customer",
-      "violation_type_to_increment": "rude_customer_declines"
+      "feedback_message_id": "feedback_decline_rude_new_customer"
     }
   },
   {
@@ -59,65 +58,6 @@
       "loyalty_change": -5,
       "target_type": "customer",
       "feedback_message_id": "feedback_price_gouge_shortage"
-    }
-  },
-  {
-    "id": "discount_loyal_customer",
-    "description": "Player gives a discount to a loyal customer.",
-    "trigger": {
-      "event_type": "offer_discount_customer",
-      "loyalty_level_high": true,
-      "customer_mood": "positive"
-    },
-    "impacts": {
-      "streetCred_global_change": 2,
-      "loyalty_change": 5,
-      "target_type": "customer",
-      "feedback_message_id": "feedback_discount_loyal_customer"
-    }
-  },
-  {
-    "id": "aggressive_tone_neutral_customer",
-    "description": "Player uses an aggressive tone with a neutral customer unnecessarily.",
-    "trigger": {
-      "event_type": "general_interaction",
-      "choice_style": "aggressive",
-      "customer_mood": "neutral"
-    },
-    "impacts": {
-      "streetCred_global_change": -1,
-      "loyalty_change": -3,
-      "target_type": "customer",
-      "feedback_message_id": "feedback_aggressive_tone_neutral",
-      "violation_type_to_increment": "unnecessary_aggression"
-    }
-  },
-  {
-    "id": "helped_pastor_jones_request",
-    "description": "Player helps Pastor Jones with a community request.",
-    "trigger": {
-      "event_type": "pastor_jones_request",
-      "action_taken": "helped"
-    },
-    "impacts": {
-      "streetCred_community_figure_change": 10,
-      "target_community_figure_id": "pastor_jones",
-      "streetCred_global_change": 1,
-      "feedback_message_id": "feedback_helped_pastor_jones"
-    }
-  },
-  {
-    "id": "declined_pastor_jones_request",
-    "description": "Player declines Pastor Jones's community request.",
-    "trigger": {
-      "event_type": "pastor_jones_request",
-      "action_taken": "declined"
-    },
-    "impacts": {
-      "streetCred_community_figure_change": -5,
-      "target_community_figure_id": "pastor_jones",
-      "streetCred_global_change": -1,
-      "feedback_message_id": "feedback_declined_pastor_jones"
     }
   }
 ]

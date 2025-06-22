@@ -1,703 +1,662 @@
-/* assets/css/phone.css */
-/* ==========================================================================
-   Base Phone UI Styles
-   ========================================================================== */
-
-#rikk-phone-ui {
-    position: fixed;
-    bottom: 20px; /* Default docked position */
-    right: 20px;
-    width: 300px; /* Standard phone width */
-    height: 600px; /* Standard phone height */
-    background-color: var(--color-dark-bg, #1a1a1a); /* Dark background for the phone body */
-    border-radius: var(--phone-border-radius, 28px); /* Rounded corners for the phone body */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 3px var(--color-surface, #333); /* More pronounced shadow, border */
+/* PHONE CONTAINER & STATES */
+.phone-container {
+    position: relative;
+    width: 100%;
+    max-width: var(--phone-max-width);
+    height: var(--phone-max-height);
+    max-height: 100%;
+    background: #111;
+    border-radius: var(--phone-border-radius);
     display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Ensures content stays within rounded corners */
-    transition: transform 0.3s ease-out, bottom 0.3s ease-out, opacity 0.3s ease-out; /* Smooth transitions for movement */
-    z-index: 1000; /* Ensure phone is above other game elements */
-    opacity: 1;
-    transform: translateY(0);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(50, 50, 50, 0.8);
+    border: 2px solid #000;
+    transition: transform var(--transition-phone-slide), opacity var(--transition-duration-medium) var(--transition-easing);
+    z-index: 50;
 }
 
-#rikk-phone-ui.is-offscreen {
-    transform: translateY(calc(100% + 50px)); /* Move completely off-screen */
+.phone-container.is-offscreen {
+    transform: translateY(120%);
     opacity: 0;
 }
 
-/* Phone Screen Area */
-#phone-screen-area {
-    flex-grow: 1;
-    background-color: var(--color-surface, #2c2c2c); /* Screen background */
-    overflow-y: auto; /* Allow scrolling for content longer than the screen */
-    position: relative; /* For absolute positioning of elements like status bar */
-    display: flex; /* Use flex to manage content layout */
-    flex-direction: column; /* Stack status bar, content, nav bar */
+.phone-container.chatting-game,
+.phone-container.home-screen-active,
+.phone-container.app-menu-game {
+    transform: translateY(0);
+    opacity: 1;
 }
 
-#phone-screen-area.screen-off {
-    background-color: #000; /* Black screen when "off" or docked indicator shown */
+.phone-screen-area {
+    width: calc(100% - 12px);
+    height: calc(100% - var(--spacing-md));
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--phone-screen-inset-radius);
+    margin: var(--spacing-sm);
+    transition: filter 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    font-family: var(--font-body);
 }
 
-/* Status Bar (Top part of the screen) */
-.status-bar {
+.phone-screen-area.screen-off {
+    filter: brightness(0.25);
+    opacity: 0.9;
+}
+
+.wallpaper {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #6e45e2 0%, #89d4cf 100%);
+    opacity: 0.2;
+    z-index: 1;
+}
+
+/* Phone Hardware */
+.volume-btn,
+.power-btn {
+    position: absolute;
+    background: #333;
+}
+
+.volume-btn {
+    left: -3px;
+    top: 80px;
+    width: 3px;
+    height: 80px;
+}
+
+.power-btn {
+    right: -3px;
+    top: 100px;
+    width: 3px;
+    height: 50px;
+}
+
+.notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: var(--spacing-xl);
+    background: #111;
+    border-bottom-left-radius: var(--spacing-lg);
+    border-bottom-right-radius: var(--spacing-lg);
+    z-index: 100;
+}
+
+.notch .camera,
+.notch .speaker {
+    position: absolute;
+    top: 50%;
+}
+
+.notch .camera {
+    right: var(--spacing-xl);
+    width: var(--spacing-sm);
+    height: var(--spacing-sm);
+    border-radius: 50%;
+    background: #333;
+    transform: translateY(-50%);
+}
+
+.notch .speaker {
+    left: 50%;
+    width: 50px;
+    height: var(--spacing-xs);
+    background: #222;
+    border-radius: 3px;
+    transform: translate(-50%, -50%);
+}
+
+/* Phone's internal status bar */
+.phone-screen-area .status-bar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 6px 12px; /* Slightly reduced padding */
-    background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent overlay for status bar */
-    color: var(--color-on-surface, #fff);
-    font-size: 0.75em; /* Smaller font for status bar */
-    position: absolute; /* Stick to top */
+    padding: var(--spacing-md) var(--spacing-xl);
+    color: white;
+    font-size: 0.9rem;
+    position: absolute;
+    width: 100%;
     top: 0;
     left: 0;
-    right: 0;
-    z-index: 10; /* Above screen content */
-    pointer-events: none; /* Allow clicks to pass through to content below if needed */
-}
-
-#current-time-small {
-    font-weight: bold;
+    z-index: 90;
 }
 
 .status-icons {
     display: flex;
-    gap: 5px; /* Space between icons */
+    gap: var(--spacing-sm);
 }
 
-/* Main Screen Content Area (below status bar, above nav bar) */
-.screen-content {
-    padding-top: 30px; /* Space for the absolute positioned status bar */
-    padding-bottom: 50px; /* Space for the absolute positioned nav bar/dock */
-    flex-grow: 1;
-    overflow-y: auto; /* Scroll content within this area */
-    display: flex; /* To allow content to fill space */
-    flex-direction: column; /* Stack different app views */
-}
-
-/* Phone Navigation Bar / Dock (Bottom part of the screen) */
-.nav-bar, .dock {
+.dock {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 8px 0;
-    background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent overlay */
-    color: var(--color-on-surface, #fff);
-    position: absolute; /* Stick to bottom */
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40px; /* Fixed height for nav bar */
-    z-index: 10; /* Above screen content */
+    z-index: 100;
 }
-.dock {
-    background-color: rgba(40, 40, 40, 0.7); /* Darker, more distinct dock */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+.dock-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .home-indicator {
-    width: 100px;
-    height: 4px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 2px;
     position: absolute;
-    bottom: 8px; /* Position above the very bottom edge */
+    bottom: var(--spacing-md);
     left: 50%;
     transform: translateX(-50%);
+    width: 100px;
+    height: var(--spacing-xs);
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--spacing-xs);
+    z-index: 100;
 }
 
-
-/* ==========================================================================
-   Android Home Screen Styles
-   ========================================================================== */
-#android-home-screen {
+/* Phone Content Views */
+.phone-content-view {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Align items to the top */
-    align-items: center;
-    height: 100%;
-    padding-top: 20px; /* Space from status bar */
-    /* background: linear-gradient(135deg, #6e45e2 0%, #89d4cf 100%); Wallpaper handled by .wallpaper */
-    position: relative; /* For wallpaper and notification */
-}
-.wallpaper {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -1; /* Behind icons */
-    /* Gradient will be set by JS */
+    z-index: 5;
+    padding-top: 30px;
 }
 
+.phone-content-view.hidden {
+    display: none;
+}
 
-.time-date-widget {
+/* Home Screen UI */
+#android-home-screen .time-display {
+    font-weight: 200;
+    font-size: 3.5rem;
     text-align: center;
-    color: var(--color-on-surface, #fff);
-    margin-bottom: 30px; /* Space below time/date */
-    background-color: rgba(0,0,0,0.2);
-    padding: 10px;
-    border-radius: 8px;
+    margin-top: var(--spacing-xl);
 }
 
-#current-time {
-    font-size: 3em; /* Large time display */
-    font-weight: 300; /* Lighter font weight */
-    margin-bottom: 2px;
+#android-home-screen .date-display {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-top: var(--spacing-md);
+    font-size: 1rem;
 }
 
-#current-date {
-    font-size: 0.9em;
-    opacity: 0.8; /* Slightly less prominent */
-}
-
-/* App Grid */
 .app-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 icons per row */
-    gap: 15px; /* Space between icons */
-    padding: 0 15px; /* Padding around the grid */
-    width: 100%;
-    box-sizing: border-box;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 .app-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    color: var(--color-on-surface, #fff);
-    text-decoration: none;
-    font-size: 0.7em;
-    background-color: rgba(255, 255, 255, 0.1); /* Subtle background for icon */
-    padding: 8px;
-    border-radius: 12px; /* Rounded corners for app icons */
-    transition: background-color 0.2s ease;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
+
+.app-icon i {
+    font-size: 1.3rem;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+}
+
+.app-icon .app-label {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
+}
+
 .app-icon:hover {
-    background-color: rgba(255, 255, 255, 0.2); /* Highlight on hover */
-}
-
-.app-icon .fas, .app-icon .material-icons { /* Font Awesome and Material Icons */
-    font-size: 24px; /* Icon size */
-    margin-bottom: 5px; /* Space between icon and text */
-    color: var(--color-secondary, #03dac5); /* Use secondary color for icons */
-}
-
-/* Dock Icons (similar to app-icon but might have different styling or container) */
-.dock-icon {
-    flex-grow: 1; /* Distribute space in the dock */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-on-surface, #fff);
-    font-size: 20px; /* Larger icons for dock */
-    height: 100%;
-    transition: background-color 0.2s ease;
-}
-.dock-icon:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-.dock-icon .fas, .dock-icon .material-icons {
-    color: var(--color-secondary, #03dac5);
-}
-
-
-/* Hidden class for views */
-.hidden {
-    display: none !important;
-}
-
-/* ==========================================================================
-   Game Chat View Styles
-   ========================================================================== */
-#game-chat-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%; /* Fill the phone screen area */
-    background-color: var(--color-dark-bg); /* Darker background for chat */
-}
-
-.chat-header {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: var(--color-surface); /* Slightly lighter header */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--color-on-surface);
-}
-.chat-header-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    margin-right: 10px;
-    font-size: 0.9em;
-}
-#chat-header-contact-name {
-    font-weight: 500;
-    font-size: 0.9em;
-}
-
-#chat-container-game {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-}
-.chat-spacer { /* New spacer element style */
-    flex-grow: 1; /* Pushes messages to the top */
-}
-
-
-.message-row {
-    display: flex;
-    margin-bottom: 8px;
-    max-width: 85%; /* Messages don't take full width */
-}
-.message-row.sent {
-    justify-content: flex-end; /* Align sent messages to the right */
-    margin-left: auto; /* Push to right */
-}
-.message-row.received {
-    justify-content: flex-start; /* Align received messages to the left */
-    margin-right: auto; /* Push to left */
-}
-
-.message-bubble {
-    padding: 8px 12px;
-    border-radius: 18px; /* More rounded bubbles */
-    font-size: 0.85em;
-    line-height: 1.4;
-    word-wrap: break-word; /* Ensure long words break */
-}
-.message-bubble.sent {
-    background-color: var(--color-primary); /* Rikk's messages */
-    color: var(--color-on-primary);
-    border-bottom-right-radius: 5px; /* Typical chat bubble shape */
-}
-.message-bubble.received {
-    background-color: var(--color-surface); /* Customer's messages */
-    color: var(--color-on-surface);
-    border-bottom-left-radius: 5px; /* Typical chat bubble shape */
-}
-.message-bubble strong { /* For bold text */
-    font-weight: 600; /* Make bold more prominent */
-}
-
-.timestamp { /* Timestamp/Narration style */
-    font-size: 0.7em;
-    color: var(--color-on-surface);
-    opacity: 0.6;
-    text-align: center;
-    margin: 8px auto; /* Center and provide spacing */
-    padding: 2px 8px;
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 5px;
-}
-
-
-.chat-footer {
-    padding: 8px;
-    background-color: var(--color-surface);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex; /* For quick replies or input area */
-    flex-direction: column; /* Stack quick replies */
-}
-.quick-reply-container {
-    display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap */
-    gap: 5px; /* Space between buttons */
-    justify-content: center; /* Center buttons if they don't fill width */
-    padding: 5px 0;
-}
-.quick-reply-button {
-    background-color: var(--color-primary-variant, #3700b3); /* Slightly different from sent bubble for distinction */
-    color: var(--color-on-primary, #ffffff);
-    border: none;
-    border-radius: 15px;
-    padding: 8px 12px;
-    font-size: 0.8em;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-.quick-reply-button:hover {
-    background-color: var(--color-primary, #bb86fc); /* Lighter on hover */
-}
-
-#chat-footer-rcs-status {
-    font-size: 0.65em;
-    text-align: center;
-    color: var(--color-on-surface);
-    opacity: 0.5;
-    margin-top: 5px; /* Space above RCS status */
-}
-
-/* Phone Docked Indicator (when phone is offscreen) */
-#phone-docked-indicator {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
-    background-color: var(--color-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-on-primary);
-    font-size: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    cursor: pointer;
-    z-index: 999; /* Below phone when active, but above game screen */
-    transition: transform 0.2s ease-out;
-}
-#phone-docked-indicator:hover {
     transform: scale(1.1);
 }
-#phone-docked-indicator.hidden {
-    display: none !important;
-}
 
-/* Notification Styles */
-#notification {
+/* Notification */
+.notification {
     position: absolute;
-    top: 35px; /* Below status bar */
-    left: 5%;
-    right: 5%;
-    width: 90%;
-    background-color: rgba(50, 50, 50, 0.9); /* Dark, semi-transparent */
-    color: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    z-index: 20; /* Above screen content */
-    font-size: 0.8em;
-    display: none; /* Initially hidden */
-    border-left: 4px solid var(--color-primary); /* Accent border */
-}
-#notification .notification-title {
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: var(--color-secondary);
-}
-#notification .notification-content {
-    font-size: 0.95em;
-    line-height: 1.3;
-}
-
-/* Phone Back Button (generic for apps) */
-.phone-back-button {
-    position: absolute;
-    top: 8px; /* Align with typical status bar height */
-    left: 8px;
-    background: none;
-    border: none;
-    color: var(--color-on-surface);
-    font-size: 1.2em; /* Material icon size */
-    cursor: pointer;
-    padding: 5px;
-    z-index: 15; /* Above app content, below potential modals within app */
-}
-.phone-back-button:hover {
-    color: var(--color-primary);
-}
-.phone-back-button.hidden {
-    display: none !important;
-}
-
-/* App View Generic Title (can be used if an app doesn't have a complex header) */
-.app-view-title {
-    font-size: 1.2em;
-    color: var(--color-primary);
-    text-align: center;
-    padding: 15px 10px 10px; /* Space around title */
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 10px;
-}
-
-/* General App View Styling */
-.app-view { /* Common class for app screens like contacts, map, news */
-    padding: 10px; /* Basic padding for app content */
-    height: 100%; /* Apps should fill their container */
-    overflow-y: auto; /* Allow scrolling within apps */
-    color: var(--color-on-surface);
-}
-.app-view h3 { /* Common header for apps */
-    color: var(--color-primary);
-    margin-top: 0;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 1.1em;
-}
-.app-view p.empty-message {
-    text-align: center;
-    opacity: 0.7;
-    margin-top: 20px;
-}
-.app-view p.error-message {
-    text-align: center;
-    color: var(--color-error);
-    margin-top: 20px;
-}
-
-/* Contacts App Specifics */
-#contacts-app-view {
-    /* Styles for the main container of the contacts app, if needed beyond .app-view */
-}
-.contacts-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.contact-list-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-.contact-list-item:hover {
-    background-color: rgba(255,255,255,0.08);
-}
-.contact-avatar-small {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    margin-right: 10px;
-    object-fit: cover; /* Ensure avatar images cover the area nicely */
-    background-color: var(--color-surface); /* Placeholder bg */
-}
-.contact-name {
-    font-size: 0.9em;
-}
-
-#contact-detail-view {
-    padding: 15px;
-    text-align: center; /* Center avatar and name */
-}
-/* Dynamic styles for when specific elements aren't found and are created by JS */
-.contact-detail-avatar-dynamic {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    margin: 0 auto 10px;
-    display: block;
-    object-fit: cover;
-    background-color: var(--color-surface);
-}
-.contact-detail-name-dynamic {
-    font-size: 1.3em;
-    color: var(--color-primary);
-    margin-bottom: 5px;
-}
-.contact-detail-description-dynamic {
-    font-size: 0.8em;
-    opacity: 0.8;
-    margin-bottom: 15px;
-}
-.contact-detail-loyalty-dynamic {
-    font-size: 0.85em;
-    margin-bottom: 15px;
-    padding: 5px;
-    background-color: rgba(0,0,0,0.15);
-    border-radius: 5px;
-    display: inline-block;
-}
-.contact-detail-services-dynamic h4,
-.contact-detail-missions-dynamic h4 {
-    font-size: 0.95em;
-    color: var(--color-secondary);
-    margin-top: 20px;
-    margin-bottom: 8px;
-    text-align: left;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding-bottom: 5px;
-}
-.contact-detail-services-dynamic ul,
-.contact-detail-missions-dynamic ul {
-    list-style: none;
-    padding: 0;
-    text-align: left;
-    font-size: 0.85em;
-}
-.contact-detail-services-dynamic li,
-.contact-detail-missions-dynamic li {
-    padding: 5px 0;
-}
-.dynamic-back-button { /* For JS-added back buttons */
-    display: block;
-    margin: 15px auto 0;
-    padding: 8px 15px;
-    background-color: var(--color-primary);
-    color: var(--color-on-primary);
-    border: none;
-    border-radius: var(--button-border-radius);
-    cursor: pointer;
-}
-
-/* Map App Specifics */
-#map-app-view {
-    /* Styles for the main container of the map app */
-}
-#map-grid-container {
-    display: grid; /* Will be configured by JS */
-    width: 100%;
-    height: calc(100% - 40px); /* Adjust if title or other elements affect height */
-    gap: 5px;
-}
-.map-district-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8em;
-    border: 1px solid var(--color-surface);
-    background-color: rgba(var(--color-primary-rgb, 187, 134, 252), 0.1); /* Use RGB for opacity */
-    color: var(--color-on-surface);
-    cursor: default; /* Or pointer if interactive */
-    transition: background-color 0.2s ease;
-}
-.map-district-cell:hover {
-    background-color: rgba(var(--color-primary-rgb, 187, 134, 252), 0.2);
-}
-.map-district-list { /* Fallback if grid container fails */
-    list-style: none;
-    padding: 0;
-}
-.map-district-list li {
-    padding: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* News App Specifics */
-#news-app-view {
-    /* Styles for the main container of the news app */
-}
-.news-article-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.news-article-item {
-    padding: 12px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-.news-article-item:hover {
-    background-color: rgba(255,255,255,0.08);
-}
-.news-headline {
-    font-size: 0.95em;
-    font-weight: 500;
-    margin: 0 0 4px 0;
-    color: var(--color-on-surface);
-}
-.news-meta {
-    font-size: 0.7em;
-    opacity: 0.6;
-    margin: 0;
-}
-
-#news-article-detail-view, .news-article-detail-dynamic { /* For JS-created elements */
-    padding: 15px;
-    font-size: 0.85em;
-    line-height: 1.5;
-}
-#news-article-headline, .news-article-headline-dynamic {
-    font-size: 1.3em;
-    color: var(--color-primary);
-    margin-bottom: 8px;
-}
-#news-article-meta, .news-article-meta-dynamic {
-    font-size: 0.75em;
-    opacity: 0.7;
-    margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 8px;
-}
-#news-article-body, .news-article-body-dynamic {
-    white-space: pre-wrap; /* Preserve line breaks from data */
-}
-.news-dynamic-back { /* If JS adds a back button to news detail */
-    margin-bottom: 15px; /* Space it from content */
-}
-
-/* Phone Theme Settings View */
-#phone-theme-settings-view {
-    padding: 15px;
-    overflow-y: auto;
-}
-#phone-theme-settings-view h3 {
-    color: var(--color-primary);
-    text-align: center;
-    margin-bottom: 20px;
-}
-.theme-setting-group {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: rgba(var(--color-surface-rgb, 30, 30, 30), 0.5);
-    border-radius: var(--modal-border-radius, 10px);
-}
-.theme-setting-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 0.85em;
-    color: var(--color-on-surface);
-    opacity: 0.8;
-}
-.theme-setting-group input[type="color"],
-.theme-setting-group input[type="range"],
-.theme-setting-group select {
-    width: 100%;
-    padding: 8px;
-    border-radius: var(--button-border-radius, 8px);
-    border: 1px solid rgba(var(--color-on-surface-rgb, 224, 224, 224), 0.2);
-    background-color: rgba(var(--color-dark-bg-rgb, 18, 18, 18), 0.7);
-    color: var(--color-on-surface);
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
-}
-.theme-setting-group input[type="color"] {
-    height: 40px; /* Consistent height for color picker */
-}
-.theme-setting-group .value-display {
-    display: inline-block;
-    margin-left: 10px;
-    font-size: 0.8em;
-    opacity: 0.7;
-}
-.theme-settings-actions {
-    display: flex;
-    justify-content: space-around; /* Space out buttons */
-    margin-top: 25px;
-}
-.theme-settings-actions button {
-    padding: 10px 15px;
-    font-size: 0.85em;
-    /* Uses global .game-button styles if available, or define here */
+    top: 40px;
+    left: var(--spacing-lg);
+    width: calc(100% - 30px);
+    background: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: var(--spacing-lg);
+    padding: var(--spacing-md);
+    color: white;
+    animation: slideIn 0.5s forwards;
+    display: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 200;
 }
 
 /* Phone Notification type styling */
-.phone-notification.positive-feedback {
+#notification.positive-feedback {
     background-color: var(--color-success-green, #2ecc71) !important;
     color: var(--color-on-primary, #000000) !important;
-    border-left-color: darken(var(--color-success-green, #2ecc71), 15%) !important; /* Darker accent for positive */
+    border-left-color: var(--color-success-darker, #27ae60) !important; /* Using a placeholder for darken */
 }
-.phone-notification.positive-feedback .notification-title {
-    color: var(--color-on-primary, #000000) !important; /* Ensure title is also readable */
+#notification.positive-feedback .notification-title {
+    color: var(--color-on-primary, #000000) !important;
 }
 
-.phone-notification.negative-feedback {
+#notification.negative-feedback {
     background-color: var(--color-error, #cf6679) !important;
-    color: var(--color-on-primary, #000000) !important; /* Ensure text is readable */
-    border-left-color: darken(var(--color-error, #cf6679), 15%) !important; /* Darker accent for negative */
+    color: var(--color-on-primary, #000000) !important;
+    border-left-color: var(--color-error-darker, #b85264) !important; /* Using a placeholder for darken */
 }
-.phone-notification.negative-feedback .notification-title {
-    color: var(--color-on-primary, #000000) !important; /* Ensure title is also readable */
+#notification.negative-feedback .notification-title {
+    color: var(--color-on-primary, #000000) !important;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.notification-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-xs);
+    overflow-wrap: break-word;
+}
+
+.notification-content {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    overflow-wrap: break-word;
+}
+
+/* === MAIN GAME CHAT UI Styles === */
+#game-chat-view {
+      --bg-color: #1f1f1f;
+      --header-footer-text: #e8eaed;
+      --timestamp-text: #9aa0a6;
+      --sent-bubble-bg: #a8b0bd;
+      --sent-bubble-text: #202124;
+      --received-bubble-bg: #303030;
+      --received-bubble-text: #e8eaed;
+      --avatar-bg: #4fbfad;
+      --input-bar-bg: #303030;
+
+      background-color: var(--bg-color);
+      color: var(--header-footer-text);
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      width: 100%;
+      /*max-width: 412px; /* Let's keep the phone's existing max-width for now */
+      /*height: 892px; /* Let's keep the phone's existing height for now */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      /*border-radius: 1rem; /* Let's keep phone's existing border-radius */
+      position: relative;
+      height: 100%; /* Explicitly fill the parent .phone-content-view */
+    }
+
+    #game-chat-view .chat-header { /* Adjusted from #recreated-android-chat */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-lg) var(--spacing-xs); /* 1rem is 16px, 0.5rem is 8px */
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 10; /* Ensure it's above the chat log content */
+      background-color: var(--bg-color); /* Add background to prevent chat log showing through during scroll */
+    }
+
+    #game-chat-view .header-left { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm); /* 0.75rem is 12px, using sm for 8px for slightly tighter feel */
+    }
+
+    #game-chat-view .header-right { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg); /* 1rem is 16px */
+      padding-right: var(--spacing-xs); /* 0.5rem is 8px */
+    }
+
+    #game-chat-view .icon { /* Adjusted */
+      fill: var(--header-footer-text);
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    #game-chat-view .back-button { /* Adjusted */
+        display: grid;
+        place-items: center;
+    }
+
+    #game-chat-view .avatar { /* Adjusted */
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: var(--avatar-bg);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    #game-chat-view .contact-name { /* Adjusted */
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    #game-chat-view .chat-log { /* Adjusted */
+      flex-grow: 1;
+      padding: 0 var(--spacing-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm); /* 0.6rem is ~9.6px, close to 8px */
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    /* Scrollbar styling */
+    #game-chat-view .chat-log::-webkit-scrollbar { /* Adjusted */
+        width: var(--spacing-sm);
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-track { /* Adjusted */
+        background: var(--bg-color);
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-thumb { /* Adjusted */
+        background: #444;
+        border-radius: 3px;
+    }
+    #game-chat-view .chat-log::-webkit-scrollbar-thumb:hover { /* Adjusted */
+        background: #555;
+    }
+
+    #game-chat-view .timestamp { /* Adjusted */
+      text-align: center;
+      color: var(--timestamp-text);
+      font-size: 0.75rem;
+      padding: var(--spacing-sm) 0; /* 0.75rem is 12px, using sm for 8px as it's a vertical padding */
+      font-weight: 500;
+    }
+
+    #game-chat-view .message-row { /* Adjusted */
+      display: flex;
+      width: 100%;
+    }
+
+    #game-chat-view .message-row.sent { /* Adjusted */
+      justify-content: flex-end;
+    }
+
+    #game-chat-view .message-row.received { /* Adjusted */
+      justify-content: flex-start;
+    }
+
+    #game-chat-view .message-bubble { /* Adjusted */
+      padding: var(--spacing-sm) var(--spacing-md); /* 0.6rem ~9.6px, 0.9rem ~14.4px */
+      max-width: 75%;
+      line-height: 1.4;
+      font-size: 1rem;
+      word-wrap: break-word;
+    }
+
+    #game-chat-view .message-bubble.sent { /* Adjusted */
+      background-color: var(--sent-bubble-bg);
+      color: var(--sent-bubble-text);
+      border-radius: 1.25rem 0.5rem 1.25rem 1.25rem;
+    }
+
+    #game-chat-view .message-bubble.received { /* Adjusted */
+      background-color: var(--received-bubble-bg);
+      color: var(--received-bubble-text);
+      border-radius: 0.5rem 1.25rem 1.25rem 1.25rem;
+    }
+
+    #game-chat-view .message-stack { /* Adjusted */
+        display: flex;
+        flex-direction: column;
+        gap: 2px; /* 0.2rem, leave as is or use var(--spacing-xxs) if defined for 2px */
+        /* align-items: flex-end; /* This might need to be conditional based on sent/received */
+    }
+    /* Added specific alignment for sent message stacks */
+    #game-chat-view .message-row.sent .message-stack {
+        align-items: flex-end;
+    }
+
+    /* Added specific alignment for received message stacks (if ever needed) */
+    #game-chat-view .message-row.received .message-stack {
+        align-items: flex-start;
+    }
+
+    #game-chat-view .message-bubble.stack-top.sent { /* Adjusted and specified for sent */
+        border-radius: 1.25rem 0.5rem 0.5rem 1.25rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-bottom.sent { /* Adjusted and specified for sent */
+        border-radius: 1.25rem 0.5rem 1.25rem 0.5rem; /* TL, TR, BR, BL */
+    }
+
+    #game-chat-view .message-bubble.stack-top.received { /* Added for received */
+        border-radius: 0.5rem 1.25rem 0.5rem 1.25rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-bottom.received { /* Added for received */
+        border-radius: 0.5rem 1.25rem 1.25rem 0.5rem; /* TL, TR, BR, BL */
+    }
+    /* If there's a middle message in a stack */
+    #game-chat-view .message-bubble.stack-middle.sent {
+        border-radius: 1.25rem 0.5rem 0.5rem 0.5rem; /* TL, TR, BR, BL */
+    }
+    #game-chat-view .message-bubble.stack-middle.received {
+        border-radius: 0.5rem 1.25rem 0.5rem 0.5rem; /* TL, TR, BR, BL */
+    }
+
+
+    #game-chat-view .chat-footer { /* Adjusted */
+      padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); /* 0.5rem, 1rem, 1rem, 1rem */
+      flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 10; /* Ensure it's above the chat log content */
+      background-color: var(--bg-color); /* Add background to prevent chat log showing through during scroll */
+    }
+
+    #game-chat-view .rcs-status { /* Adjusted */
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--timestamp-text);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    #game-chat-view #chat-form { /* Adjusted */
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm); /* 0.75rem is 12px */
+    }
+
+    #game-chat-view .input-bar { /* Adjusted */
+      flex-grow: 1;
+      background-color: var(--input-bar-bg);
+      border-radius: 2rem;
+      padding: var(--spacing-xs) var(--spacing-sm); /* 0.5rem, 0.75rem */
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm); /* 0.75rem */
+    }
+
+    #game-chat-view #chat-input { /* Adjusted */
+      flex-grow: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--header-footer-text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    #game-chat-view #chat-input::placeholder { /* Adjusted */
+        color: var(--timestamp-text);
+        opacity: 1;
+    }
+
+    #game-chat-view .send-button { /* Adjusted */
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background-color: var(--input-bar-bg);
+      display: grid;
+      place-items: center;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    #game-chat-view .send-button:hover { /* Adjusted */
+        background-color: #404040;
+    }
+
+    #game-chat-view .send-button .icon { /* Adjusted */
+        transform: translateX(1px); /* Optical alignment for send icon */
+    }
+
+#game-chat-view #chat-input:disabled {
+    background-color: var(--input-bar-bg); /* Ensure it keeps its bar background */
+    opacity: 0.6; /* Make it look more clearly disabled */
+    cursor: not-allowed; /* Indicate it's not interactive */
+    /* Remove placeholder text if it looks odd when disabled, or style it */
+}
+
+/* Optional: Style placeholder of disabled input if needed */
+#game-chat-view #chat-input:disabled::placeholder {
+    color: var(--timestamp-text); /* Keep placeholder color or make it fainter */
+    opacity: 0.7; /* Ensure placeholder is also dimmed */
+}
+
+/* Quick Reply Styles */
+#game-chat-view .quick-reply-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap to next line */
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: var(--spacing-xs);    /* Use a small gap (e.g., 4px) */
+    margin-bottom: var(--spacing-sm); /* Space between replies and input bar (e.g., 8px) */
+    padding: 0 var(--spacing-sm); /* Horizontal padding for the container */
+    max-height: 70px; /* Limit height to roughly two rows of buttons */
+    overflow-y: auto; /* Allow scrolling if more choices */
+}
+
+#game-chat-view .quick-reply-button {
+    padding: var(--spacing-sm) var(--spacing-md); /* e.g., 8px 12px */
+    background-color: var(--sent-bubble-bg); /* Match sent bubble style */
+    color: var(--sent-bubble-text);
+    border-radius: 20px; /* Highly rounded */
+    cursor: pointer;
+    border: 1px solid transparent; /* Transparent border initially */
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background-color 0.2s, transform 0.1s;
+    flex-shrink: 0; /* Prevent buttons from shrinking too much if container is constrained */
+}
+
+#game-chat-view .quick-reply-button:hover {
+    background-color: var(--received-bubble-bg); /* Example hover: use received bubble style */
+    color: var(--received-bubble-text);
+    border-color: var(--received-bubble-bg);
+}
+
+#game-chat-view .quick-reply-button:active {
+    transform: scale(0.95);
+}
+
+/* Styling for the scrollbar in quick-reply-container (optional, webkit only) */
+#game-chat-view .quick-reply-container::-webkit-scrollbar {
+    height: 6px; /* Height for horizontal scrollbar if flex-direction was row */
+    width: 6px; /* Width for vertical scrollbar */
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-track {
+    background: transparent; /* Or var(--bg-color) if needed */
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-thumb {
+    background: #444; /* Similar to chat-log scrollbar */
+    border-radius: 3px;
+}
+#game-chat-view .quick-reply-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Disabled state for the main send button */
+#game-chat-view #chat-form .send-button:disabled {
+    background-color: var(--input-bar-bg); /* Match disabled input bar */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+#game-chat-view #chat-form .send-button:disabled .icon {
+    fill: var(--timestamp-text); /* Dim the icon color */
+    opacity: 0.7;
+}
+
+/* From REMAINING CORE UI STYLES */
+.phone-header {
+    background-color: #2A2A2E;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid #3A3A3C;
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#phone-title-game {
+    margin: 0;
+    font-weight: bold;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.phone-back-button {
+    position: absolute;
+    left: var(--spacing-lg);
+    background: none;
+    border: none;
+    color: var(--color-on-surface);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    min-width: 30px;
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }

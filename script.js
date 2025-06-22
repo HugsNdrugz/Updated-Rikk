@@ -517,33 +517,9 @@ function nextFiend() {
         setupUIForNewInteraction();
         setTimeout(() => {
             try {
-                // Pastor Jones Spawning Logic
-                const gameStateForCustomerManager = { // Define gameStateForCustomerManager here as it's needed for Pastor Jones too
-                    inventory: game.getInventory(),
-                    cash: game.getCash(),
-                    playerSkills: game.getPlayerSkills(),
-                    activeWorldEvents: game.getActiveWorldEvents(),
-                    combinedWorldEffects: getCombinedActiveEventEffects() // Make sure to call this to get current effects
-                };
-
-                if (game.getStreetCred('global') > 10 && Math.random() < 0.1) { // 10% chance if global street cred > 10
-                    console.log("Attempting to spawn Pastor Jones...");
-                    debugLogger.log('nextFiend', "Attempting to spawn Pastor Jones...");
-                    const pastorInteraction = game.customerManager.generatePastorJonesInteraction(gameStateForCustomerManager);
-                    if (pastorInteraction) {
-                        game.setCurrentCustomerInstance(pastorInteraction.instance);
-                        startCustomerInteraction(pastorInteraction);
-                        saveGameState(); // Save state after special interaction starts
-                        return; // Skip regular customer generation
-                    } else {
-                        debugLogger.log('nextFiend', "Pastor Jones interaction was null, proceeding to regular customer.");
-                    }
-                }
-                // --- End of Pastor Jones Spawning Logic ---
-
-                generateAndStartCustomerInteraction(); // This will use its own internal gameStateForCustomerManager if Pastor not spawned
+                generateAndStartCustomerInteraction();
             } catch (e) {
-                console.error("[SCRIPT ERROR in generateAndStartCustomerInteraction or Pastor Jones spawn]", e);
+                console.error("[SCRIPT ERROR in generateAndStartCustomerInteraction]", e);
                 if (uiManager.nextCustomerBtn) uiManager.nextCustomerBtn.disabled = true;
                 phoneShowNotification("Oops! A glitch in the matrix. Try restarting if issues persist.", "System Error");
             }
@@ -778,6 +754,20 @@ function handleChoice(outcome) {
                     dialogueContextKey = 'lowCashRikk';
                 }
                 break;
+            case "decline_offer_to_buy_rude":
+                dealSuccess = false;
+                loyaltyChange = -1;
+                narrationText = "Rikk passes on the offer.";
+                uiManager.playSound(uiManager.deniedSound);
+                dialogueContextKey = 'customerReactsToRudeDismissal';
+                break;
+            case "decline_offer_to_buy_polite":
+                dealSuccess = false;
+                loyaltyChange = -1;
+                narrationText = "Rikk passes on the offer.";
+                uiManager.playSound(uiManager.deniedSound);
+                dialogueContextKey = 'customerReactsToPoliteDismissal';
+                break;
             case "sell_to_customer":
                 const soldItem = game.removeItemFromInventoryById(outcome.item.id);
                 if (soldItem) {
@@ -798,18 +788,6 @@ function handleChoice(outcome) {
                     if (itemDefinition && itemDefinition.effectsOnSell && game.itemEffectManager) {
                         if (game.DEBUG_MODE) debugLogger.log('handleChoice', `Processing effectsOnSell for ${itemDefinition.name}`);
                         game.itemEffectManager.processEffects(itemDefinition.effectsOnSell, { gameState: game /* pass full game object as context */ });
-                    }
-
-                    // Placeholder for Mama Carter rep change
-                    // For testing, using a common item ID like 'standard_issue_glock' or any other sellable item.
-                    // Replace 'standard_issue_glock' with a real quest item ID later.
-                    if (soldItem.id === 'standard_issue_glock') { // TEMPORARY: Use a common item for testing
-                        const repGain = 10;
-                        game.streetCredManager.addStreetCred('communityFigures', 'mama_carter', repGain);
-                        phoneShowNotification(`Your standing with Mama Carter improved by ${repGain}!`, "Reputation");
-                        if (game.DEBUG_MODE) {
-                            debugLogger.log('handleChoice', `Mama Carter reputation changed by ${repGain}. New rep: ${game.streetCredManager.getStreetCred('communityFigures', 'mama_carter')}`);
-                        }
                     }
                 } else {
                     dealSuccess = false;
@@ -877,31 +855,9 @@ function handleChoice(outcome) {
                 loyaltyChange = 0; // System error, no loyalty change
                 narrationText = "System error acknowledged.";
                 break;
-            case "pastor_jones_interaction_resolved":
-                narrationText = "Pastor Jones nods slowly."; // Default narration
-                dealSuccess = true; // Considered a successful interaction for progression
-                // Etiquette context is handled below. Rikk's line and Pastor's response.
-                const rikkLineKey = outcome.followUpDialogueKey;
-                const pastorResponseKey = outcome.customerFollowUpKey;
-
-                const rikkDialogue = game.customerManager.getOutcomeDialogue(currentCustomer, rikkLineKey);
-                if (rikkDialogue && rikkDialogue.line) {
-                    queueNextMessage(rikkDialogue.line, 'rikk');
-                }
-
-                const pastorResponse = game.customerManager.getOutcomeDialogue(currentCustomer, pastorResponseKey);
-                if (pastorResponse && pastorResponse.line) {
-                    // This will be queued after Rikk's line by the main logic
-                    // We store it in outcomeResult to be picked up
-                    outcomeResult = pastorResponse; // This is a bit of a hack, ensuring outcomeResult.line is set for the final display
-                } else {
-                     outcomeResult = { line: "...", payload: null }; // Ensure outcomeResult is defined
-                }
-                // No direct loyalty change here, it's handled by etiquette rule
-                break;
         }
 
-        if (outcome.type !== "negotiate_sell" && outcome.type !== "pastor_jones_interaction_resolved") {
+        if (outcome.type !== "negotiate_sell") {
             game.decrementFiendsLeft();
         }
 
@@ -916,9 +872,9 @@ function handleChoice(outcome) {
             // If a rule matched and provided a feedback message ID, display it via UIManager
             if (etiquetteResult && etiquetteResult.feedback_message_id) {
                 if (game.DEBUG_MODE) {
-                    debugLogger.log('handleChoice', `Etiquette feedback (from dialogue choice) to display: ${etiquetteResult.feedback_message_id}, type: ${etiquetteResult.feedback_type}`);
+                    debugLogger.log('handleChoice', `Etiquette feedback (from dialogue choice) to display: ${etiquetteResult.feedback_message_id}`);
                 }
-                uiManager.displayEtiquetteFeedback(etiquetteResult.feedback_message_id, etiquetteResult.feedback_type);
+                uiManager.displayEtiquetteFeedback(etiquetteResult.feedback_message_id);
             }
         }
 
@@ -1062,9 +1018,9 @@ function handleChoice(outcome) {
             // If a rule matched and provided a feedback message ID, display it
             if (sellEtiquetteResult && sellEtiquetteResult.feedback_message_id) {
                 if (game.DEBUG_MODE) {
-                    debugLogger.log('handleChoice', `Etiquette feedback (from sale event) to display: ${sellEtiquetteResult.feedback_message_id}, type: ${sellEtiquetteResult.feedback_type}`);
+                    debugLogger.log('handleChoice', `Etiquette feedback (from sale event) to display: ${sellEtiquetteResult.feedback_message_id}`);
                 }
-                uiManager.displayEtiquetteFeedback(sellEtiquetteResult.feedback_message_id, sellEtiquetteResult.feedback_type);
+                uiManager.displayEtiquetteFeedback(sellEtiquetteResult.feedback_message_id);
             }
         }
 
