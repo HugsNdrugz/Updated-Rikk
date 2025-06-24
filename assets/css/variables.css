@@ -2,10 +2,10 @@
     /* --- Theme: Modern Underground/Gritty --- */
 
     /* Fonts */
-    --font-body: 'Roboto', 'Arial', sans-serif;
-    --font-display: 'Aldrich', 'Orbitron', 'Arial Black', sans-serif;
-    --font-ui: 'Inter', sans-serif; /* Added for consistency with some UI elements */
-    --font-slot-game: 'Black Ops One', sans-serif; /* Specific font for slot game */
+    --font-ui: 'Inter', 'Arial', sans-serif; /* Primary UI font for body, buttons, general text */
+    --font-body: var(--font-ui); /* Alias for consistency; body text will use UI font */
+    --font-display: 'Aldrich', 'Orbitron', 'Arial Black', sans-serif; /* For titles and major headings */
+    --font-slot-game: 'Black Ops One', 'Arial Black', sans-serif; /* Specific font for slot game, added fallback */
 
     /* Core Colors */
     --color-dark-bg: #0A0A0A;

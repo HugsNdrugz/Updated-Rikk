@@ -168,40 +168,28 @@
                 <!-- UPDATED: New Sleek Header -->
                 <header class="game-header">
                     <div class="status-bar">
-                        <div class="status-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                <path
-                                    d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c2.17-.46 3.5-1.66 3.5-3.68 0-2.01-1.34-3.66-4.2-4.37z">
-                                </path>
-                            </svg>
+                        <div class="status-item" aria-label="Cash">
+                            <i class="fas fa-dollar-sign" aria-hidden="true"></i>
                             <span>$<span id="cash-display">0</span></span>
                         </div>
-                        <div class="status-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                <path
-                                    d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z">
-                                </path>
-                            </svg>
-                            <span id="day-display">10</span>
+                        <div class="status-item" aria-label="Day">
+                            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                            <span id="day-display">1</span>
                         </div>
-                        <div class="status-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                <path
-                                    d="M10.53 11.45c.53-1.42 1.22-2.77 2.06-4.04l.13-.2c.4-.62.33-1.44-.19-1.96s-1.34-.6-1.96-.19c-.02.02-.04.04-.06.06C6.42 10.36 5.11 15.42 5.39 19.5c.05.75.67 1.34 1.42 1.34.69 0 1.27-.51 1.39-1.18 1.01-5.52 3.33-7.17 2.33-8.17zM13 3c-1.83 2.1-3.13 4.67-3.9 7.42-.71 2.52-1.28 5.23-1.1 7.58.01.12.03.24.03.36.88 0 1.63-.59 1.87-1.42.59-2.08 1.4-3.93 2.4-5.63 1.17-1.95 2.59-3.48 4.2-4.64.4-.29.58-.81.42-1.29-.16-.48-.63-.78-1.12-.71-.14.02-.28.06-.4.14z">
-                                </path>
-                            </svg>
+                        <div class="status-item" aria-label="Heat level">
+                            <i class="fas fa-fire" aria-hidden="true"></i>
                             <span id="heat-display">0</span>
                         </div>
-                        <div class="status-item">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z">
-                                </path>
-                            </svg>
+                        <div class="status-item" aria-label="Street Cred">
+                            <i class="fas fa-star" aria-hidden="true"></i>
                             <span id="cred-display">0</span>
                         </div>
+                        <button id="hud-info-btn" class="status-item-info-btn" aria-label="HUD Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
                     </div>
                     
-                    <div id="event-ticker" class="rival-banner">Word on the street: All quiet... for now.</div>
+                    <div id="event-ticker" class="rival-banner" aria-live="polite">Word on the street: All quiet... for now.</div>
                 </header>
                 
                 <div id="game-scene" class="main-content">

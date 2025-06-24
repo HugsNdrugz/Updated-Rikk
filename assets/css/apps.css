@@ -18,7 +18,7 @@
     color: var(--color-primary); /* Primary color for app title */
 }
 #contacts-app-view .phone-header .icon-btn { /* For icons like search/add in header */
-    color: var(--phone-icon-color);
+    color: var(--color-text-base); /* Brighter icon color for better contrast */
 }
 #contacts-app-view .phone-header .icon-btn:hover {
     color: var(--color-primary);

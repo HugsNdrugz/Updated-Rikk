@@ -35,6 +35,26 @@
     fill: currentColor; /* Ensure SVG inherits text color */
 }
 
+.status-item-info-btn {
+    background: none;
+    border: none;
+    color: var(--hud-status-item-text); /* Match other status items */
+    padding: 0 var(--spacing-xs); /* Minimal padding */
+    margin-left: var(--spacing-sm); /* Space it from other items */
+    cursor: pointer;
+    font-size: 0.9rem; /* Match status item font size */
+    opacity: 0.7;
+}
+.status-item-info-btn:hover {
+    opacity: 1;
+    color: var(--color-info); /* Use info color on hover */
+}
+.status-item-info-btn i {
+    width: calc(var(--icon-size) * 0.8); /* Slightly smaller info icon */
+    height: calc(var(--icon-size) * 0.8);
+}
+
+
 .rival-banner { /* Event Ticker */
     background-color: var(--hud-rival-banner-bg); /* Themed */
     color: var(--hud-rival-banner-text); /* Themed */

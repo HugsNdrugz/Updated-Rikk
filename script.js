@@ -310,6 +310,43 @@ function setupEventListeners() {
             if (panelToClose) uiManager.closeSubmenuPanel(panelToClose);
         });
     });
+
+    // HUD Info Button
+    const hudInfoBtn = document.getElementById('hud-info-btn');
+    if (hudInfoBtn) {
+        hudInfoBtn.addEventListener('click', () => {
+            const messages = [
+                { speaker: 'narration', text: "<b>HUD INFO:</b>" },
+                { speaker: 'narration', text: "<b>Cash ($):</b> Your money. Don't run out, or it's game over if your stash is also empty." },
+                { speaker: 'narration', text: `<b>Day:</b> Current day. You have ${game.getFiendsLeft()} interactions left in this run.` },
+                { speaker: 'narration', text: "<b>Heat (Fire Icon):</b> Police attention. High heat attracts trouble. Max Heat = Game Over." },
+                { speaker: 'narration', text: "<b>Cred (Star Icon):</b> Street Cred. Your reputation. High cred can unlock opportunities." }
+            ];
+            let messageIndex = 0;
+            function showNextInfo() {
+                if (messageIndex < messages.length) {
+                    // Ensure chat is active for system messages if player is not in a chat
+                    if (uiManager.rikkPhoneUI.classList.contains('is-offscreen') || !uiManager.gameChatView.classList.contains('active')){
+                        uiManager.setPhoneUIState('chatting');
+                        uiManager.updateChatParticipantInfo(null); // Clear customer info for system messages
+                        uiManager.clearChat(); // Clear previous chat
+                    }
+                    uiManager.displayPhoneMessage(messages[messageIndex].text, messages[messageIndex].speaker);
+                    messageIndex++;
+                    if (messageIndex < messages.length) {
+                        // Short delay for readability if multiple messages are shown in chat
+                        setTimeout(showNextInfo, 300);
+                    } else {
+                        // Optionally, add a final "Tap to continue" or similar if needed,
+                        // or just allow player to close/navigate away from chat.
+                    }
+                }
+            }
+            showNextInfo();
+        });
+    } else {
+        if (DEBUG_MODE) console.warn('SCRIPT: HUD Info Button #hud-info-btn not found.');
+    }
 }
 
 function initializeUIAndSettings() {

@@ -238,7 +238,7 @@
     border-radius: var(--button-border-radius); /* Consistent border radius */
     display: grid;
     place-items: center;
-    color: var(--phone-icon-color); /* Themed icon color */
+    color: var(--color-text-base); /* Brighter icon color for better contrast */
 }
 
 .app-icon .app-label {
@@ -681,8 +681,9 @@
 /* Generic title styling for phone app headers (can be overridden by specific app styles) */
 .phone-header h3 { /* Assuming titles are h3 */
     margin: 0;
+    font-family: var(--font-display); /* Use display font for app titles */
     font-weight: 500; /* Medium weight */
-    font-size: 1rem;
+    font-size: 1.1rem; /* Slightly larger for display font */
     flex-grow: 1; /* Allow title to take space */
     white-space: nowrap;
     overflow: hidden;
