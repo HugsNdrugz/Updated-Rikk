@@ -58,7 +58,7 @@
     /* Uses .btn-secondary styles from components.css for colors */
     width: 50px; /* Fixed size */
     height: 50px;
-    border-radius: 50%; /* Fully rounded */
+    border-radius: 50px; /* Pill shape */
     flex-shrink: 0;
     font-size: 1.2rem; /* Icon size */
     padding: 0; /* Remove padding to center icon in fixed size */

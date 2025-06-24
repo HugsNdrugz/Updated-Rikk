@@ -420,13 +420,17 @@ class UIManager {
 
         if (messageClass === 'narration') {
             bubble.className = 'timestamp';
-            bubble.innerHTML = message;
+            let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            bubble.innerHTML = formattedMessage;
             if(spacer) this.chatContainer.insertBefore(bubble, spacer);
             else this.chatContainer.appendChild(bubble);
         } else {
             messageRow.className = `message-row ${messageClass}`;
             bubble.className = `message-bubble ${messageClass}`;
-            bubble.innerHTML = message; // Assuming message is pre-formatted HTML or simple text
+            let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            bubble.innerHTML = formattedMessage;
             messageRow.appendChild(bubble);
             if (spacer) this.chatContainer.insertBefore(messageRow, spacer);
             else this.chatContainer.appendChild(messageRow);
