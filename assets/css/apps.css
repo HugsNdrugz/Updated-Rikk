@@ -1,147 +1,323 @@
-/* ======================================================================== */
-/* === STYLES FOR INTEGRATED CONTACTS APP (SCOPED & REFACTORED) === */
-/* ======================================================================== */
-
+/* CONTACTS APP STYLES */
 #contacts-app-view {
-    background-color: var(--color-dark-bg);
-    color: var(--text-primary); /* Assuming --text-color is defined in variables.css or is a general variable */
+    background-color: var(--phone-bg-color); /* Use phone theme background */
+    color: var(--phone-header-footer-text);
     display: flex;
     flex-direction: column;
+    height: 100%; /* Ensure it fills the phone content view */
+    padding-top: 0; /* Override .phone-content-view padding if needed */
 }
 
-#contacts-app-view #details-panel-contacts {
-    background-color: var(--color-dark-bg);
+/* Common header for contacts app - if HTML has a .phone-header inside #contacts-app-view */
+#contacts-app-view .phone-header { /* If a more specific header is used */
+    background-color: var(--phone-header-footer-bg);
+    border-bottom: 1px solid var(--color-divider);
+    /* Other styles inherited from general .phone-header */
+}
+#contacts-app-view .phone-header h3 { /* Example if title is h3 */
+    color: var(--color-primary); /* Primary color for app title */
+}
+#contacts-app-view .phone-header .icon-btn { /* For icons like search/add in header */
+    color: var(--phone-icon-color);
+}
+#contacts-app-view .phone-header .icon-btn:hover {
+    color: var(--color-primary);
 }
 
-#contacts-app-view .app-header-contacts {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: var(--spacing-md) var(--spacing-lg); background-color: var(--color-surface);
-    flex-shrink: 0; border-bottom: 1px solid var(--divider-color); /* Assuming --divider-color */
+
+/* Contacts List Area (#contacts-list-container) */
+#contacts-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
 }
-#contacts-app-view #app-title-contacts { font-size: 1.2em; font-weight: 700; color: var(--color-primary); } /* Assuming --primary-color */
-#contacts-app-view .header-icons-contacts { display: flex; gap: var(--spacing-md); }
-#contacts-app-view .header-icons-contacts .icon-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.2em;
+
+.list-section-header { /* For "Favorites", "All Contacts" headers */
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: var(--spacing-md) 0 var(--spacing-sm) var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-divider);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.list-section-header .star-icon { /* If using an icon for favorites */
+    color: var(--color-accent-gold);
+    margin-right: var(--spacing-xs);
+}
+
+.customer-card { /* Individual contact item */
+    background-color: transparent; /* Make cards transparent, rely on list bg */
+    border-radius: var(--button-border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-xs); /* Small gap between cards */
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    padding: var(--spacing-xs);
-    min-width: 36px;
-    min-height: 36px;
-    display: inline-flex;
+    transition: background-color var(--transition-duration-short);
+    user-select: none;
+    border: 1px solid transparent; /* For hover/active state */
+}
+.customer-card:hover {
+    background-color: var(--color-surface-light); /* Subtle hover */
+    border-color: var(--color-border-medium);
+}
+.customer-card.active { /* For selected contact */
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary-bg);
+    border-color: var(--color-primary);
+}
+.customer-card.active .customer-card-key {
+    color: var(--color-text-on-primary-bg);
+    opacity: 0.8;
+}
+
+
+.customer-card-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: var(--spacing-md);
+    object-fit: cover;
+    flex-shrink: 0;
+    background-color: var(--color-surface-medium); /* Placeholder bg */
+    display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.2em; /* For initial text */
+    font-weight: 500;
+    color: var(--color-text-base);
+    overflow: hidden;
 }
-#contacts-app-view .icon-btn { background: none; border: none; color: var(--text-secondary); font-size: 1.2em; cursor: pointer; } /* Assuming --subtle-text-color */
-#contacts-app-view .main-app-content-contacts { flex-grow: 1; position: relative; overflow: hidden; }
-#contacts-app-view #contacts-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; background-color: var(--color-dark-bg); padding: 0 var(--spacing-md) var(--spacing-lg) var(--spacing-md); } /* Assuming --bg-color */
-#contacts-app-view .list-section-header { font-size: 0.8em; color: var(--text-secondary); margin-top: var(--spacing-lg); margin-bottom: var(--spacing-sm); padding-left: var(--spacing-xs); display: flex; align-items: center; gap: var(--spacing-sm); font-weight: 500; }
-#contacts-app-view .star-icon { color: gold; font-size: 1.1em; }
-#contacts-app-view .customer-card { background-color: var(--color-surface); border-radius: 15px; padding: var(--spacing-md) var(--spacing-md); display: flex; align-items: center; cursor: pointer; transition: background-color 0.2s; user-select: none; position: relative; overflow: hidden; } /* Assuming --surface-color */
-#contacts-app-view .customer-card:not(.no-divider):not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 60px; right: 15px; height: 1px; background-color: var(--divider-color); }
-#contacts-app-view .customer-card.active { background-color: var(--active-card-bg); } /* Assuming --active-card-bg */
-#contacts-app-view .customer-card.my-profile-card { margin-top: var(--spacing-sm); margin-bottom: var(--spacing-sm); }
-#contacts-app-view .customer-card-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: var(--spacing-md); object-fit: cover; flex-shrink: 0; background-color: #666; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; color: #fff; overflow: hidden; }
-#contacts-app-view .customer-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
-#contacts-app-view .avatar-initial { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-#contacts-app-view .customer-card-info { flex-grow: 1; }
-#contacts-app-view .customer-card-name { font-size: 0.9em; margin-bottom: 2px; font-weight: 500; color: var(--text-primary); overflow-wrap: break-word; }
-#contacts-app-view .customer-card-key { font-size: 0.8em; color: var(--text-secondary); overflow-wrap: break-word; }
-#contacts-app-view .customer-card.active .customer-card-name { color: var(--color-on-primary); } /* Assuming --text-color-dark */
-#contacts-app-view .customer-card.active .customer-card-key { color: #555; }
-#contacts-app-view #details-panel-contacts { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform: translateX(100%); transition: transform 0.3s ease-out; z-index: 10; display: flex; flex-direction: column; }
-#contacts-app-view #details-panel-contacts.active { transform: translateX(0); }
-#contacts-app-view .details-panel-header { display: flex; align-items: center; padding: var(--spacing-md) var(--spacing-lg); border-bottom: 1px solid var(--divider-color); flex-shrink: 0; background-color: var(--color-surface); }
-#contacts-app-view .details-panel-header .icon-btn { margin-right: var(--spacing-md); font-size: 1.5em;}
-#contacts-app-view #details-panel-title { flex-grow: 1; font-size: 1.1em; color: var(--color-primary); text-align: center; margin-right: 40px; overflow-wrap: break-word; white-space: normal; }
-#contacts-app-view #details-panel-content { flex-grow: 1; padding: var(--spacing-lg); overflow-y: auto; }
-#contacts-app-view .editor-pane, #contacts-app-view .new-customer-step-content { padding: var(--spacing-md); }
-#contacts-app-view .editor-section { padding: var(--spacing-lg); margin-bottom:var(--spacing-lg); background: var(--color-surface); border-radius: 10px; }
-#contacts-app-view .form-group { margin-bottom: var(--spacing-lg); }
-#contacts-app-view .form-group label { display: block; margin-bottom: var(--spacing-xs); font-size: 0.9rem; color: var(--text-secondary); }
-#contacts-app-view .form-group input, #contacts-app-view .form-group textarea, #contacts-app-view .form-group select { width: 100%; padding: var(--spacing-md); background: var(--color-dark-bg); border: 1px solid var(--divider-color); border-radius: 5px; color: var(--text-primary); font-size: 0.9rem; }
-#contacts-app-view .form-group input:focus,
-#contacts-app-view .form-group textarea:focus,
-#contacts-app-view .form-group select:focus {
-    outline: 2px solid var(--color-primary, #bb86fc);
-    outline-offset: 2px;
-    border-color: var(--color-primary, #bb86fc); /* Optional: also change border color */
+.customer-card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-initial { /* Text initial inside avatar */
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
 }
-#contacts-app-view .checkbox-group { display: flex; flex-direction: column; gap: var(--spacing-xs); }
-#contacts-app-view .checkbox-group label { display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.85rem; padding: var(--spacing-sm); background-color: var(--color-dark-bg); border-radius: 5px;}
-#contacts-app-view pre { background: #000; padding: var(--spacing-md); border-radius: 5px; font-size: 0.7rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;}
+
+.customer-card-info { flex-grow: 1; }
+.customer-card-name {
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    font-weight: 500;
+    color: inherit; /* Inherit from .customer-card or .customer-card.active */
+    overflow-wrap: break-word;
+}
+.customer-card-key { /* For phone number or subtitle */
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    overflow-wrap: break-word;
+}
+
+/* Contact Detail View (#contact-detail-view) */
+#contact-detail-view {
+    padding: var(--spacing-lg);
+    background-color: var(--phone-bg-color); /* Or a slightly different surface */
+    /* This view is shown/hidden by JS, ensure it fills the space */
+}
+#contact-detail-avatar { /* Large avatar in detail view */
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto var(--spacing-lg);
+    background-color: var(--color-surface-medium);
+    object-fit: cover;
+}
+#contact-detail-name {
+    text-align: center;
+    font-size: 1.4rem;
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+#contact-detail-description, #contact-detail-loyalty {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.9rem;
+}
+#contact-detail-view h4 { /* For "Services:", "Missions:" */
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-divider);
+    padding-bottom: var(--spacing-xs);
+}
+#contact-detail-services-list, #contact-detail-missions-list {
+    list-style: none;
+    padding-left: 0;
+    font-size: 0.9rem;
+}
+#contact-detail-services-list li {
+    padding: var(--spacing-xs) 0;
+}
+/* Add styling for mission items if they are more complex */
+
+
+/* General Form Styles (if used in Contacts App editor) */
+.form-group { margin-bottom: var(--spacing-md); }
+.form-group label {
+    display: block; margin-bottom: var(--spacing-xs);
+    font-size: 0.85rem; color: var(--color-text-muted); font-weight: 500;
+}
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: var(--spacing-sm);
+    background: var(--color-surface); border: 1px solid var(--color-border-medium);
+    border-radius: var(--button-border-radius); color: var(--color-text-base); font-size: 0.9rem;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+}
 
 /* ======================================================================== */
-/* === SCOPED STYLES FOR SLOT GAME APP === */
+/* === SLOT GAME APP STYLES === */
 /* ======================================================================== */
 
 #slot-game-view {
-    background: #000;
-    font-family: 'Black Ops One', sans-serif;
-    color: white;
-    padding-top: 0;
+    background: var(--phone-bg-color); /* Darker background for the game app */
+    font-family: var(--font-slot-game); /* Use specific slot game font */
+    color: var(--color-text-base);
+    padding-top: 0; /* Override .phone-content-view padding */
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
-#slot-game-view .phone-header { background-color: #111; border-bottom: 1px solid #333; } /* This was already in phone.css, but specific enough to be here too or overridden */
+/* Slot game header already styled by .phone-header in phone.css */
+#slot-game-view .phone-header h3 { /* Specific title for slot game */
+    color: var(--color-accent-gold); /* Gold title for slot game */
+}
 
-/* Slot Game App Specific Styles */
+
 #slot-game-view .game-container {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center canvas and controls horizontally */
-    justify-content: center; /* Center vertically if there's space */
-    flex-grow: 1; /* Allow it to take available space in the phone view */
-    padding: var(--spacing-xs); /* Small padding around the game area */
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    padding: var(--spacing-sm); /* Reduced padding */
     box-sizing: border-box;
-    overflow: hidden; /* Prevent oversized canvas from breaking layout before JS resizes it */
+    overflow: hidden;
 }
 
-#slot-game-view .game-container canvas#slot {
-    display: block; /* Remove extra space below inline canvas */
-    max-width: 100%; /* Ensure canvas doesn't overflow its container */
-    height: auto;   /* Maintain aspect ratio if only width is constrained by max-width */
-    object-fit: contain; /* Ensures the content scales nicely if CSS forces a size */
-    /* The border and border-radius from the old #slot rule can be kept or modified as needed */
-    border: 4px solid #343a40;
-    border-radius: 10px; /* Adjusted border-radius for a more modern look, can be reverted to 40px if preferred */
+#slot-game-view canvas#slot {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    border: 3px solid var(--color-accent-gold); /* Gold border */
+    border-radius: var(--button-border-radius); /* Consistent radius */
+    background-color: var(--color-dark-bg); /* Dark background for canvas area */
 }
 
-/* Optional: Adjust controls if they look bad on small screens */
 #slot-game-view .controls {
-    /* Add any specific rules here if needed, e.g., flex-wrap for buttons */
-    /* For now, relying on existing d-flex and Bootstrap/custom button styling */
-    /* but ensure they don't prevent the canvas from shrinking. */
-    max-width: 100%; /* Ensure controls don't overflow */
+    max-width: 100%;
+    margin-top: var(--spacing-sm); /* Reduced margin */
+    width: 100%; /* Ensure controls take full width for d-flex to work well */
 }
 
-#slot-game-view .winner-display { color: #FFD700; font-size: 28px; border-radius: 20px; border: 0; font-weight: bold; overflow: hidden; padding: var(--spacing-sm) var(--spacing-lg); }
-#slot-game-view #spin-manual { background-color: #9a0102; color: wheat; border: 4px solid #dc3545; border-radius: 40px; padding: var(--spacing-lg); font-size: 24px; cursor: pointer; justify-content: center; text-align: center; flex: 1; }
-#slot-game-view .bet-action-btn {
+#slot-game-view .winner-display {
+    color: var(--color-accent-gold);
+    font-size: 1.8rem; /* Adjusted size */
+    font-weight: bold;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background-color: rgba(0,0,0,0.3); /* Subtle bg */
+    border-radius: var(--button-border-radius);
+    margin-bottom: var(--spacing-sm); /* Reduced margin */
+}
+#slot-game-view #spin-manual { /* Main spin button */
+    background-color: var(--color-secondary); /* Use secondary color */
+    color: var(--color-text-on-secondary-bg);
+    border: 2px solid var(--color-secondary); /* Darker shade for border */
+    border-radius: var(--button-border-radius); /* Consistent */
+    padding: var(--spacing-md); /* Adjusted padding */
+    font-size: 1.5rem; /* Adjusted size */
+    cursor: pointer;
+    flex: 1; /* Allow to grow */
+}
+#slot-game-view #spin-manual:hover {
+    background-color: var(--color-button-secondary-hover-bg);
+}
+
+#slot-game-view .bet-action-btn { /* + / - buttons */
     border-radius: 50%;
-    border: solid 4px #343a40;
-    background-color: #313030;
-    color: wheat;
-    width: 36px;
-    height: 36px;
+    border: 2px solid var(--color-border-medium);
+    background-color: var(--color-surface-medium);
+    color: var(--color-text-base);
+    width: 30px; /* Smaller */
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 1rem; /* Smaller icon/text */
 }
-#slot-game-view #spin-auto, #slot-game-view #pay-table {
-    background-color: #313030;
-    color: wheat;
-    border: 4px solid #343a40;
-    border-radius: 40px;
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 14px;
+#slot-game-view .bet-action-btn:hover {
+    background-color: var(--color-surface-light);
+    border-color: var(--color-border-strong);
+}
+
+#slot-game-view #spin-auto, #slot-game-view #pay-table { /* Auto / Pay Table buttons */
+    background-color: var(--color-surface-medium);
+    color: var(--color-text-base);
+    border: 2px solid var(--color-border-medium);
+    border-radius: var(--button-border-radius); /* Consistent */
+    padding: var(--spacing-xs) var(--spacing-sm); /* Adjusted padding */
+    font-size: 0.8rem; /* Smaller font */
     cursor: pointer;
     font-weight: bold;
 }
-#slot-game-view .controls .left { font-size: 20px; }
-#slot-game-view .controls .middle { width: 250px; }
-#slot-game-view button:hover { opacity: 0.8 !important; box-shadow: 0 0 10px 0 #000000; }
-#slot-game-view .modal-dialog { margin: 1rem; }
-#slot-game-view div.modal-footer, #slot-game-view div.modal-body, #slot-game-view div.modal-header { background-color: #000000de; color: white; }
+#slot-game-view #spin-auto:hover, #slot-game-view #pay-table:hover {
+    background-color: var(--color-surface-light);
+    border-color: var(--color-border-strong);
+}
+
+#slot-game-view .controls .left { /* Credit / Bet display */
+    font-size: 1rem; /* Adjusted size */
+    color: var(--color-text-muted);
+}
+#slot-game-view .controls .left .credit,
+#slot-game-view .controls .left .bet {
+    color: var(--color-text-base); /* Brighter for actual values */
+    font-weight: bold;
+}
+
+#slot-game-view .controls .middle { width: auto; flex-grow: 1; max-width: 200px; } /* Allow middle to be more flexible */
+
+/* Bootstrap Modal Theming for Slot Game Pay Table */
+#slot-game-view .modal-dialog { margin: var(--spacing-sm); }
+#slot-game-view .modal-content {
+    background-color: var(--color-surface); /* Themed modal */
+    color: var(--color-text-base);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--modal-border-radius);
+    font-family: var(--font-ui); /* Use UI font for modal content */
+}
+#slot-game-view .modal-header {
+    background-color: var(--color-surface-medium);
+    color: var(--color-primary); /* Primary color for modal title */
+    border-bottom: 1px solid var(--color-divider);
+}
+#slot-game-view .modal-header .btn-close { /* Bootstrap close button */
+    filter: invert(1) grayscale(100%) brightness(200%); /* Make it white/visible on dark bg */
+}
+#slot-game-view .modal-body {
+    background-color: var(--color-surface);
+    font-size: 0.9rem;
+}
+/* Ensure table inside modal body is styled if needed (e.g., colors for text/borders) */
+#slot-game-view .modal-body table {
+    color: var(--color-text-base);
+    width: 100%;
+}
+#slot-game-view .modal-body th, #slot-game-view .modal-body td {
+    border: 1px solid var(--color-divider);
+    padding: var(--spacing-sm);
+    text-align: left;
+}
+#slot-game-view .modal-body th {
+    background-color: var(--color-surface-light);
+}

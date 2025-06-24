@@ -24,13 +24,13 @@ class UIManager {
 
         // Screens
         this.splashScreen = document.getElementById('splash-screen');
-        console.log("[Debug UIManager] Initializing this.splashScreen:", this.splashScreen);
+        if (this.game.DEBUG_MODE) console.log("[Debug UIManager] Initializing this.splashScreen:", this.splashScreen);
         this.startScreen = document.getElementById('start-screen');
-        console.log("[Debug UIManager] Initializing this.startScreen:", this.startScreen);
+        if (this.game.DEBUG_MODE) console.log("[Debug UIManager] Initializing this.startScreen:", this.startScreen);
         this.gameScreen = document.getElementById('game-screen');
-        console.log("[Debug UIManager] Initializing this.gameScreen:", this.gameScreen);
+        if (this.game.DEBUG_MODE) console.log("[Debug UIManager] Initializing this.gameScreen:", this.gameScreen);
         this.endScreen = document.getElementById('end-screen');
-        console.log("[Debug UIManager] Initializing this.endScreen:", this.endScreen);
+        if (this.game.DEBUG_MODE) console.log("[Debug UIManager] Initializing this.endScreen:", this.endScreen);
 
         // Main Menu & Sub-panels
         this.newGameBtn = document.getElementById('new-game-btn');
@@ -52,19 +52,29 @@ class UIManager {
         this.heatDisplay = document.getElementById('heat-display');
         this.credDisplay = document.getElementById('cred-display');
         this.eventTicker = document.getElementById('event-ticker');
+        if (!this.eventTicker) debugLogger.error("UIManager: #event-ticker not found.");
         this.inventoryCountDisplay = document.getElementById('inventory-count-display');
+        if (!this.inventoryCountDisplay) debugLogger.error("UIManager: #inventory-count-display not found.");
         this.nextCustomerBtn = document.getElementById('next-customer-btn');
+        if (!this.nextCustomerBtn) debugLogger.error("UIManager: #next-customer-btn not found.");
         this.openInventoryBtn = document.getElementById('open-inventory-btn');
+        if (!this.openInventoryBtn) debugLogger.error("UIManager: #open-inventory-btn not found.");
 
         // Knock Effect
         this.knockEffect = document.getElementById('knock-effect');
+        if (!this.knockEffect) debugLogger.warn("UIManager: #knock-effect not found (optional).");
 
         // Inventory Modal
         this.inventoryModal = document.getElementById('inventory-modal');
-        this.inventoryDialog = document.getElementById('inventory-dialog'); // Assuming this is part of modal
+        if (!this.inventoryModal) debugLogger.error("UIManager: #inventory-modal not found.");
+        this.inventoryDialog = document.getElementById('inventory-dialog');
+        if (!this.inventoryDialog) debugLogger.error("UIManager: #inventory-dialog not found.");
         this.inventoryList = document.getElementById('inventory-list');
-        this.closeModalBtn = document.querySelector('#inventory-modal .close-modal-btn'); // More specific selector
+        if (!this.inventoryList) debugLogger.error("UIManager: #inventory-list not found.");
+        this.closeModalBtn = document.querySelector('#inventory-modal .close-modal-btn');
+        if (!this.closeModalBtn) debugLogger.error("UIManager: #inventory-modal .close-modal-btn not found.");
         this.modalInventorySlotsDisplay = document.getElementById('modal-inventory-slots-display');
+        if (!this.modalInventorySlotsDisplay) debugLogger.error("UIManager: #modal-inventory-slots-display not found.");
 
         // End Screen
         this.finalDaysDisplay = document.getElementById('final-days-display');
@@ -78,47 +88,67 @@ class UIManager {
         this.phoneScreenArea = document.getElementById('phone-screen-area');
         this.phoneDockedIndicator = document.getElementById('phone-docked-indicator');
         this.dockPhoneBtn = document.getElementById('dock-phone-btn');
-        this.phoneContentContainer = this.rikkPhoneUI ? this.rikkPhoneUI.querySelector('.screen-content') : null;
+        // this.phoneContentContainer = this.rikkPhoneUI ? this.rikkPhoneUI.querySelector('.screen-content') : null; // Unused and potentially incorrect selector
         this.phoneBackButtons = document.querySelectorAll('.phone-back-button');
 
         // Chat View
         this.gameChatView = document.getElementById('game-chat-view');
+        if (!this.gameChatView) debugLogger.error("UIManager: #game-chat-view not found.");
         this.chatContainer = document.getElementById('chat-container-game');
+        if (!this.chatContainer) debugLogger.error("UIManager: #chat-container-game not found.");
         this.quickReplyContainer = this.gameChatView ? this.gameChatView.querySelector('.quick-reply-container') : null;
+        if (!this.quickReplyContainer && this.gameChatView) debugLogger.warn("UIManager: .quick-reply-container not found in #game-chat-view.");
         this.chatHeaderAvatar = document.getElementById('chat-header-avatar');
-        this.chatHeaderName = document.getElementById('chat-header-contact-name'); // Corrected from chatHeaderContactName
+        if (!this.chatHeaderAvatar) debugLogger.error("UIManager: #chat-header-avatar not found.");
+        this.chatHeaderName = document.getElementById('chat-header-contact-name');
+        if (!this.chatHeaderName) debugLogger.error("UIManager: #chat-header-contact-name not found.");
         this.chatFooterStatus = document.getElementById('chat-footer-rcs-status');
+        if (!this.chatFooterStatus) debugLogger.error("UIManager: #chat-footer-rcs-status not found.");
 
         // Home Screen & Other Apps
         this.homeScreen = document.getElementById('android-home-screen');
+        if (!this.homeScreen) debugLogger.error("UIManager: #android-home-screen not found.");
         this.contactsAppScreen = document.getElementById('contacts-app-view');
+        if (!this.contactsAppScreen) debugLogger.error("UIManager: #contacts-app-view not found.");
         this.contactsListContainer = document.getElementById('contacts-list-container');
+        if (!this.contactsListContainer) debugLogger.warn("UIManager: #contacts-list-container not found (optional, for ContactsAppManager).");
         this.contactDetailView = document.getElementById('contact-detail-view');
+        if (!this.contactDetailView) debugLogger.warn("UIManager: #contact-detail-view not found (optional, for ContactsAppManager).");
         this.mapAppView = document.getElementById('map-app-view');
+        if (!this.mapAppView) debugLogger.warn("UIManager: #map-app-view not found (optional).");
         this.newsAppView = document.getElementById('news-app-view');
+        if (!this.newsAppView) debugLogger.warn("UIManager: #news-app-view not found (optional).");
         this.slotGameView = document.getElementById('slot-game-view');
+        if (!this.slotGameView) debugLogger.warn("UIManager: #slot-game-view not found (optional).");
 
         // Phone Theme Settings
         this.phoneThemeSettingsView = document.getElementById('phone-theme-settings-view');
+        if (!this.phoneThemeSettingsView) debugLogger.warn("UIManager: #phone-theme-settings-view not found (optional).");
         this.previewPhoneSettingsButton = document.getElementById('preview-phone-style-settings');
+        if (!this.previewPhoneSettingsButton) debugLogger.warn("UIManager: #preview-phone-style-settings button not found (optional).");
         this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
+        if (!this.resetPhoneSettingsButton) debugLogger.warn("UIManager: #reset-phone-style-settings button not found (optional).");
     }
 
     // --- Screen Management ---
     showScreen(screenElement) {
-        console.log("[Debug UIManager] showScreen called with screenElement:", screenElement);
+        if (this.game.DEBUG_MODE) {
+            console.log("[Debug UIManager] showScreen called with screenElement:", screenElement);
+        }
         const allScreens = document.querySelectorAll('.screen');
-        console.log("[Debug UIManager] All elements with .screen class:", allScreens);
+        if (this.game.DEBUG_MODE) {
+            console.log("[Debug UIManager] All elements with .screen class:", allScreens);
+        }
         allScreens.forEach(s => {
-            console.log(`[Debug UIManager] Removing 'active' from:`, s);
+            if (this.game.DEBUG_MODE) console.log(`[Debug UIManager] Removing 'active' from:`, s);
             s.classList.remove('active');
         });
         if (screenElement) {
-            console.log(`[Debug UIManager] Adding 'active' to:`, screenElement);
+            if (this.game.DEBUG_MODE) console.log(`[Debug UIManager] Adding 'active' to:`, screenElement);
             screenElement.classList.add('active');
         } else {
             debugLogger.warn('UIManager', 'showScreen called with null or undefined element.');
-            console.warn("[Debug UIManager] showScreen: screenElement is null or undefined. No screen will be activated.");
+            if (this.game.DEBUG_MODE) console.warn("[Debug UIManager] showScreen: screenElement is null or undefined. No screen will be activated.");
         }
     }
 
@@ -359,24 +389,31 @@ class UIManager {
     }
 
     updateInventoryDisplay() {
-        if (!this.inventoryList || !this.modalInventorySlotsDisplay) return;
+        if (!this.inventoryList || !this.modalInventorySlotsDisplay) {
+            debugLogger.error("UIManager: Inventory list or slots display element not found in updateInventoryDisplay.");
+            return;
+        }
         const inventory = this.game.getInventory();
         const maxSlots = this.game.getMaxInventorySlots();
-        this.inventoryList.innerHTML = '';
+        this.inventoryList.innerHTML = ''; // Clear previous items
+
         if (inventory.length === 0) {
             this.inventoryList.innerHTML = '<p class="empty-inventory">Your stash is empty.</p>';
         } else {
             inventory.forEach(item => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'inventory-item';
-                // Ensure item.itemTypeObj exists before accessing its properties
-                const itemTypeDesc = item.itemTypeObj ? item.itemTypeObj.description : 'No description.';
-                const itemIconClass = item.itemTypeObj ? item.itemTypeObj.type.toLowerCase() : 'unknown';
+
+                const itemTypeDesc = item.itemTypeObj && item.itemTypeObj.description ? item.itemTypeObj.description : 'No description available.';
+                const itemIconClass = item.itemTypeObj && item.itemTypeObj.type ? item.itemTypeObj.type.toLowerCase() : 'unknown';
+                // Default purchasePrice to 'N/A' if not present, though it should always be there for inventory items
+                const displayPrice = typeof item.purchasePrice === 'number' ? item.purchasePrice : 'N/A';
+
                 itemDiv.innerHTML = `
-                    <div class.base = "item-icon ${itemIconClass}"></div>
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-quality">${item.quality}</div>
-                    <div class="item-value">$${item.purchasePrice}</div>
+                    <div class="item-icon ${itemIconClass}"></div>
+                    <div class="item-name">${item.name || 'Unknown Item'}</div>
+                    <div class="item-quality">${item.quality || 'Standard'}</div>
+                    <div class="item-value">$${displayPrice}</div>
                     <div class="item-description">${itemTypeDesc}</div>
                 `;
                 this.inventoryList.appendChild(itemDiv);

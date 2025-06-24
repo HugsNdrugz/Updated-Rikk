@@ -108,48 +108,48 @@ const uiManagerConfig = {
 };
 
 // --- Instantiate Core Classes ---
-console.log("SCRIPT: Instantiating GameState...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating GameState...');
 const game = new GameState(gameStateConfig);
-console.log("SCRIPT: GameState instantiated.");
+if (DEBUG_MODE) console.log('SCRIPT: GameState instantiated.');
 
-console.log("SCRIPT: Instantiating UIManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating UIManager...');
 const uiManager = new UIManager(game, uiManagerConfig);
-console.log("SCRIPT: UIManager instantiated.");
+if (DEBUG_MODE) console.log('SCRIPT: UIManager instantiated.');
 
-console.log("SCRIPT: Instantiating StreetCredManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating StreetCredManager...');
 const streetCredManager = new StreetCredManager(game);
 game.streetCredManager = streetCredManager; // Attach immediately
-console.log("SCRIPT: StreetCredManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: StreetCredManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating LoyaltyManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating LoyaltyManager...');
 const loyaltyManager = new LoyaltyManager(game);
 game.loyaltyManager = loyaltyManager; // Attach immediately
-console.log("SCRIPT: LoyaltyManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: LoyaltyManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating WorldEventManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating WorldEventManager...');
 const worldEventManager = new WorldEventManager(game, uiManager);
 game.worldEventManager = worldEventManager; // Attach immediately
-console.log("SCRIPT: WorldEventManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: WorldEventManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating ItemEffectManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating ItemEffectManager...');
 const itemEffectManager = new ItemEffectManager(game);
 game.itemEffectManager = itemEffectManager; // Attach immediately
-console.log("SCRIPT: ItemEffectManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: ItemEffectManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating ContactsManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating ContactsManager...');
 const contactsManager = new ContactsManager(game);
 game.contactsManager = contactsManager; // Attach immediately
-console.log("SCRIPT: ContactsManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: ContactsManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating MapManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating MapManager...');
 const mapManager = new MapManager(game);
 game.mapManager = mapManager; // Attach immediately
-console.log("SCRIPT: MapManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: MapManager instantiated and attached.');
 
-console.log("SCRIPT: Instantiating NewsManager...");
+if (DEBUG_MODE) console.log('SCRIPT: Instantiating NewsManager...');
 const newsManager = new NewsManager(game);
 game.newsManager = newsManager; // Attach immediately
-console.log("SCRIPT: NewsManager instantiated and attached.");
+if (DEBUG_MODE) console.log('SCRIPT: NewsManager instantiated and attached.');
 
 
 // --- State Variables ---
@@ -242,21 +242,21 @@ function loadCustomerTemplates() {
 }
 
 function initializeManagers() {
-    console.log("SCRIPT: initializeManagers() started.");
+    if (DEBUG_MODE) console.log('SCRIPT: initializeManagers() started.');
     loadCustomerTemplates();
     const currentTemplates = game.getCustomerTemplates();
 
-    console.log("SCRIPT: Instantiating CustomerManager...");
+    if (DEBUG_MODE) console.log('SCRIPT: Instantiating CustomerManager...');
     game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
-    console.log("SCRIPT: CustomerManager instantiated.");
+    if (DEBUG_MODE) console.log('SCRIPT: CustomerManager instantiated.');
 
-    console.log("SCRIPT: Attempting to instantiate ContactsAppManager...");
-    console.log("[Debug] uiManager.contactsAppScreen before ContactsAppManager:", uiManager.contactsAppScreen);
+    if (DEBUG_MODE) console.log('SCRIPT: Attempting to instantiate ContactsAppManager...');
+    if (DEBUG_MODE) console.log('[Debug] uiManager.contactsAppScreen before ContactsAppManager:', uiManager.contactsAppScreen);
     game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppScreen, currentTemplates);
-    console.log("SCRIPT: ContactsAppManager instantiated.");
+    if (DEBUG_MODE) console.log('SCRIPT: ContactsAppManager instantiated.');
 
-    console.log("SCRIPT: Instantiating SlotGameManager...");
-    console.log("[Debug] uiManager.slotGameView before SlotGameManager:", uiManager.slotGameView);
+    if (DEBUG_MODE) console.log('SCRIPT: Instantiating SlotGameManager...');
+    if (DEBUG_MODE) console.log('[Debug] uiManager.slotGameView before SlotGameManager:', uiManager.slotGameView);
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
         () => game.getCash(),
@@ -265,14 +265,14 @@ function initializeManagers() {
             uiManager.updateHUD();
         }
     );
-    console.log("SCRIPT: SlotGameManager instantiated.");
+    if (DEBUG_MODE) console.log('SCRIPT: SlotGameManager instantiated.');
 
     // The event listener for 'customerTemplatesUpdated' from the old ContactsAppManager
     // might need to be re-evaluated or removed if that functionality is no longer part of a UI view
     // or if the new ContactsManager handles template updates differently (it currently doesn't manage templates).
-    // For now, commenting it out to avoid errors if uiManager.contactsAppView is not the old component.
-    /*
-    if (uiManager.contactsAppScreen) { // Assuming contactsAppScreen is the main view for new app
+
+    // Listen for updates from ContactsAppManager to save customer templates
+    if (uiManager.contactsAppScreen && game.contactsAppManager) { // Ensure both UI element and manager exist
         uiManager.contactsAppScreen.addEventListener('customerTemplatesUpdated', (event) => {
             if (event.detail && event.detail.updatedTemplates) {
                 game.updateCustomerTemplates(event.detail.updatedTemplates);
@@ -283,7 +283,6 @@ function initializeManagers() {
             }
         });
     }
-    */
 }
 
 function setupEventListeners() {
@@ -315,24 +314,24 @@ function setupEventListeners() {
 
 function initializeUIAndSettings() {
     if (uiManager.splashScreen) {
-        console.log("SCRIPT: Showing splash screen.");
+        if (DEBUG_MODE) console.log('SCRIPT: Showing splash screen.');
         uiManager.showScreen(uiManager.splashScreen);
         setTimeout(() => {
-            console.log("SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.");
-            console.log("[Debug] uiManager.startScreen before showScreen:", uiManager.startScreen);
+            if (DEBUG_MODE) console.log('SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.');
+            if (DEBUG_MODE) console.log('[Debug] uiManager.startScreen before showScreen:', uiManager.startScreen);
             uiManager.showScreen(uiManager.startScreen);
-            console.log("[Debug] uiManager.showScreen(uiManager.startScreen) called.");
-            console.log("SCRIPT: startScreen (or mainMenu) displayed.");
+            if (DEBUG_MODE) console.log('[Debug] uiManager.showScreen(uiManager.startScreen) called.');
+            if (DEBUG_MODE) console.log('SCRIPT: startScreen (or mainMenu) displayed.');
             uiManager.activateMainMenuLights(true);
             checkForSavedGame();
         }, SPLASH_SCREEN_DURATION);
     } else {
-        console.warn("SCRIPT: Splash screen element not found by UIManager. Proceeding without splash timeout.");
+        if (DEBUG_MODE) console.warn('SCRIPT: Splash screen element not found by UIManager. Proceeding without splash timeout.');
         // If splash is not found, proceed to show startScreen directly after a minimal delay or immediately
         // This ensures the game doesn't halt if splash is missing.
         setTimeout(() => {
             uiManager.showScreen(uiManager.startScreen);
-            console.log("SCRIPT: startScreen (or mainMenu) displayed (no splash).");
+            if (DEBUG_MODE) console.log('SCRIPT: startScreen (or mainMenu) displayed (no splash).');
             uiManager.activateMainMenuLights(true);
             checkForSavedGame();
         }, 50);
@@ -345,20 +344,20 @@ function initializeUIAndSettings() {
 }
 
 function initGame() {
-    console.log("SCRIPT: initGame() started.");
+    if (DEBUG_MODE) console.log('SCRIPT: initGame() started.');
     try {
         uiManager.initDOMReferences();
         // uiManager.setChatInputHandler(processPlayerChoiceInput);
-        console.log("SCRIPT: uiManager.initDOMReferences() completed.");
+        if (DEBUG_MODE) console.log('SCRIPT: uiManager.initDOMReferences() completed.');
         initializeManagers();
-        console.log("SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.");
+        if (DEBUG_MODE) console.log('SCRIPT: initializeManagers() completed. All game-specific managers should be instantiated.');
         initializeUIAndSettings();
-        console.log("SCRIPT: initializeUIAndSettings() completed.");
+        if (DEBUG_MODE) console.log('SCRIPT: initializeUIAndSettings() completed.');
         setupEventListeners();
-        console.log("SCRIPT: setupEventListeners() completed.");
-        console.log("SCRIPT: initGame() finished successfully.");
+        if (DEBUG_MODE) console.log('SCRIPT: setupEventListeners() completed.');
+        if (DEBUG_MODE) console.log('SCRIPT: initGame() finished successfully.');
     } catch (error) {
-        console.error("CRITICAL ERROR during game initialization (within initGame try-catch):", error);
+        console.error("CRITICAL ERROR during game initialization (within initGame try-catch):", error); // Keep this error visible
         // Optionally, display a user-friendly error message on the page
         const body = document.querySelector('body');
         if (body) {
@@ -368,13 +367,13 @@ function initGame() {
 }
 
 function initializeNewGameState() {
-    console.log("SCRIPT: initializeNewGameState() started.");
+    if (DEBUG_MODE) console.log('SCRIPT: initializeNewGameState() started.');
     clearSavedGameState();
     game.resetToDefault(gameStateConfig);
-    console.log("SCRIPT: game.resetToDefault() completed.");
+    if (DEBUG_MODE) console.log('SCRIPT: game.resetToDefault() completed.');
     if (game.customerManager) {
         game.customerManager.reset();
-        console.log("SCRIPT: game.customerManager.reset() completed.");
+        if (DEBUG_MODE) console.log('SCRIPT: game.customerManager.reset() completed.');
     }
     // Managers like ContactsManager and MapManager initialize their GameState parts in their constructor
     // or through methods called during their instantiation (e.g. ensureInitialPlayerContacts, initializeMapState)
@@ -383,15 +382,15 @@ function initializeNewGameState() {
     if (game.contactsManager) {
       // game.contactsManager.ensureInitialPlayerContacts(); // This is already called in constructor, but also on getUnlockedContacts.
                                                           // Repopulates based on current (reset) streetcred.
-      console.log("SCRIPT: contactsManager re-checked/initialized initial contacts.");
+      if (DEBUG_MODE) console.log('SCRIPT: contactsManager re-checked/initialized initial contacts.');
     }
     if (game.mapManager) {
       // game.mapManager.initializeMapState(); // Also called in constructor.
-      console.log("SCRIPT: mapManager re-checked/initialized map state.");
+      if (DEBUG_MODE) console.log('SCRIPT: mapManager re-checked/initialized map state.');
     }
 
     uiManager.updateEventTicker();
-    console.log("SCRIPT: initializeNewGameState() finished.");
+    if (DEBUG_MODE) console.log('SCRIPT: initializeNewGameState() finished.');
 }
 
 function startGameFlow() {
@@ -429,7 +428,7 @@ function endGame(reason) {
     }
     if (uiManager.finalVerdictText) {
         uiManager.finalVerdictText.textContent = verdict;
-        uiManager.finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (game.getCash() > STARTING_CASH ? "var(--color-success-green)" : "var(--color-accent-orange)");
+        uiManager.finalVerdictText.style.color = (reason === "heat" || reason === "bankrupt") ? "var(--color-error)" : (game.getCash() > STARTING_CASH ? "var(--color-success)" : "var(--color-accent-orange)");
     }
     uiManager.setPhoneUIState('offscreen');
     clearSavedGameState();
@@ -558,7 +557,7 @@ function startCustomerInteraction(interaction) {
             if (interaction.choices && interaction.choices.length > 0) {
                 uiManager.displayChoices(interaction.choices, handleChoice);
             } else {
-                console.warn("Interaction ended with no choices to present, or choices array is malformed.");
+                if (DEBUG_MODE) console.warn('Interaction ended with no choices to present, or choices array is malformed.');
                 endCustomerInteraction(); // Proceed to end interaction if no choices
             }
         }
@@ -720,7 +719,8 @@ function displaySystemMessage(message) {
 function handleChoice(outcome) {
     const currentCustomer = game.getCurrentCustomerInstance();
     if (!currentCustomer) {
-        console.error("handleChoice called with no active customer instance from GameState.");
+        // Keep this console.error as it's a significant issue if it occurs
+        console.error('handleChoice called with no active customer instance from GameState.');
         return;
     }
     try {
@@ -1137,13 +1137,13 @@ function processPayload(payload, dealSuccess) {
                         heatGain = applyDealHeat(Math.round(heatGain), game);
                         game.addHeat(heatGain);
                         if (effect.credValue) game.streetCredManager.addStreetCred('global', null, effect.credValue);
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[HEAT_VALUE]', heatGain);
+                        message = message.replace(/\[CUSTOMER_NAME\]/g, currentCustomer.name).replace(/\[HEAT_VALUE\]/g, heatGain); // Use regex for global replace
                     } else if (effect.eventName === 'highRollerTip') {
                         const tip = Math.floor(game.getCash() * effect.tipPercentage); // Tip is calculated based on current cash *before* adding the tip itself.
                         game.addCash(tip);
                         uiManager.showCashChangeAnimation(tip); // Show tip animation
                         if (effect.credValue) game.streetCredManager.addStreetCred('global', null, effect.credValue);
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name).replace('[TIP_AMOUNT]', tip);
+                        message = message.replace(/\[CUSTOMER_NAME\]/g, currentCustomer.name).replace(/\[TIP_AMOUNT\]/g, tip); // Use regex for global replace
                     } else if (effect.eventName === 'publicIncident') {
                         let heatValue = effect.heatValue; // Base heat from event
                         const currentModifiers = game.activeEventModifiers;
@@ -1159,13 +1159,13 @@ function processPayload(payload, dealSuccess) {
                         }
                         heatValue = applyDealHeat(Math.round(heatValue), game);
                         game.addHeat(heatValue);
-                        message = message.replace('[CUSTOMER_NAME]', currentCustomer.name);
+                        message = message.replace(/\[CUSTOMER_NAME\]/g, currentCustomer.name); // Use regex for global replace
                     }
-                    if (message) uiManager.displayPhoneMessage(message, "narration");
+                    if (message) uiManager.displayPhoneMessage(message, 'narration');
                 }
                 break;
             default:
-                console.warn(`processPayload: Unknown effect type '${effect.type}'`);
+                if (DEBUG_MODE) console.warn(`processPayload: Unknown effect type '${effect.type}'`);
                 break;
         }
     });
@@ -1207,26 +1207,26 @@ function saveGameState() {
         }
         localStorage.setItem(SAVE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
-        console.error("Error saving game state:", error);
+        console.error('Error saving game state:', error); // Keep visible
     }
 }
 
 function loadGameState() {
     if (!localStorageAvailable) {
-        console.log("SCRIPT: loadGameState() - localStorage not available.");
+        if (DEBUG_MODE) console.log('SCRIPT: loadGameState() - localStorage not available.');
         return false;
     }
     const savedData = localStorage.getItem(SAVE_KEY);
-    console.log("SCRIPT: loadGameState() attempting to load from localStorage.");
+    if (DEBUG_MODE) console.log('SCRIPT: loadGameState() attempting to load from localStorage.');
     if (savedData) {
         try {
             const loadedState = JSON.parse(savedData);
-            console.log("SCRIPT: GameState parsed successfully from localStorage.");
+            if (DEBUG_MODE) console.log('SCRIPT: GameState parsed successfully from localStorage.');
             game.fromJSON(loadedState, gameStateConfig);
-            console.log("SCRIPT: game.fromJSON() completed.");
+            if (DEBUG_MODE) console.log('SCRIPT: game.fromJSON() completed.');
             if (game.customerManager?.loadSaveState && loadedState.customerManagerState) {
                 game.customerManager.loadSaveState(loadedState.customerManagerState);
-                console.log("SCRIPT: Loaded customerManager save state.");
+                if (DEBUG_MODE) console.log('SCRIPT: Loaded customerManager save state.');
             }
             // Other managers might need to load state if they save anything specific
             // For now, ContactsManager, MapManager, etc., re-initialize based on GameState.
@@ -1235,23 +1235,23 @@ function loadGameState() {
 
             uiManager.updateEventTicker();
             uiManager.updateHUD();
-            console.log("SCRIPT: GameState loaded and UI updated.");
+            if (DEBUG_MODE) console.log('SCRIPT: GameState loaded and UI updated.');
             return true;
         } catch (e) {
-            console.error("Error loading game state:", e);
-            console.log("SCRIPT: Error loading game state. Clearing saved data.");
+            console.error('Error loading game state:', e); // Keep visible
+            if (DEBUG_MODE) console.log('SCRIPT: Error loading game state. Clearing saved data.');
             clearSavedGameState();
             return false;
         }
     }
-    console.log("SCRIPT: No saved data found in localStorage.");
+    if (DEBUG_MODE) console.log('SCRIPT: No saved data found in localStorage.');
     return false;
 }
 
 function clearSavedGameState() {
     if (localStorageAvailable) {
         localStorage.removeItem(SAVE_KEY);
-        console.log("SCRIPT: Cleared saved game state from localStorage.");
+        if (DEBUG_MODE) console.log('SCRIPT: Cleared saved game state from localStorage.');
     }
 }
 
@@ -1270,25 +1270,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (uiManager.previewMainSettingsButton) {
         uiManager.previewMainSettingsButton.addEventListener('click', () => uiManager.togglePreview(saveStyleSettings));
     } else {
-        console.warn("Preview button for main settings (preview-style-settings) not found by UIManager.");
+        if (DEBUG_MODE) console.warn('Preview button for main settings (preview-style-settings) not found by UIManager.');
     }
     
     if (uiManager.previewPhoneSettingsButton) {
         uiManager.previewPhoneSettingsButton.addEventListener('click', () => uiManager.togglePreview(saveStyleSettings));
     } else {
-        console.warn("Preview button for phone settings (preview-phone-style-settings) not found by UIManager.");
+        if (DEBUG_MODE) console.warn('Preview button for phone settings (preview-phone-style-settings) not found by UIManager.');
     }
     
     if (uiManager.resetMainSettingsButton) {
         uiManager.resetMainSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
-        console.warn("Reset button for main settings (reset-style-settings) not found by UIManager.");
+        if (DEBUG_MODE) console.warn('Reset button for main settings (reset-style-settings) not found by UIManager.');
     }
     
     if (uiManager.resetPhoneSettingsButton) {
         uiManager.resetPhoneSettingsButton.addEventListener('click', () => uiManager.resetToDefaultStyles(saveStyleSettings));
     } else {
-        console.warn("Reset button for phone settings (reset-phone-style-settings) not found by UIManager.");
+        if (DEBUG_MODE) console.warn('Reset button for phone settings (reset-phone-style-settings) not found by UIManager.');
     }
     
     const elSettingsLoading = document.querySelector('.settings-loading');

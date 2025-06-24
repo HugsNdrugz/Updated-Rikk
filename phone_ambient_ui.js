@@ -9,7 +9,7 @@ import { debugLogger } from './utils.js';
 // --- Module-level variables ---
 let currentTimeSmallElement, currentTimeElement, currentDateElement;
 let notificationElement, notificationTitleEl, notificationContentEl;
-let batteryIcons, wallpaperElement;
+let batteryIconElement, wallpaperElement; // Changed batteryIcons to batteryIconElement
 let timeUpdateInterval, batteryUpdateInterval, wallpaperUpdateInterval;
 
 /**
@@ -27,7 +27,7 @@ export function initPhoneAmbientUI(phoneContainer) {
     currentTimeElement = phoneContainer.querySelector('#current-time');
     currentDateElement = phoneContainer.querySelector('#current-date');
     notificationElement = phoneContainer.querySelector('#notification');
-    batteryIcons = phoneContainer.querySelectorAll('.status-icons .fas'); // More specific selector
+    batteryIconElement = phoneContainer.querySelector('.phone-battery-indicator'); // Use specific class
     wallpaperElement = phoneContainer.querySelector('.wallpaper');
 
     if (notificationElement) {
@@ -71,14 +71,13 @@ function updateTime() {
 * Animates the battery icon in the status bar.
 */
 function animateBattery() {
-    if (!batteryIcons || batteryIcons.length === 0) return;
+    if (!batteryIconElement) return; // Check single element
     const levels = ["fa-battery-empty", "fa-battery-quarter", "fa-battery-half", "fa-battery-three-quarters", "fa-battery-full"];
     const randomLevel = levels[Math.floor(Math.random() * levels.length)];
     
-    batteryIcons.forEach(icon => {
-        if (icon.classList.contains('fa-signal') || icon.classList.contains('fa-wifi')) return;
-        icon.className = `fas ${randomLevel}`; // Replace all classes with new battery level
-    });
+    // Keep other classes like 'fas' and 'phone-battery-indicator', only change the fa-battery-* class
+    batteryIconElement.classList.remove("fa-battery-empty", "fa-battery-quarter", "fa-battery-half", "fa-battery-three-quarters", "fa-battery-full");
+    batteryIconElement.classList.add(randomLevel);
 }
 
 /**

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My Nigga Rikk - Street Hustle</title>
+        <title>Street Hustle</title>
         <!-- Main Game Styles -->
         <link rel="stylesheet" href="assets/css/variables.css">
         <link rel="stylesheet" href="assets/css/base.css">
@@ -21,7 +21,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@400;500;700&family=Lato&family=Outfit:wght@100..900&family=Permanent+Marker&family=Press+Start+2P&family=Roboto:ital,wght@0,400;0,700;1,300&display=swap" rel="stylesheet">
-        <!-- NEW: Slot Game i -->
+        <!-- NEW: Slot Game Integration -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     </head>
     
@@ -48,26 +48,29 @@
                     <div class="light right-strobe"></div>
                 </div>
     
-                <div id="main-menu-content">
-                    <!-- REVISED: Split Button Component is now the main content -->
-                    <div class="split-button-container">
-                        <!-- Main action button (Start Game) -->
-                        <button type="button" id="new-game-btn" class="btn btn-main">
-                            Run It
-                        </button>
-                        
-                        <!-- Icon action button (Load Game) -->
-                        <button type="button" id="continue-game-btn" class="btn btn-icon hidden" aria-label="Load Game">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                <nav id="main-menu-nav" aria-label="Main menu">
+                    <div id="main-menu-content">
+                        <!-- REVISED: Split Button Component is now the main content -->
+                        <div class="split-button-container">
+                            <!-- Main action button (Start Game) -->
+                            <button type="button" id="new-game-btn" class="btn btn-main">
+                                Run It
+                            </button>
+
+                            <!-- Icon action button (Load Game) -->
+                            <button type="button" id="continue-game-btn" class="btn btn-icon hidden" aria-label="Load Game">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Settings Button (Remains in corner) -->
-                <button id="settings-menu-btn" aria-label="Settings"><i class="fas fa-cog"></i></button>
+
+                    <!-- Settings Button (Remains in corner) -->
+                    <button id="settings-menu-btn" aria-label="Settings"><i class="fas fa-cog"></i></button>
+                </nav>
                 
                 <!-- Sub-menu panels remain the same but are triggered by the settings button -->
-                <div id="settings-menu-panel" class="submenu-panel hidden">
+                <div id="settings-menu-panel" class="submenu-panel hidden" role="dialog" aria-labelledby="settings-menu-title" aria-modal="true">
+                    <h2 id="settings-menu-title">Style Settings</h2>
                     <h2>Style Settings</h2>
                     <div class="settings-group" data-setting-group="colors">
                         <h3>Colors</h3>
@@ -146,14 +149,14 @@
                     <button id="preview-style-settings">Preview</button>
                     <button class="submenu-back-btn" data-targetpanel="settings-menu-panel">Back</button>
                 </div>
-                <div id="load-menu-panel" class="submenu-panel hidden">
-                    <h2>Load Game</h2>
+                <div id="load-menu-panel" class="submenu-panel hidden" role="dialog" aria-labelledby="load-menu-title" aria-modal="true">
+                    <h2 id="load-menu-title">Load Game</h2>
                     <p>Saved game slots will appear here.</p>
                     <button class="submenu-back-btn" data-targetpanel="load-menu-panel">Back</button>
                 </div>
                 <!-- Credits panel is now hidden -->
-                <div id="credits-menu-panel" class="submenu-panel hidden">
-                    <h2>Credits</h2>
+                <div id="credits-menu-panel" class="submenu-panel hidden" role="dialog" aria-labelledby="credits-menu-title" aria-modal="true">
+                    <h2 id="credits-menu-title">Credits</h2>
                     <p>Game developed by: Your Name/Studio</p>
                     <p>Assets from: Asset Store Links/Credits</p>
                     <button class="submenu-back-btn" data-targetpanel="credits-menu-panel">Back</button>
@@ -219,9 +222,9 @@
                             <div class="status-bar">
                                 <div id="current-time-small">12:34</div>
                                 <div class="status-icons">
-                                    <i class="fas fa-signal"></i>
-                                    <i class="fas fa-wifi"></i>
-                                    <i class="fas fa-battery-three-quarters"></i>
+                                     <i class="fas fa-signal" aria-hidden="true"></i>
+                                     <i class="fas fa-wifi" aria-hidden="true"></i>
+                                     <i class="fas fa-battery-three-quarters phone-battery-indicator" aria-label="Battery status"></i>
                                 </div>
                             </div>
                             
@@ -261,9 +264,9 @@
                             <div id="game-chat-view" class="phone-content-view hidden mockchat">
                                 <header class="chat-header">
                                   <div class="header-left">
-                                    <a href="javascript:void(0);" class="back-button phone-back-button" data-action="back-to-home" aria-label="Go back"> <!-- Changed href for game context -->
+                                    <button type="button" class="back-button phone-back-button" data-action="back-to-home" aria-label="Go back">
                                       <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
-                                    </a>
+                                    </button>
                                     <div class="avatar" id="chat-header-avatar">L</div> <!-- Added ID for dynamic update -->
                                     <span class="contact-name" id="chat-header-contact-name">Larry Johansen</span> <!-- Added ID for dynamic update -->
                                   </div>
@@ -278,10 +281,11 @@
                                   <div class="quick-reply-container">
                                       <!-- Quick reply buttons will be dynamically injected here by UIManager.js -->
                                   </div>
-                                  <form id="chat-form">
+                                  <form id="chat-form" aria-labelledby="chat-input-label">
+                                    <span id="chat-input-label" class="sr-only">Chat message input</span>
                                     <div class="input-bar">
                                       <svg class="icon" id="chat-input-smiley-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM11 17H7v-2h4v-4H7V9h4V5h2v4h4v2h-4v4h4v2h-4z" transform="scale(1.2) translate(-2, -2)"></path></svg>
-                                      <input type="text" id="chat-input" placeholder="RCS message" autocomplete="off" disabled>
+                                      <input type="text" id="chat-input" placeholder="RCS message" autocomplete="off" disabled aria-label="Chat message">
                                       <svg class="icon" id="chat-input-emoji-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
                                       <svg class="icon" id="chat-input-image-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
                                     </div>
@@ -419,15 +423,15 @@
                         </div>
                     </aside>
                     
-                    <div id="phone-docked-indicator" class="hidden">
-                        <i class="fas fa-mobile-alt"></i>
+                        <div id="phone-docked-indicator" class="hidden" aria-live="polite">
+                        <i class="fas fa-mobile-alt" aria-hidden="true"></i> <span class="sr-only">Phone is docked</span>
                     </div>
                 </div>
                 
                 <!-- UPDATED: New Sleek Footer -->
-                <footer class="bottom-nav">
+                <footer class="bottom-nav" role="navigation" aria-label="Main game actions">
                     <button id="open-inventory-btn" class="nav-button">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
                             <path
                                 d="M20.9 5.54l-3.44-3.44A1.5 1.5 0 0016.41 1H7.59a1.5 1.5 0 00-1.06.44L3.1 5.54A1.5 1.5 0 003 6.59V21a2 2 0 002 2h14a2 2 0 002-2V6.59a1.5 1.5 0 00-.1-.96zM12 3.5l2.5 2.5H9.5L12 3.5zM19 21H5V7h14v14z">
                             </path>
@@ -437,7 +441,7 @@
                     </button>
                     <button id="next-customer-btn" class="nav-button nav-button--primary" disabled>
                         Next Fiend
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
                             <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"></path>
                         </svg>
                     </button>
@@ -445,7 +449,7 @@
             </main>
             
             <!-- End Screen -->
-            <section id="end-screen" class="screen overlay-screen" aria-labelledby="end-screen-title">
+            <section id="end-screen" class="screen overlay-screen" aria-labelledby="end-screen-title" role="alertdialog" aria-modal="true">
                 <div class="screen-content">
                     <h2 id="end-screen-title">The Night's Over!</h2>
                     <div class="final-stats">

@@ -16,142 +16,160 @@
 }
 
 .settings-loading .loading-spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
+    border: 4px solid var(--color-surface-light); /* Themed */
     border-radius: 50%;
-    border-top-color: #fff;
+    border-top-color: var(--color-text-base); /* Themed */
     width: 40px;
     height: 40px;
-    animation: spin 1s ease-infinite; /* Assuming @keyframes spin is in base.css or layout.css */
+    animation: spin 1s linear infinite; /* Corrected animation */
     margin-bottom: var(--spacing-lg);
 }
 
 .settings-error {
-    color: var(--color-error, #ff6b6b);
+    color: var(--color-error); /* Themed */
 }
 
 .settings-error .error-message {
     margin-bottom: var(--spacing-lg);
     font-size: 1.1em;
+    color: var(--color-text-base); /* Ensure error message text is visible */
 }
 
-.settings-error .retry-button {
+.settings-error .retry-button { /* Style as a game button */
     padding: var(--spacing-sm) var(--spacing-lg);
-    background-color: var(--color-primary, #007bff);
-    color: var(--color-on-primary, #ffffff);
-    border: none;
-    border-radius: var(--spacing-xs);
+    background-color: var(--color-button-primary-bg);
+    color: var(--color-button-primary-text);
+    border: 1px solid var(--color-button-primary-border);
+    border-radius: var(--button-border-radius);
     cursor: pointer;
+    font-family: var(--font-ui);
 }
-
 .settings-error .retry-button:hover {
-    opacity: 0.9;
+    background-color: var(--color-button-primary-hover-bg);
 }
 
-.preview-mode {
-    position: relative;
+
+.preview-mode { /* This class would be added to #game-viewport by JS */
+    position: relative; /* If #game-viewport is already relative, this is fine */
 }
 
-.preview-mode::after {
+.preview-mode::after { /* Banner for preview mode */
     content: 'Preview Mode';
     position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
+    top: var(--spacing-sm); /* Adjusted positioning */
+    right: var(--spacing-sm);
     padding: var(--spacing-xs) var(--spacing-sm);
-    background: var(--color-accent-gold, #ffd700);
-    color: var(--color-on-primary, #000000);
-    font-size: 0.8em;
+    background: var(--color-accent-gold);
+    color: var(--color-text-on-primary-bg); /* Assuming gold is like primary for text contrast */
+    font-size: 0.75em; /* Smaller text */
+    font-family: var(--font-ui);
     border-radius: 3px;
-    z-index: 999;
+    z-index: 9999; /* Ensure it's on top of everything */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* === Style Settings Panel Controls === */
-/* This is for the main menu settings panel. Phone-specific theme settings are in phone.css */
-.settings-controls-container {
-    overflow-y: auto;
-    max-height: 65vh;
-    padding: var(--spacing-xs) var(--spacing-sm); /* Already uses variables */
-    margin-top: var(--spacing-md); /* Already uses variables */
-}
-
+/* === Style Settings Panel Controls (Main Menu & Phone Theme) === */
+/* These styles apply to .settings-group within .submenu-panel or .phone-content-view */
 .settings-group {
-    margin-bottom: var(--spacing-lg); /* Already a variable */
-    border: 1px solid var(--color-grey-dark);
-    padding: var(--spacing-md); /* Already a variable */
-    border-radius: var(--button-border-radius); /* Already a variable */
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid var(--color-border-medium); /* Themed */
+    padding: var(--spacing-md);
+    border-radius: var(--button-border-radius); /* Consistent radius */
 }
+/* Removed .settings-controls-container as a specific wrapper unless needed for scroll */
 
-.settings-group legend {
-    font-weight: bold;
+.settings-group h3 { /* Changed from legend to h3 to match HTML */
+    font-weight: 500; /* Medium weight for group titles */
     color: var(--color-primary);
-    padding: 0 var(--spacing-sm); /* Already a variable */
-    margin-bottom: var(--spacing-md); /* Already a variable */
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--color-divider); /* Separator for heading */
     font-size: 1.1rem;
+    font-family: var(--font-ui);
 }
 
 .setting-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-md); /* Already a variable */
-    gap: var(--spacing-sm); /* Already a variable */
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-lg); /* Increased gap for better spacing */
 }
 
 .setting-row:last-child {
-    margin-bottom: var(--spacing-xs); /* Already a variable */
+    margin-bottom: 0; /* Remove margin from last row in a group */
 }
 
 .setting-row label {
-    margin-right: var(--spacing-sm); /* Already a variable */
     font-size: 0.9rem;
-    color: var(--color-grey-light);
+    color: var(--color-text-muted); /* Themed */
     flex-shrink: 0;
+    flex-basis: 40%; /* Give labels a consistent basis */
+    text-align: left;
 }
 
-.settings-controls-container input[type="color"],
-.settings-controls-container select,
-.settings-controls-container input[type="range"],
-.settings-controls-container input[type="number"] {
-    background-color: var(--color-dark-bg);
-    border: 1px solid var(--color-grey-mid);
-    color: var(--color-on-surface);
-    border-radius: var(--spacing-xs); /* Already a variable */
-    padding: var(--spacing-xs); /* Already a variable */
+/* Common styles for various input types in settings */
+.settings-group input[type="color"],
+.settings-group select,
+.settings-group input[type="range"],
+.settings-group input[type="number"] {
+    background-color: var(--color-surface-light); /* Slightly lighter for inputs */
+    border: 1px solid var(--color-border-medium); /* Themed */
+    color: var(--color-text-base); /* Themed */
+    border-radius: var(--button-border-radius); /* Consistent radius */
+    padding: var(--spacing-sm); /* Consistent padding */
     font-family: var(--font-body);
     font-size: 0.9rem;
+    flex-grow: 1; /* Allow inputs to take available space */
+    min-width: 80px; /* Prevent inputs from becoming too small */
 }
 
-.settings-controls-container input[type="color"] {
-    min-width: 60px;
-    height: 30px;
-    padding: 2px; /* Fine-tuning, leave as is */
+.settings-group input[type="color"] {
+    min-width: 60px; /* Keep specific min-width */
+    height: 35px; /* Consistent height with other inputs */
+    padding: var(--spacing-xs); /* Adjust padding for color input */
+    flex-grow: 0; /* Don't let color input grow excessively */
 }
 
-.settings-controls-container select {
-    min-width: 160px;
-    height: 30px;
-    padding: var(--spacing-xs) var(--spacing-sm); /* Already uses variables */
+.settings-group select {
+    /* min-width: 160px; Let flex-grow handle width */
+    height: 35px; /* Consistent height */
 }
 
-.settings-controls-container input[type="range"] {
-    flex-grow: 1;
-    height: 20px; /* Could be var(--spacing-xl) if desired, but might be too large for a range input height */
-    accent-color: var(--color-primary);
+.settings-group input[type="range"] {
+    height: auto; /* Let browser determine height or set explicitly if needed */
+    padding: 0; /* Range inputs often don't need vertical padding */
+    accent-color: var(--color-primary); /* Themed track/thumb */
 }
 
 .setting-row .value-display {
-    margin-left: var(--spacing-sm); /* Already a variable */
+    margin-left: var(--spacing-sm);
     font-size: 0.85rem;
-    color: var(--text-secondary);
-    min-width: 30px;
+    color: var(--color-text-muted); /* Themed */
+    min-width: 40px; /* Ensure space for 'px' or value */
     text-align: right;
+    flex-shrink: 0; /* Prevent value display from shrinking */
 }
 
-.settings-controls-container input:focus,
-.settings-controls-container select:focus {
-    outline: 2px solid var(--color-secondary);
+.settings-group input:focus,
+.settings-group select:focus {
+    outline: 2px solid var(--color-primary); /* Use primary for focus */
     outline-offset: 1px;
-    border-color: var(--color-secondary);
+    border-color: var(--color-primary); /* Match outline */
 }
 
-/* Note: Styles for .phone-content-view > .settings-controls-container and
-   #phone-theme-controls-container p are expected to be in phone.css */
+/* Buttons within settings panels (Reset, Preview, Back) */
+/* Apply .btn and .btn-neutral or .btn-primary classes in HTML for these */
+#settings-menu-panel button,
+#phone-theme-settings-view button {
+    margin-top: var(--spacing-md);
+}
+#settings-menu-panel button:not(:last-child),
+#phone-theme-settings-view button:not(:last-child) {
+    margin-right: var(--spacing-sm); /* Space between horizontal buttons */
+}
+
+/* Ensure settings panel itself is scrollable if content overflows */
+.submenu-panel, .phone-content-view { /* Assuming phone theme settings are in a phone-content-view */
+    overflow-y: auto;
+}

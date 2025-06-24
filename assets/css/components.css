@@ -1,115 +1,160 @@
-/* From REMAINING CORE UI STYLES */
-.game-button {
-    padding: var(--spacing-lg) var(--spacing-xl); /* Already uses variables */
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    line-height: 1.2;
-    border: 2px solid;
+/* General Button Styles */
+.game-button, .btn { /* Apply base .btn styles too if used elsewhere */
+    padding: var(--spacing-md) var(--spacing-lg); /* Adjusted default padding */
+    font-family: var(--font-ui); /* Use UI font for general buttons */
+    font-size: 1rem;
+    line-height: 1.3;
+    border: 1px solid; /* Thinner border by default */
     border-radius: var(--button-border-radius);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-duration-short) ease-in-out;
+    text-align: center;
+    font-weight: 500; /* Medium weight for UI buttons */
 }
 
-.game-button.primary-action {
+.game-button.primary-action, .btn.btn-main, .btn-primary { /* Consolidate primary button styles */
     background-color: var(--color-button-primary-bg);
     color: var(--color-button-primary-text);
     border-color: var(--color-button-primary-border);
+    font-family: var(--font-display); /* Display font for main actions */
+    font-size: 1.1rem; /* Slightly larger for primary actions */
+}
+.game-button.primary-action:hover, .btn.btn-main:hover, .btn-primary:hover {
+    background-color: var(--color-button-primary-hover-bg);
+    border-color: var(--color-button-primary-hover-bg);
 }
 
-.game-button.secondary-action {
+.game-button.secondary-action, .btn.btn-icon, .btn-secondary { /* Consolidate secondary/icon button styles */
     background-color: var(--color-button-secondary-bg);
     color: var(--color-button-secondary-text);
     border-color: var(--color-button-secondary-border);
 }
+.game-button.secondary-action:hover, .btn.btn-icon:hover, .btn-secondary:hover {
+    background-color: var(--color-button-secondary-hover-bg);
+    border-color: var(--color-button-secondary-hover-bg);
+    color: var(--color-text-on-secondary-bg); /* Ensure text contrast on hover */
+}
+
+.btn-neutral { /* For general purpose buttons like "Back" */
+    background-color: var(--color-button-neutral-bg);
+    color: var(--color-button-neutral-text);
+    border-color: var(--color-button-neutral-border);
+}
+.btn-neutral:hover {
+    background-color: var(--color-button-neutral-hover-bg);
+    border-color: var(--color-button-neutral-hover-bg);
+}
+
 
 .hidden {
     display: none !important;
 }
+.sr-only { /* Screen-reader only class from HTML refinements */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
 
-/* === DOCKING BUTTON === */
+/* === DOCKING BUTTON (Phone UI) === */
 #dock-phone-btn {
     position: absolute;
     bottom: var(--spacing-md);
     right: var(--spacing-md);
     width: 40px;
     height: 40px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--color-grey-light);
+    background-color: var(--phone-input-bar-bg); /* Themed */
+    border: 1px solid var(--color-divider); /* Themed */
+    color: var(--phone-icon-color); /* Themed */
     border-radius: 50%;
     display: grid;
     place-items: center;
     cursor: pointer;
-    transition: background-color 0.2s;
-    z-index: 1000;
+    transition: background-color var(--transition-duration-short);
+    z-index: 1000; /* Above phone content */
 }
 #dock-phone-btn:hover {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: var(--color-surface-light); /* Themed hover */
 }
 
 /* === Inventory Modal Styles === */
 #inventory-modal.modal-overlay {
-    position: fixed;
+    position: fixed; /* Cover entire viewport */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--color-overlay-dark-medium, rgba(0, 0, 0, 0.65)); /* Using existing variable or a fallback */
-    display: none; /* Initially hidden */
+    background-color: var(--color-overlay-dark-medium);
+    display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1000; /* Ensure it's above most content */
+    z-index: 1000;
+    backdrop-filter: blur(3px); /* Subtle blur for background */
 }
 
 #inventory-modal.modal-overlay.active {
-    display: flex; /* Show when active */
+    display: flex;
 }
 
 #inventory-dialog.modal-content {
     background-color: var(--color-surface);
-    padding: var(--spacing-xl); /* Already a variable */
+    padding: 0; /* Remove padding, handle with header/body/footer */
     border-radius: var(--modal-border-radius);
-    border: 1px solid var(--color-grey-dark);
+    border: 1px solid var(--color-border-strong); /* Themed */
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-    color: var(--color-on-surface);
+    color: var(--color-text-base); /* Themed */
     width: 90%;
-    max-width: var(--modal-max-width, 420px); /* Use existing variable or a default */
-    position: relative; /* For potential absolute positioning of children like a close button */
-    max-height: 80vh;
+    max-width: var(--modal-max-width);
+    position: relative;
+    max-height: 80vh; /* Prevent modal from being too tall */
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack header, body, footer */
 }
 
 #inventory-dialog .modal-header {
-    padding: var(--spacing-md) var(--spacing-xl); /* Already uses variables */
-    border-bottom: 1px solid var(--color-grey-dark);
-    display: flex; /* To align title and close button */
+    padding: var(--spacing-md) var(--spacing-lg); /* Consistent padding */
+    border-bottom: 1px solid var(--color-divider); /* Themed */
+    display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
-#inventory-dialog .modal-header h2 {
-    margin: 0; /* Remove default h2 margin */
-    font-size: 1.5rem; /* Example size */
+#inventory-dialog .modal-header h2 { /* Target specifically #inventory-modal-title */
+    margin: 0;
+    font-size: 1.4rem; /* Adjusted size */
+    font-family: var(--font-display);
     color: var(--color-primary);
 }
 
 #inventory-dialog .modal-body {
-    padding: var(--spacing-md) var(--spacing-xl); /* Already uses variables */
-    overflow-y: auto; /* Make body scrollable if content exceeds max-height */
-    flex-grow: 1;
+    padding: var(--spacing-lg); /* Consistent padding */
+    overflow-y: auto;
+    flex-grow: 1; /* Allow body to take available space */
 }
 
 #inventory-dialog .modal-footer {
-    padding: var(--spacing-md) var(--spacing-xl); /* Already uses variables */
-    border-top: 1px solid var(--color-grey-dark);
-    text-align: right; /* Example alignment */
+    padding: var(--spacing-md) var(--spacing-lg); /* Consistent padding */
+    border-top: 1px solid var(--color-divider); /* Themed */
+    text-align: right;
+    flex-shrink: 0; /* Prevent footer from shrinking */
+    color: var(--color-text-muted);
 }
 
 #inventory-dialog .close-modal-btn {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: var(--color-on-surface);
+    font-size: 1.8rem; /* Larger close icon */
+    color: var(--color-text-muted); /* Themed */
     cursor: pointer;
+    padding: var(--spacing-xs); /* Add some padding for easier click */
+    line-height: 1; /* Ensure '×' is centered */
+}
+#inventory-dialog .close-modal-btn:hover {
+    color: var(--color-text-base);
 }
