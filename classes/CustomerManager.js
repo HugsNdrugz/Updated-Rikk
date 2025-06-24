@@ -298,8 +298,11 @@ export class CustomerManager {
 
     _getDialogue(customerInstance, contextKey) {
         const template = this.customerTemplates[customerInstance.archetypeKey];
+        const playerSafeFallback = { line: "...", payload: null }; // Default player-safe fallback
+
         if (!template || !template.dialogue || !template.dialogue[contextKey]) {
-            return { line: `... (missing dialogue: ${contextKey})`, payload: null };
+            debugLogger.warn('CustomerManager', `Missing dialogue template or contextKey: '${contextKey}' for archetype '${customerInstance.archetypeKey}'.`);
+            return playerSafeFallback;
         }
         const dialogueNode = template.dialogue[contextKey];
         for (const block of dialogueNode) {
@@ -331,7 +334,8 @@ export class CustomerManager {
                 return { line: processedLine, payload: block.payload || null };
             }
         }
-        return { line: `... (no matching dialogue block for ${contextKey})`, payload: null };
+        debugLogger.warn('CustomerManager', `No matching dialogue block after conditions for contextKey: '${contextKey}' for archetype '${customerInstance.archetypeKey}'.`);
+        return playerSafeFallback; // Use the same player-safe fallback
     }
 
     _checkCondition(customerInstance, condition) {
