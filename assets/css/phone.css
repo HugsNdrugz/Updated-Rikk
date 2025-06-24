@@ -691,6 +691,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-transform: capitalize;
     /* Adjust padding if back button is present to prevent overlap */
     padding-left: 30px; /* Space for back button */
     padding-right: 30px; /* Space for potential right-side icons */
@@ -723,4 +724,100 @@
     width: var(--icon-size);
     height: var(--icon-size);
     fill: currentColor; /* Ensure SVG inherits color */
+}
+
+/* === One UI Screen Layout === */
+.one-ui-screen-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Override default .phone-content-view padding as layout children will handle it */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.one-ui-screen-layout .viewing-area {
+    padding: 40px 24px 24px 24px; /* Adjust padding as needed */
+    /* This area holds the non-scrolling title or static content */
+    flex-shrink: 0; /* Prevent viewing area from shrinking */
+    /* Specific styling for titles within viewing-area if not using collapsible-header */
+}
+.one-ui-screen-layout .viewing-area h1, /* For main titles */
+.one-ui-screen-layout .viewing-area h2,
+.one-ui-screen-layout .viewing-area h3 {
+    font-family: var(--font-display);
+    color: var(--color-text-base); /* Or primary, depending on design */
+    margin: 0 0 var(--spacing-md) 0; /* Example margin */
+}
+
+
+.one-ui-screen-layout .interaction-area {
+    flex-grow: 1; /* This makes the area fill remaining space */
+    overflow-y: auto; /* This makes ONLY this area scrollable */
+    padding: 0 24px 24px 24px; /* Content padding, adjust as needed */
+    /* Ensure space for phone dock/home indicator if they are globally positioned */
+    /* padding-bottom: 80px; */ /* Example if dock is present and fixed */
+}
+
+/* Scrollbar styling for interaction area (optional, but good for consistency) */
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar {
+    width: var(--spacing-xs);
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-track {
+    background: var(--phone-bg-color); /* Or transparent */
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb {
+    background: var(--color-surface-light);
+    border-radius: var(--spacing-xs);
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb:hover {
+    background: var(--color-surface-medium);
+}
+
+/* === One UI Screen Layout === */
+.one-ui-screen-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Override default .phone-content-view padding as layout children will handle it */
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.one-ui-screen-layout .viewing-area {
+    padding: 40px 24px 24px 24px; /* Adjust padding as needed */
+    /* This area holds the non-scrolling title or static content */
+    flex-shrink: 0; /* Prevent viewing area from shrinking */
+    /* Specific styling for titles within viewing-area if not using collapsible-header */
+}
+.one-ui-screen-layout .viewing-area h1, /* For main titles */
+.one-ui-screen-layout .viewing-area h2,
+.one-ui-screen-layout .viewing-area h3 {
+    font-family: var(--font-display);
+    color: var(--color-text-base); /* Or primary, depending on design */
+    margin: 0 0 var(--spacing-md) 0; /* Example margin */
+}
+
+
+.one-ui-screen-layout .interaction-area {
+    flex-grow: 1; /* This makes the area fill remaining space */
+    overflow-y: auto; /* This makes ONLY this area scrollable */
+    padding: 0 24px 24px 24px; /* Content padding, adjust as needed */
+    /* Ensure space for phone dock/home indicator if they are globally positioned */
+    /* padding-bottom: 80px; */ /* Example if dock is present and fixed */
+}
+
+/* Scrollbar styling for interaction area (optional, but good for consistency) */
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar {
+    width: var(--spacing-xs);
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-track {
+    background: var(--phone-bg-color); /* Or transparent */
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb {
+    background: var(--color-surface-light);
+    border-radius: var(--spacing-xs);
+}
+.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb:hover {
+    background: var(--color-surface-medium);
 }

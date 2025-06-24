@@ -140,6 +140,23 @@ class UIManager {
             this.phoneDock = null;
             this.phoneHomeIndicator = null;
         }
+
+        // Collapsible header elements for News App
+        if (this.newsAppView) {
+            this.newsAppHeader = this.newsAppView.querySelector('.collapsible-header');
+            this.newsAppInteractionArea = this.newsAppView.querySelector('.interaction-area');
+            if (this.newsAppHeader && this.newsAppInteractionArea) {
+                this.newsAppInteractionArea.addEventListener('scroll', () => {
+                    if (this.newsAppInteractionArea.scrollTop > 50) {
+                        this.newsAppHeader.classList.add('scrolled');
+                    } else {
+                        this.newsAppHeader.classList.remove('scrolled');
+                    }
+                });
+            } else {
+                debugLogger.warn("UIManager: Collapsible header elements for News App not fully found.");
+            }
+        }
     }
 
     // --- Screen Management ---

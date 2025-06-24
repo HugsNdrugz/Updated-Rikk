@@ -103,6 +103,7 @@
     gap: var(--spacing-sm);
     transition: all var(--transition-duration-short) ease-out;
     text-align: center; /* Ensure text is centered if it wraps */
+    text-transform: capitalize;
 }
 
 .nav-button:hover:not(:disabled) { /* More specific hover */

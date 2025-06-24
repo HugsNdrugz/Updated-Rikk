@@ -91,7 +91,7 @@
     height: 100%;
     background-color: var(--color-overlay-dark-medium);
     display: none;
-    align-items: center;
+    align-items: flex-end; /* CHANGED from 'center' to 'flex-end' */
     justify-content: center;
     z-index: 1000;
     backdrop-filter: blur(3px); /* Subtle blur for background */
@@ -110,10 +110,19 @@
     color: var(--color-text-base); /* Themed */
     width: 90%;
     max-width: var(--modal-max-width);
-    position: relative;
+    /* position: relative; */ /* Not needed if transform is used for animation */
     max-height: 80vh; /* Prevent modal from being too tall */
     display: flex;
     flex-direction: column; /* Stack header, body, footer */
+    border-radius: var(--modal-border-radius) var(--modal-border-radius) 0 0; /* Top corners rounded, bottom sharp */
+    width: 100%; /* Take full width on mobile, respects max-width */
+    transform: translateY(100%); /* Start off-screen at the bottom */
+    transition: transform 0.3s ease-out;
+}
+
+/* New rule for active state */
+#inventory-modal.modal-overlay.active #inventory-dialog.modal-content {
+    transform: translateY(0); /* Slide into view */
 }
 
 #inventory-dialog .modal-header {
