@@ -55,8 +55,8 @@
 }
 
 .outfit-splash-tagline {
-    font-family: "Outfit", sans-serif; /* Ensure "Outfit" font is loaded or use var(--font-ui) or similar */
-    font-optical-sizing: auto;
+    font-family: var(--font-ui); /* Use consistent UI font */
+    font-optical-sizing: auto; /* Keep if 'Inter' supports it, harmless otherwise */
     font-weight: 400;
     font-style: normal;
     color: var(--color-text-base);

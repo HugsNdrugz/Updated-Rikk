@@ -20,12 +20,14 @@
     opacity: 0;
 }
 
-/* .phone-container.chatting-game, (These specific state classes might be redundant if is-offscreen is the primary control)
+/* Old state classes - redundant if is-offscreen is primary control
+.phone-container.chatting-game,
 .phone-container.home-screen-active,
 .phone-container.app-menu-game {
     transform: translateY(0);
     opacity: 1;
-} */
+}
+*/
 
 .phone-screen-area {
     width: calc(100% - 12px); /* Keep inset look */
@@ -188,6 +190,7 @@
     flex-direction: column;
     z-index: 5; /* Above wallpaper */
     padding-top: calc(var(--spacing-xl) + var(--spacing-xs)); /* Space for notch and status bar */
+    padding-bottom: 75px; /* Space for the phone's main dock and home indicator */
     color: var(--phone-header-footer-text); /* Default text color for views */
     background-color: transparent; /* Views are transparent, wallpaper or screen bg shows */
 }
