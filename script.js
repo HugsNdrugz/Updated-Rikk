@@ -250,9 +250,13 @@ function initializeManagers() {
     game.customerManager = new CustomerManager(currentTemplates, itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS);
     console.log("SCRIPT: CustomerManager instantiated.");
 
+    console.log("SCRIPT: Attempting to instantiate ContactsAppManager...");
+    console.log("[Debug] uiManager.contactsAppScreen before ContactsAppManager:", uiManager.contactsAppScreen);
     game.contactsAppManager = new ContactsAppManager(uiManager.contactsAppScreen, currentTemplates);
+    console.log("SCRIPT: ContactsAppManager instantiated.");
 
     console.log("SCRIPT: Instantiating SlotGameManager...");
+    console.log("[Debug] uiManager.slotGameView before SlotGameManager:", uiManager.slotGameView);
     game.slotGameManager = new SlotGameManager(
         uiManager.slotGameView,
         () => game.getCash(),
@@ -261,6 +265,7 @@ function initializeManagers() {
             uiManager.updateHUD();
         }
     );
+    console.log("SCRIPT: SlotGameManager instantiated.");
 
     // The event listener for 'customerTemplatesUpdated' from the old ContactsAppManager
     // might need to be re-evaluated or removed if that functionality is no longer part of a UI view

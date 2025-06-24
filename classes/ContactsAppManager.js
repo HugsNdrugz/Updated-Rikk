@@ -14,6 +14,7 @@ export class ContactsAppManager {
      * @param {object} initialCustomerData - The initial set of customer templates.
      */
     constructor(containerElement, initialCustomerData) {
+        console.log("MANAGER: ContactsAppManager constructor called");
         if (!containerElement) {
             // Using console.error directly here because debugLogger might not be available if this constructor fails.
             // Or, ensure this class is only instantiated after utils.js and its logger are confirmed loaded.
