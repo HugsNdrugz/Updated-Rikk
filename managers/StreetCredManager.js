@@ -1,12 +1,12 @@
 // managers/StreetCredManager.js
 import { debugLogger } from '../utils.js';
-import etiquetteRules from '../data/etiquette_rules.json';
+import { etiquetteRulesData } from '../data/etiquette_rules.js';
 
 class StreetCredManager {
     constructor(gameState) {
         console.log("MANAGER: StreetCredManager constructor called");
         this.gameState = gameState;
-        this.etiquetteRules = etiquetteRules;
+        this.etiquetteRules = etiquetteRulesData; // Use the imported data
 
         if (this.gameState.DEBUG_MODE) {
             debugLogger.log('StreetCredManager', 'Initialized with gameState:', gameState);
@@ -92,7 +92,7 @@ class StreetCredManager {
      *
      * @param {object} actionContext - An object containing details about the player's action
      *                                 and relevant game state. Properties should align with
-     *                                 trigger conditions in `data/etiquette_rules.json`.
+     *                                 trigger conditions in `data/etiquette_rules.js`.
      *                                 Example: {
      *                                   event_type: "decline_deal_from_customer",
      *                                   customer_is_new: true,

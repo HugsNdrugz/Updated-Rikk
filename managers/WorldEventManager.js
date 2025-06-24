@@ -1,7 +1,7 @@
 // managers/WorldEventManager.js
 import { debugLogger } from '../utils.js';
 import { possibleWorldEvents } from '../data/data_events.js'; // Now loading event definitions
-// import { consequences } from '../data/consequences.js'; // Will be needed later
+import { consequencesData } from '../data/consequences.js';
 import { showNotification as phoneShowNotification } from '../phone_ambient_ui.js';
 
 class WorldEventManager {
@@ -9,10 +9,12 @@ class WorldEventManager {
         console.log("MANAGER: WorldEventManager constructor called"); // Added log
         this.gameState = gameState;
         this.uiManager = uiManager;
-        this.eventDefinitions = possibleWorldEvents; // Load from JSON
+        this.eventDefinitions = possibleWorldEvents;
+        this.consequences = consequencesData; // Assign imported consequences
 
         if (this.gameState.DEBUG_MODE) {
             debugLogger.log('WorldEventManager', 'Initialized with event definitions:', this.eventDefinitions);
+            debugLogger.log('WorldEventManager', 'Initialized with consequences:', this.consequences);
         }
     }
 
@@ -145,14 +147,88 @@ class WorldEventManager {
      */
     checkConsequences() { // gameState is available via this.gameState
         if (this.gameState.DEBUG_MODE) {
-            // debugLogger.log('WorldEventManager', 'Checking consequences. Current choices:', JSON.stringify(this.gameState.choices));
-            // debugLogger.log('WorldEventManager', 'Current systemic vars:', JSON.stringify(this.gameState.systemic));
+            debugLogger.log('WorldEventManager', 'Checking consequences. Current choices:', JSON.stringify(this.gameState.choices));
+            debugLogger.log('WorldEventManager', 'Current systemic vars:', JSON.stringify(this.gameState.systemic));
         }
-        // Placeholder for future logic
-        if (this.gameState.systemic.cityDespairLevel > 5 && this.gameState.DEBUG_MODE) {
-             debugLogger.log('WorldEventManager', `City Despair (${this.gameState.systemic.cityDespairLevel}) is getting high! (Example check for consequences)`);
+
+        if (!this.consequences || this.consequences.length === 0) {
+            if (this.gameState.DEBUG_MODE) {
+                debugLogger.log('WorldEventManager', 'No consequences defined or loaded.');
+            }
+            return;
         }
+
+        this.consequences.forEach(consequence => {
+            let conditionsMet = true;
+            if (!consequence.triggerConditions || consequence.triggerConditions.length === 0) {
+                conditionsMet = false; // Requires at least one trigger condition
+            }
+
+            for (const condition of consequence.triggerConditions) {
+                let currentConditionMet = false;
+                switch (condition.type) {
+                    case 'choiceMade':
+                        if (this.gameState.choices && this.gameState.choices[condition.choiceId] === condition.value) {
+                            currentConditionMet = true;
+                        }
+                        break;
+                    case 'systemicStat':
+                        if (this.gameState.systemic && typeof this.gameState.systemic[condition.statId] !== 'undefined') {
+                            const statValue = this.gameState.systemic[condition.statId];
+                            switch (condition.operator) {
+                                case '>=': currentConditionMet = statValue >= condition.value; break;
+                                case '<=': currentConditionMet = statValue <= condition.value; break;
+                                case '>': currentConditionMet = statValue > condition.value; break;
+                                case '<': currentConditionMet = statValue < condition.value; break;
+                                case '==': currentConditionMet = statValue == condition.value; break; // Use == for flexibility if types might differ slightly
+                                default:
+                                    if (this.gameState.DEBUG_MODE) debugLogger.warn('WorldEventManager', `Unknown operator in consequence ${consequence.consequenceId}: ${condition.operator}`);
+                                    break;
+                            }
+                        }
+                        break;
+                    // Add other condition types here (e.g., worldEventActive, playerStat)
+                    default:
+                        if (this.gameState.DEBUG_MODE) debugLogger.warn('WorldEventManager', `Unknown condition type in consequence ${consequence.consequenceId}: ${condition.type}`);
+                        break;
+                }
+                if (!currentConditionMet) {
+                    conditionsMet = false;
+                    break;
+                }
+            }
+
+            if (conditionsMet) {
+                // Basic probability check
+                if (consequence.probability < 1.0 && Math.random() > consequence.probability) {
+                    if (this.gameState.DEBUG_MODE) debugLogger.log('WorldEventManager', `Consequence ${consequence.consequenceId} met conditions but failed probability check.`);
+                    return; // Skips this consequence for this check
+                }
+
+                // TODO: Implement cooldown and onceOnly logic if needed for full feature.
+                // For now, just log or apply effects directly.
+
+                if (this.gameState.DEBUG_MODE) {
+                    debugLogger.log('WorldEventManager', `Consequence Triggered: ${consequence.consequenceId} - ${consequence.logMessage}`);
+                }
+                // Placeholder for applying effects:
+                // this.applyConsequenceEffects(consequence.effects);
+                // For now, just show a notification if there's a log message.
+                if (consequence.logMessage) {
+                    phoneShowNotification(consequence.logMessage, "System Update");
+                }
+            }
+        });
     }
+
+    // Placeholder for a future method to apply effects.
+    // applyConsequenceEffects(effects) {
+    //     effects.forEach(effect => {
+    //         // Logic to apply different effect types (worldEvent, newsArticle, gameStateChange, etc.)
+    //         // This would be similar to applyInitialEventEffects or ItemEffectManager logic.
+    //         if (this.gameState.DEBUG_MODE) debugLogger.log('WorldEventManager', `Applying consequence effect:`, effect);
+    //     });
+    // }
 }
 
 export { WorldEventManager };

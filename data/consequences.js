@@ -1,4 +1,4 @@
-[
+export const consequencesData = [
   {
     "consequenceId": "example_consequence_1",
     "description": "An example consequence for testing the system when city despair is high and a placeholder choice has been made.",
@@ -34,4 +34,4 @@
     "priority": 5,
     "logMessage": "Consequence triggered: Selling too many hard drugs is impacting the city."
   }
-]
+];

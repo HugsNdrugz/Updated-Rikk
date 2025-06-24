@@ -1,4 +1,4 @@
-[
+export const etiquetteRulesData = [
   {
     "id": "decline_deal_rude_new_customer",
     "description": "Player rudely declines a deal offered by a new customer.",
@@ -60,4 +60,4 @@
       "feedback_message_id": "feedback_price_gouge_shortage"
     }
   }
-]
+];
