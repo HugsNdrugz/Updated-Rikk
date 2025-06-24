@@ -50,6 +50,7 @@
     padding: var(--spacing-lg) var(--spacing-xl); /* Larger padding for main button */
     font-size: 1.4rem; /* Larger font for main "Run It" button */
     border-radius: 50px; /* Keep fully rounded style */
+    text-transform: capitalize;
 }
 
 .split-button-container .btn-icon {

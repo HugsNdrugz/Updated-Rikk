@@ -2,23 +2,23 @@
     /* --- Theme: Modern Underground/Gritty --- */
 
     /* Fonts */
-    --font-ui: 'Inter', 'Arial', sans-serif; /* Primary UI font for body, buttons, general text */
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-body: var(--font-ui); /* Alias for consistency; body text will use UI font */
-    --font-display: 'Aldrich', 'Orbitron', 'Arial Black', sans-serif; /* For titles and major headings */
-    --font-slot-game: 'Black Ops One', 'Arial Black', sans-serif; /* Specific font for slot game, added fallback */
+    --font-display: var(--font-ui); /* One UI often uses the same font, just different weights/sizes */
+    --font-slot-game: 'Black Ops One', 'Arial Black', sans-serif; /* Specific font for slot game, added fallback - KEEPING THIS AS IT'S SPECIFIC */
 
     /* Core Colors */
-    --color-dark-bg: #0A0A0A;
-    --color-surface: #161618;
-    --color-surface-medium: #222225;
-    --color-surface-light: #2c2c30; /* For elements needing to be lighter than surface-medium but not text */
-    --color-primary: #00B0B0;   /* Teal */
-    --color-on-primary: #0A0A0A;
-    --color-secondary: #D00070; /* Magenta */
-    --color-on-secondary: #F0F0F0;
+    --color-dark-bg: #121212; /* Guide's dark theme background */
+    --color-surface: #252525; /* Guide's card/surface background */
+    --color-surface-medium: #333333; /* Adjusted for consistency */
+    --color-surface-light: #404040; /* Adjusted for consistency */
+    --color-primary: #007bff; /* Guide's recommended interactive blue */
+    --color-on-primary: #FFFFFF; /* Text on primary should be light */
+    --color-secondary: #6c757d; /* A neutral secondary */
+    --color-on-secondary: #FFFFFF; /* Text on secondary should be light */
 
     /* Text Colors */
-    --color-text-base: #E5E5E5; /* Renamed from --color-text-primary for clarity */
+    --color-text-base: #e1e1e1; /* Guide's dark theme text color */
     --color-text-muted: #A0A0A5;  /* Renamed from --color-text-secondary */
     --color-text-disabled: #606065;
     --color-text-on-primary-bg: var(--color-on-primary); /* Text on primary background */
@@ -37,9 +37,9 @@
     --color-info: #30A0FF; /* Using link color for general info accents */
 
     /* UI Elements */
-    --color-border-strong: #48484D; /* Darker, stronger border */
-    --color-border-medium: #303035; /* Existing --color-border, renamed for clarity */
-    --color-border-light: #606065; /* Lighter border, e.g., for HUD elements against dark bg */
+    --color-border-strong: #4a4a4a; /* Adjusted for consistency */
+    --color-border-medium: #333333; /* Guide's border color */
+    --color-border-light: #555555; /* Adjusted for consistency */
     --color-divider: var(--color-border-medium);
     --color-overlay-dark-strong: rgba(0, 0, 0, 0.92);
     --color-overlay-dark-medium: rgba(0, 0, 0, 0.70);
@@ -111,9 +111,9 @@
     --phone-screen-inset-radius: calc(var(--phone-border-radius) - 8px);
 
     --modal-max-width: 420px;
-    --modal-border-radius: 8px;
-    --button-border-radius: 6px; /* Sharper buttons */
-    --chat-bubble-border-radius: 16px;
+    --modal-border-radius: 26px; /* For large blocks like modals */
+    --button-border-radius: 50px; /* For pill-shaped buttons */
+    --chat-bubble-border-radius: 20px; /* Guide's "large thumbnail" radius */
     --icon-size: 22px;
 
     /* Spacing */

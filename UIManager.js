@@ -140,6 +140,23 @@ class UIManager {
             this.phoneDock = null;
             this.phoneHomeIndicator = null;
         }
+
+        // Collapsible header elements for News App
+        if (this.newsAppView) {
+            this.newsAppHeader = this.newsAppView.querySelector('.collapsible-header');
+            this.newsAppInteractionArea = this.newsAppView.querySelector('.interaction-area');
+            if (this.newsAppHeader && this.newsAppInteractionArea) {
+                this.newsAppInteractionArea.addEventListener('scroll', () => {
+                    if (this.newsAppInteractionArea.scrollTop > 50) {
+                        this.newsAppHeader.classList.add('scrolled');
+                    } else {
+                        this.newsAppHeader.classList.remove('scrolled');
+                    }
+                });
+            } else {
+                debugLogger.warn("UIManager: Collapsible header elements for News App not fully found.");
+            }
+        }
     }
 
     // --- Screen Management ---
@@ -288,10 +305,18 @@ class UIManager {
             case 'chatting':
                 if (this.gameChatView) this.gameChatView.classList.remove('hidden');
                 // Dock hidden for chat
+                if (this.dockPhoneBtn) this.dockPhoneBtn.classList.add('hidden');
                 break;
             case 'contactsAppList':
                 if (this.contactsAppScreen) this.contactsAppScreen.classList.remove('hidden');
                 // Dock hidden for contacts app
+                break;
+            case 'playerContactsList': // New case for player-facing contacts
+                if (this.contactsAppScreen) {
+                    this.contactsAppScreen.classList.remove('hidden');
+                    this.renderPlayerContactsList(); // New method to render actual contacts
+                }
+                // Dock typically hidden for full-screen app views
                 break;
             case 'mapAppView':
                 if (this.mapAppView) {
@@ -340,6 +365,17 @@ class UIManager {
             if (this.phoneHomeIndicator) {
                 if (showDockAndIndicator) this.phoneHomeIndicator.classList.remove('hidden');
                 else this.phoneHomeIndicator.classList.add('hidden');
+            }
+        }
+
+        // Manage #dock-phone-btn visibility separately
+        // It should be hidden if phone is offscreen/docked, or if in specific states like 'chatting'.
+        // Otherwise, for on-screen app views (including home), it should be visible.
+        if (this.dockPhoneBtn) {
+            if (state === 'chatting' || this.rikkPhoneUI.classList.contains('is-offscreen')) {
+                this.dockPhoneBtn.classList.add('hidden');
+            } else {
+                this.dockPhoneBtn.classList.remove('hidden');
             }
         }
     }
@@ -538,6 +574,236 @@ class UIManager {
         headlineEl.textContent = article.headline;
         metaEl.textContent = `${article.category} - ${article.timestamp}`;
         bodyEl.textContent = article.body;
+    }
+
+    renderPlayerContactsList() {
+        if (!this.contactsListContainer || !this.game.contactsManager) {
+            debugLogger.error("UIManager: Contacts list container or ContactsManager not available.");
+            return;
+        }
+
+        // Ensure list is visible and detail is hidden
+        this.contactsListContainer.classList.remove('hidden');
+        if (this.contactDetailView) this.contactDetailView.classList.add('hidden');
+
+        this.contactsListContainer.innerHTML = ''; // Clear previous list
+        const contacts = this.game.contactsManager.getUnlockedContacts();
+
+        if (contacts.length === 0) {
+            this.contactsListContainer.innerHTML = '<p class="empty-message">No contacts unlocked yet.</p>';
+            return;
+        }
+
+        const ul = document.createElement('ul');
+        ul.className = 'player-contact-list'; // Add a class for specific styling if needed
+
+        contacts.forEach(contact => {
+            const li = document.createElement('li');
+            li.className = 'customer-card'; // Reuse existing styling for list items
+            li.dataset.contactId = contact.id;
+
+            // Avatar
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'customer-card-avatar';
+            if (contact.avatarUrl) {
+                const img = document.createElement('img');
+                img.src = contact.avatarUrl;
+                img.alt = contact.name;
+                avatarDiv.appendChild(img);
+            } else {
+                avatarDiv.textContent = contact.name ? contact.name[0].toUpperCase() : '?';
+            }
+            li.appendChild(avatarDiv);
+
+            // Info
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'customer-card-info';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'customer-card-name';
+            nameDiv.textContent = contact.name;
+            infoDiv.appendChild(nameDiv);
+
+            const keyDiv = document.createElement('div'); // For a subtitle, e.g., their role or a snippet
+            keyDiv.className = 'customer-card-key';
+            keyDiv.textContent = contact.shortDescription || "Mysterious Figure"; // Fallback
+            infoDiv.appendChild(keyDiv);
+
+            li.appendChild(infoDiv);
+
+            li.addEventListener('click', () => this.renderPlayerContactDetail(contact.id));
+            ul.appendChild(li);
+        });
+        this.contactsListContainer.appendChild(ul);
+    }
+
+    renderPlayerContactDetail(contactId) {
+        if (!this.contactDetailView || !this.game.contactsManager) {
+            debugLogger.error("UIManager: Contact detail view or ContactsManager not available.");
+            return;
+        }
+        const contact = this.game.contactsManager.getContactById(contactId);
+        if (!contact) {
+            debugLogger.error(`UIManager: Contact with ID ${contactId} not found.`);
+            this.renderPlayerContactsList(); // Go back to list if contact not found
+            return;
+        }
+
+        // Hide list, show detail
+        if (this.contactsListContainer) this.contactsListContainer.classList.add('hidden');
+        this.contactDetailView.classList.remove('hidden');
+        this.contactDetailView.innerHTML = ''; // Clear previous details
+
+        // Back button (could be part of the static HTML for contact-detail-view and just handled by existing phone-back-button logic)
+        // For now, we'll assume a global back button or one within the contacts-app-view's header can take user back to list.
+        // Alternatively, add one dynamically:
+        // const backButton = document.createElement('button');
+        // backButton.className = 'btn btn-neutral phone-back-button'; // Re-use existing styles
+        // backButton.textContent = 'Back to List';
+        // backButton.addEventListener('click', () => this.renderPlayerContactsList());
+        // this.contactDetailView.appendChild(backButton);
+
+
+        // Avatar
+        const avatarImg = document.createElement('img');
+        avatarImg.id = 'contact-detail-avatar'; // Corresponds to existing CSS
+        avatarImg.className = 'contact-avatar-large'; // Corresponds to existing CSS
+        avatarImg.src = contact.avatarUrl || 'assets/images/default-avatar.png'; // Provide a default
+        avatarImg.alt = contact.name;
+        this.contactDetailView.appendChild(avatarImg);
+
+        // Name
+        const nameH3 = document.createElement('h3');
+        nameH3.id = 'contact-detail-name'; // Corresponds to existing CSS
+        nameH3.textContent = contact.name;
+        this.contactDetailView.appendChild(nameH3);
+
+        // Description
+        const descriptionP = document.createElement('p');
+        descriptionP.id = 'contact-detail-description'; // Corresponds to existing CSS
+        descriptionP.textContent = contact.description;
+        this.contactDetailView.appendChild(descriptionP);
+
+        // Loyalty
+        const loyaltyP = document.createElement('p');
+        loyaltyP.id = 'contact-detail-loyalty';
+        const loyaltyData = this.game.loyaltyManager.getLoyalty(contact.id);
+        loyaltyP.textContent = `Loyalty: ${loyaltyData.levelName} (${loyaltyData.points})`;
+        this.contactDetailView.appendChild(loyaltyP);
+
+        // Services
+        if (contact.services && contact.services.length > 0) {
+            const servicesHeader = document.createElement('h4');
+            servicesHeader.textContent = 'Services:';
+            this.contactDetailView.appendChild(servicesHeader);
+            const servicesUl = document.createElement('ul');
+            servicesUl.id = 'contact-detail-services-list'; // Corresponds to existing CSS
+            contact.services.forEach(serviceId => {
+                const service = this.game.contactsManager.getServiceById(serviceId);
+                if (service) {
+                    servicesUl.appendChild(this._renderServiceItem(service, contact.id));
+                }
+            });
+            this.contactDetailView.appendChild(servicesUl);
+        }
+
+        // Missions
+        if (contact.missions && contact.missions.length > 0) {
+            const missionsHeader = document.createElement('h4');
+            missionsHeader.textContent = 'Missions:';
+            this.contactDetailView.appendChild(missionsHeader);
+            const missionsDiv = document.createElement('div');
+            missionsDiv.id = 'contact-detail-missions-list'; // Corresponds to existing CSS
+            contact.missions.forEach(missionId => {
+                const mission = this.game.contactsManager.getMissionById(missionId);
+                if (mission) {
+                    // Check if player meets requirements for this mission
+                    const canStart = this.game.contactsManager.canStartMission(contact.id, missionId);
+                    missionsDiv.appendChild(this._renderMissionItem(mission, contact.id, canStart));
+                }
+            });
+            this.contactDetailView.appendChild(missionsDiv);
+        }
+    }
+
+    _renderServiceItem(service, contactId) {
+        const li = document.createElement('li');
+        li.className = 'service-item'; // For styling
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'service-name';
+        nameSpan.textContent = `${service.name} - Cost: $${service.cost}`;
+        li.appendChild(nameSpan);
+
+        const descriptionP = document.createElement('p');
+        descriptionP.className = 'service-description';
+        descriptionP.textContent = service.description;
+        li.appendChild(descriptionP);
+
+        const activateButton = document.createElement('button');
+        activateButton.className = 'btn btn-primary btn-small'; // Use existing button styles
+        activateButton.textContent = 'Activate Service';
+        activateButton.disabled = this.game.getCash() < service.cost;
+        activateButton.addEventListener('click', () => {
+            const success = this.game.contactsManager.activateService(contactId, service.id);
+            if (success) {
+                showNotification(`Service "${service.name}" activated! Cost: $${service.cost}`, "Contacts");
+                this.updateHUD(); // Update cash display
+                this.renderPlayerContactDetail(contactId); // Re-render detail to update button states
+            } else {
+                showNotification(`Could not activate "${service.name}". Not enough cash or service unavailable.`, "Contacts", "negative");
+            }
+        });
+        li.appendChild(activateButton);
+        return li;
+    }
+
+    _renderMissionItem(mission, contactId, canStart) {
+        const div = document.createElement('div');
+        div.className = 'mission-item'; // For styling
+
+        const nameH5 = document.createElement('h5');
+        nameH5.className = 'mission-name';
+        nameH5.textContent = mission.name;
+        div.appendChild(nameH5);
+
+        const descriptionP = document.createElement('p');
+        descriptionP.className = 'mission-description';
+        descriptionP.textContent = mission.description;
+        div.appendChild(descriptionP);
+
+        if (mission.requirements) {
+            const reqP = document.createElement('p');
+            reqP.className = 'mission-requirements';
+            let reqText = "Requires: ";
+            if (mission.requirements.minStreetCred) reqText += `Street Cred ${mission.requirements.minStreetCred}, `;
+            if (mission.requirements.minLoyalty) reqText += `Loyalty Level "${this.game.loyaltyManager.getLoyaltyLevelName(mission.requirements.minLoyalty)}" with ${this.game.contactsManager.getContactById(contactId).name}, `;
+            // Add other requirement displays here
+            reqP.textContent = reqText.slice(0, -2); // Remove trailing comma and space
+            div.appendChild(reqP);
+        }
+
+        const startButton = document.createElement('button');
+        startButton.className = 'btn btn-secondary btn-small'; // Use existing button styles
+        startButton.textContent = 'Start Mission';
+        startButton.disabled = !canStart;
+        if (!canStart) {
+            startButton.title = "Requirements not met or mission already completed/active.";
+        }
+        startButton.addEventListener('click', () => {
+            // Logic to start mission - this would typically involve setting game state
+            // and potentially navigating to a mission-specific UI or dialogue.
+            // For now, just a notification.
+            const started = this.game.contactsManager.startMission(contactId, mission.id);
+            if(started){
+                showNotification(`Mission "${mission.name}" started! Check objectives.`, "Contacts");
+                this.renderPlayerContactDetail(contactId); // Re-render to update button state
+            } else {
+                showNotification(`Could not start mission "${mission.name}".`, "Contacts", "negative");
+            }
+        });
+        div.appendChild(startButton);
+        return div;
     }
 
     // --- Audio ---

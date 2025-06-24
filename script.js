@@ -594,8 +594,10 @@ function startCustomerInteraction(interaction) {
             if (interaction.choices && interaction.choices.length > 0) {
                 uiManager.displayChoices(interaction.choices, handleChoice);
             } else {
-                if (DEBUG_MODE) console.warn('Interaction ended with no choices to present, or choices array is malformed.');
-                endCustomerInteraction(); // Proceed to end interaction if no choices
+                // If no choices are provided by the interaction, always offer a way to end.
+                if (DEBUG_MODE) console.warn('Interaction has no choices. Adding a default [End] button.');
+                const endChoice = [{ text: "[Later]", outcome: { type: "end_interaction_player_triggered" } }];
+                uiManager.displayChoices(endChoice, handleChoice);
             }
         }
     };
@@ -670,7 +672,9 @@ function handlePhoneAppClick(event) {
             uiManager.openInventoryModal();
             break;
         case 'contacts-app':
-            uiManager.setPhoneUIState('contactsAppList');
+            // Disconnected ContactsAppManager (dev tool) from this player-facing action.
+            // Player-facing contacts will be handled by UIManager with a new state.
+            uiManager.setPhoneUIState('playerContactsList');
             break;
         case 'map-app':
             uiManager.setPhoneUIState('mapAppView');
@@ -777,6 +781,12 @@ function handleChoice(outcome) {
         let dealSuccess = false;
         let dialogueContextKey = '';
         let loyaltyChange = 0; // Initialize loyalty change
+
+        // Handle player-triggered end of interaction first
+        if (outcome.type === "end_interaction_player_triggered") {
+            endCustomerInteraction();
+            return; // Exit early, no further processing needed for this type
+        }
 
         switch (outcome.type) {
             case "buy_from_customer":
@@ -1072,21 +1082,30 @@ function handleChoice(outcome) {
         uiManager.updateInventoryDisplay();
 
         const followUp = () => {
+            const displayEndButton = () => {
+                const endChoice = [{ text: "[Peace Out]", outcome: { type: "end_interaction_player_triggered" } }];
+                uiManager.displayChoices(endChoice, handleChoice);
+            };
+
             if (outcomeResult.line && outcomeResult.line.trim() !== "") {
-                queueNextMessage(outcomeResult.line, 'customer', () => {
-                    setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
-                });
+                queueNextMessage(outcomeResult.line, 'customer', displayEndButton);
             } else {
-                setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
+                // If there's no specific customer reaction line, still show the end button.
+                displayEndButton();
             }
         };
 
         if (narrationText.trim() !== "") {
+            // If there's narration (e.g., "Rikk copped 'X'."), show it, then proceed to followUp (which might show customer reaction then end button, or just end button)
             queueNextMessage(narrationText, 'narration', followUp);
         } else {
+            // If no narration, directly call followUp (which might show customer reaction then end button, or just end button)
             followUp();
         }
 
+        // Check game-ending conditions *after* the current interaction's effects but *before* player explicitly ends via button for some cases.
+        // However, the actual endGame() call should ideally happen after the player clicks the final end button if that's the flow.
+        // For now, these checks remain here, but the flow will pause for the player's final click.
         if (game.getHeat() >= game.getMaxHeat()) endGame("heat");
         else if (game.getCash() <= 0 && game.getInventory().length === 0 && game.getFiendsLeft() > 0) endGame("bankrupt");
 

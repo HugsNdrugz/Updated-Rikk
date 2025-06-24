@@ -174,6 +174,124 @@
     border-color: var(--color-primary);
 }
 
+
+/* ======================================================================== */
+/* === NEWS APP STYLES === */
+/* ======================================================================== */
+
+/* Collapsible Header for News App */
+#news-app-view .collapsible-header {
+    background-color: var(--phone-header-footer-bg); /* Or var(--phone-bg-color) if transparent to content */
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md); /* Generous padding for expanded title */
+    position: sticky;
+    top: 0; /* Sticks to the top of the scrollable area if .interaction-area is the scroller */
+    z-index: 10;
+    transition: padding 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    overflow: hidden; /* Prevents text overflow issues during transition */
+    border-bottom: 1px solid var(--color-divider);
+    /* Ensure this header doesn't get affected by global .phone-content-view padding-top */
+    /* margin-top: calc(-1 * (var(--spacing-xl) + var(--spacing-xs))); */ /* Counteract global padding if needed */
+}
+
+#news-app-view .expanded-title {
+    font-family: var(--font-display);
+    font-size: 2.2rem; /* Large title when expanded */
+    font-weight: 700;
+    color: var(--color-text-base);
+    margin: 0;
+    line-height: 1.2;
+    transition: opacity 0.2s ease-in-out, font-size 0.3s ease-in-out, transform 0.3s ease-in-out;
+    transform: translateY(0);
+}
+
+#news-app-view .collapsed-title {
+    font-family: var(--font-ui); /* Or var(--font-display) with smaller size */
+    font-size: 1.1rem; /* Standard header size when collapsed */
+    font-weight: 600;
+    color: var(--color-text-base);
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.2s ease-in-out, transform 0.3s ease-in-out;
+    padding: 0 var(--spacing-md); /* Ensure padding for centered title */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scrolled state for the header */
+#news-app-view .collapsible-header.scrolled {
+    padding-top: var(--spacing-sm); /* Reduced padding */
+    padding-bottom: var(--spacing-sm);
+    /* background-color: var(--phone-header-footer-bg); */ /* Ensure background is solid when scrolled if it wasn't before */
+}
+
+#news-app-view .collapsible-header.scrolled .expanded-title {
+    opacity: 0;
+    font-size: 1.8rem; /* Shrink it a bit as it fades */
+    transform: translateY(-20px); /* Optional: move it up as it fades */
+}
+
+#news-app-view .collapsible-header.scrolled .collapsed-title {
+    opacity: 1;
+    transform: translateY(-50%); /* Ensure it's centered */
+}
+
+/* News List Styles (basic example) */
+#news-list-container {
+    /* padding: var(--spacing-md); */ /* Padding is now handled by .interaction-area */
+    /* This container will be part of .interaction-area which handles scrolling */
+}
+
+.news-article-item {
+    padding: var(--spacing-sm) var(--spacing-xs); /* Adjust padding for items within interaction area */
+    border-bottom: 1px solid var(--color-divider);
+    cursor: pointer;
+}
+.news-article-item:last-child {
+    border-bottom: none;
+}
+.news-article-item:hover {
+    background-color: var(--color-surface-light); /* Subtle hover */
+}
+.news-article-item h4 { /* Headline in list */
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-base);
+    margin-bottom: var(--spacing-xs);
+}
+.news-article-item p { /* Snippet or meta in list */
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* News Article Detail View */
+#news-article-detail-view {
+    /* padding: var(--spacing-md); */ /* Padding is now handled by .interaction-area */
+    /* This view is shown/hidden by JS, ensure it fills the space if needed */
+}
+#news-article-headline { /* Headline in detail view */
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+#news-article-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-md);
+}
+#news-article-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-text-base);
+}
+
+
 /* ======================================================================== */
 /* === SLOT GAME APP STYLES === */
 /* ======================================================================== */
