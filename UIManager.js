@@ -24,9 +24,13 @@ class UIManager {
 
         // Screens
         this.splashScreen = document.getElementById('splash-screen');
+        console.log("[Debug UIManager] Initializing this.splashScreen:", this.splashScreen);
         this.startScreen = document.getElementById('start-screen');
+        console.log("[Debug UIManager] Initializing this.startScreen:", this.startScreen);
         this.gameScreen = document.getElementById('game-screen');
+        console.log("[Debug UIManager] Initializing this.gameScreen:", this.gameScreen);
         this.endScreen = document.getElementById('end-screen');
+        console.log("[Debug UIManager] Initializing this.endScreen:", this.endScreen);
 
         // Main Menu & Sub-panels
         this.newGameBtn = document.getElementById('new-game-btn');
@@ -102,11 +106,19 @@ class UIManager {
 
     // --- Screen Management ---
     showScreen(screenElement) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        console.log("[Debug UIManager] showScreen called with screenElement:", screenElement);
+        const allScreens = document.querySelectorAll('.screen');
+        console.log("[Debug UIManager] All elements with .screen class:", allScreens);
+        allScreens.forEach(s => {
+            console.log(`[Debug UIManager] Removing 'active' from:`, s);
+            s.classList.remove('active');
+        });
         if (screenElement) {
+            console.log(`[Debug UIManager] Adding 'active' to:`, screenElement);
             screenElement.classList.add('active');
         } else {
             debugLogger.warn('UIManager', 'showScreen called with null or undefined element.');
+            console.warn("[Debug UIManager] showScreen: screenElement is null or undefined. No screen will be activated.");
         }
     }
 

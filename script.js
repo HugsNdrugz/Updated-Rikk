@@ -314,7 +314,9 @@ function initializeUIAndSettings() {
         uiManager.showScreen(uiManager.splashScreen);
         setTimeout(() => {
             console.log("SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.");
+            console.log("[Debug] uiManager.startScreen before showScreen:", uiManager.startScreen);
             uiManager.showScreen(uiManager.startScreen);
+            console.log("[Debug] uiManager.showScreen(uiManager.startScreen) called.");
             console.log("SCRIPT: startScreen (or mainMenu) displayed.");
             uiManager.activateMainMenuLights(true);
             checkForSavedGame();
@@ -351,7 +353,7 @@ function initGame() {
         console.log("SCRIPT: setupEventListeners() completed.");
         console.log("SCRIPT: initGame() finished successfully.");
     } catch (error) {
-        console.error("CRITICAL ERROR during game initialization:", error);
+        console.error("CRITICAL ERROR during game initialization (within initGame try-catch):", error);
         // Optionally, display a user-friendly error message on the page
         const body = document.querySelector('body');
         if (body) {
