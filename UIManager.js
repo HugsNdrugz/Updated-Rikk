@@ -128,6 +128,18 @@ class UIManager {
         if (!this.previewPhoneSettingsButton) debugLogger.warn("UIManager: #preview-phone-style-settings button not found (optional).");
         this.resetPhoneSettingsButton = document.getElementById('reset-phone-style-settings');
         if (!this.resetPhoneSettingsButton) debugLogger.warn("UIManager: #reset-phone-style-settings button not found (optional).");
+
+        // Phone Dock & Home Indicator (for hiding in app views)
+        if (this.rikkPhoneUI) {
+            this.phoneDock = this.rikkPhoneUI.querySelector('.dock');
+            if (!this.phoneDock) debugLogger.warn("UIManager: .dock (phone dock) not found in #rikk-phone-ui.");
+            this.phoneHomeIndicator = this.rikkPhoneUI.querySelector('.home-indicator');
+            if (!this.phoneHomeIndicator) debugLogger.warn("UIManager: .home-indicator (phone home indicator) not found in #rikk-phone-ui.");
+        } else {
+            debugLogger.error("UIManager: #rikk-phone-ui not found, cannot query for dock and home indicator.");
+            this.phoneDock = null;
+            this.phoneHomeIndicator = null;
+        }
     }
 
     // --- Screen Management ---
@@ -248,56 +260,87 @@ class UIManager {
         if (!this.rikkPhoneUI || !this.phoneDockedIndicator) return;
         this.rikkPhoneUI.querySelectorAll('.phone-content-view').forEach(view => view.classList.add('hidden'));
 
+        // Handle overall phone visibility (offscreen/docked)
         if (state === 'docked' || state === 'offscreen') {
             this.rikkPhoneUI.classList.add('is-offscreen');
+            if (this.phoneDock) this.phoneDock.classList.add('hidden'); // Hide dock if phone is offscreen/docked
+            if (this.phoneHomeIndicator) this.phoneHomeIndicator.classList.add('hidden'); // Hide home indicator too
+
             if (state === 'docked') {
-                this.phoneDockedIndicator.classList.remove('hidden');
+                if (this.phoneDockedIndicator) this.phoneDockedIndicator.classList.remove('hidden');
             } else {
-                this.phoneDockedIndicator.classList.add('hidden');
+                if (this.phoneDockedIndicator) this.phoneDockedIndicator.classList.add('hidden');
             }
         } else {
             this.rikkPhoneUI.classList.remove('is-offscreen');
-            this.phoneDockedIndicator.classList.add('hidden');
+            if (this.phoneDockedIndicator) this.phoneDockedIndicator.classList.add('hidden');
+            // Dock and home indicator visibility will be handled by specific app states below
         }
+
+        // Handle visibility of specific views and the dock/home indicator
+        let showDockAndIndicator = false;
 
         switch (state) {
             case 'home':
                 if (this.homeScreen) this.homeScreen.classList.remove('hidden');
+                showDockAndIndicator = true;
                 break;
             case 'chatting':
                 if (this.gameChatView) this.gameChatView.classList.remove('hidden');
+                // Dock hidden for chat
                 break;
-            case 'contactsAppList': // Changed from contactsAppView to contactsAppList
+            case 'contactsAppList':
                 if (this.contactsAppScreen) this.contactsAppScreen.classList.remove('hidden');
+                // Dock hidden for contacts app
                 break;
             case 'mapAppView':
                 if (this.mapAppView) {
                     this.mapAppView.classList.remove('hidden');
                     this.renderMap();
                 }
+                // Dock hidden for map app
                 break;
-            case 'newsAppList': // Changed from newsAppView to newsAppList
+            case 'newsAppList':
                 if (this.newsAppView) {
                     this.newsAppView.classList.remove('hidden');
                     this.renderNewsList();
                 }
+                // Dock hidden for news app
                 break;
-            case 'newsArticleDetail':
-                if (this.newsAppView) this.newsAppView.classList.remove('hidden');
+            case 'newsArticleDetail': // Assuming news detail is also full screen
+                if (this.newsAppView) this.newsAppView.classList.remove('hidden'); // The parent container for news
+                // Need to ensure the specific detail view within newsAppView is shown by newsManager/UIManager logic
+                // Dock hidden for news article detail
                 break;
             case 'slots':
                 if (this.slotGameView) this.slotGameView.classList.remove('hidden');
+                // Dock hidden for slot game
                 break;
-            case 'theme-settings':
+            case 'theme-settings': // This is a phone app view
                 if (this.phoneThemeSettingsView) this.phoneThemeSettingsView.classList.remove('hidden');
+                // Dock hidden for theme settings app
                 break;
             case 'docked':
             case 'offscreen':
+                // Dock and indicator are already handled (hidden)
                 break;
             default:
                 if (this.homeScreen) this.homeScreen.classList.remove('hidden');
-                debugLogger.warn('UIManager', `Unknown phone UI state requested: ${state}. Defaulting to home.`);
+                showDockAndIndicator = true; // Default to showing dock if state is unknown but phone is on-screen
+                debugLogger.warn('UIManager', `Unknown phone UI state requested: ${state}. Defaulting to home screen.`);
                 break;
+        }
+
+        // Apply dock and home indicator visibility unless phone is offscreen
+        if (!this.rikkPhoneUI.classList.contains('is-offscreen')) {
+            if (this.phoneDock) {
+                if (showDockAndIndicator) this.phoneDock.classList.remove('hidden');
+                else this.phoneDock.classList.add('hidden');
+            }
+            if (this.phoneHomeIndicator) {
+                if (showDockAndIndicator) this.phoneHomeIndicator.classList.remove('hidden');
+                else this.phoneHomeIndicator.classList.add('hidden');
+            }
         }
     }
 
