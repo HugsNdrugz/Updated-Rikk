@@ -238,7 +238,7 @@
     width: 50px; /* Larger touch target */
     height: 50px;
     background: rgba(255, 255, 255, 0.08); /* Subtle background */
-    border-radius: var(--button-border-radius); /* Consistent border radius */
+    border-radius: var(--phone-app-icon-radius); /* One UI: Rounded square/squircle (20px) */
     display: grid;
     place-items: center;
     color: var(--color-text-base); /* Brighter icon color for better contrast */
@@ -737,7 +737,7 @@
 }
 
 .one-ui-screen-layout .viewing-area {
-    padding: 40px 24px 24px 24px; /* Adjust padding as needed */
+    padding: var(--one-ui-viewing-area-padding-top) var(--spacing-xl) var(--spacing-xl) var(--spacing-xl); /* Use theme vars: 72px 24px 24px 24px */
     /* This area holds the non-scrolling title or static content */
     flex-shrink: 0; /* Prevent viewing area from shrinking */
     /* Specific styling for titles within viewing-area if not using collapsible-header */

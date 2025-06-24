@@ -181,21 +181,23 @@
 
 /* Collapsible Header for News App */
 #news-app-view .collapsible-header {
-    background-color: var(--phone-header-footer-bg); /* Or var(--phone-bg-color) if transparent to content */
-    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md); /* Generous padding for expanded title */
+    background-color: var(--phone-header-footer-bg);
+    height: 160px; /* Adjusted expanded height (Guide: 200px, a bit tall for small phone) */
+    padding: var(--spacing-md); /* Consistent padding, title positioning by flex */
     position: sticky;
-    top: 0; /* Sticks to the top of the scrollable area if .interaction-area is the scroller */
+    top: 0;
     z-index: 10;
-    transition: padding 0.3s ease-in-out, background-color 0.3s ease-in-out;
-    overflow: hidden; /* Prevents text overflow issues during transition */
+    transition: height 0.3s ease-out, background-color 0.3s ease-in-out; /* Transition height */
+    overflow: hidden;
     border-bottom: 1px solid var(--color-divider);
-    /* Ensure this header doesn't get affected by global .phone-content-view padding-top */
-    /* margin-top: calc(-1 * (var(--spacing-xl) + var(--spacing-xs))); */ /* Counteract global padding if needed */
+    display: flex; /* Needed for align-items */
+    flex-direction: column; /* Stack expanded and collapsed titles if both visible during transition */
+    justify-content: flex-end; /* Aligns expanded title to bottom */
 }
 
 #news-app-view .expanded-title {
     font-family: var(--font-display);
-    font-size: 2.2rem; /* Large title when expanded */
+    font-size: var(--font-size-extend-title); /* Use theme var: 40px */
     font-weight: 700;
     color: var(--color-text-base);
     margin: 0;
@@ -225,20 +227,22 @@
 
 /* Scrolled state for the header */
 #news-app-view .collapsible-header.scrolled {
-    padding-top: var(--spacing-sm); /* Reduced padding */
-    padding-bottom: var(--spacing-sm);
-    /* background-color: var(--phone-header-footer-bg); */ /* Ensure background is solid when scrolled if it wasn't before */
+    height: 60px; /* Guide: Collapsed height */
+    padding-top: 0; /* Padding adjusted as content is centered */
+    padding-bottom: 0;
+    justify-content: center; /* Center collapsed title vertically */
+    /* background-color: var(--phone-header-footer-bg); */ /* Ensure background is solid if it wasn't before */
 }
 
 #news-app-view .collapsible-header.scrolled .expanded-title {
     opacity: 0;
-    font-size: 1.8rem; /* Shrink it a bit as it fades */
+    font-size: var(--font-size-dialog-title); /* Shrink it a bit as it fades, e.g. to dialog title size */
     transform: translateY(-20px); /* Optional: move it up as it fades */
 }
 
 #news-app-view .collapsible-header.scrolled .collapsed-title {
     opacity: 1;
-    transform: translateY(-50%); /* Ensure it's centered */
+    /* transform: translateY(-50%); */ /* No longer needed if header itself centers */
 }
 
 /* News List Styles (basic example) */

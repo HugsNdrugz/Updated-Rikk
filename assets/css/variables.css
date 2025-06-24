@@ -1,132 +1,193 @@
+/*
+  One UI for Web: Theming Variables
+  Inspired by "One UI for Web: Design Guidelines"
+*/
+
 :root {
-    /* --- Theme: Modern Underground/Gritty --- */
+    /* --- DEFAULT THEME (Light) --- */
+    --bg-color: #f2f2f2;
+    --text-color: #000000;
+    --primary-color: #007bff;
+    --card-bg-color: #ffffff;
+    --border-color: #e0e0e0;
 
-    /* Fonts */
-    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-body: var(--font-ui); /* Alias for consistency; body text will use UI font */
-    --font-display: var(--font-ui); /* One UI often uses the same font, just different weights/sizes */
-    --font-slot-game: 'Black Ops One', 'Arial Black', sans-serif; /* Specific font for slot game, added fallback - KEEPING THIS AS IT'S SPECIFIC */
+    --on-primary-color: #ffffff;
+    --secondary-color: #6c757d;
+    --on-secondary-color: #ffffff;
 
-    /* Core Colors */
-    --color-dark-bg: #121212; /* Guide's dark theme background */
-    --color-surface: #252525; /* Guide's card/surface background */
-    --color-surface-medium: #333333; /* Adjusted for consistency */
-    --color-surface-light: #404040; /* Adjusted for consistency */
-    --color-primary: #007bff; /* Guide's recommended interactive blue */
-    --color-on-primary: #FFFFFF; /* Text on primary should be light */
-    --color-secondary: #6c757d; /* A neutral secondary */
-    --color-on-secondary: #FFFFFF; /* Text on secondary should be light */
+    /* Semantic aliases for clarity in component CSS */
+    /* These will be used by components, and their values change based on theme */
+    --color-background: var(--bg-color);
+    --color-surface: var(--card-bg-color); /* For cards, modals, etc. */
+    --color-surface-medium: color-mix(in srgb, var(--card-bg-color) 90%, var(--text-color) 10%);
+    --color-surface-light: color-mix(in srgb, var(--card-bg-color) 95%, var(--text-color) 5%);
 
-    /* Text Colors */
-    --color-text-base: #e1e1e1; /* Guide's dark theme text color */
-    --color-text-muted: #A0A0A5;  /* Renamed from --color-text-secondary */
-    --color-text-disabled: #606065;
-    --color-text-on-primary-bg: var(--color-on-primary); /* Text on primary background */
-    --color-text-on-secondary-bg: var(--color-on-secondary); /* Text on secondary background */
-    --color-text-error: var(--color-on-primary); /* Text on error background */
-    --color-text-success: var(--color-on-primary); /* Text on success background */
-    --color-text-warning: var(--color-on-primary); /* Text on warning background */
-    --color-text-link: #30A0FF;
+    --color-text-base: var(--text-color);
+    --color-text-muted: color-mix(in srgb, var(--text-color) 65%, var(--bg-color) 35%);
+    --color-text-disabled: color-mix(in srgb, var(--text-color) 45%, var(--bg-color) 55%);
+    --color-text-link: var(--primary-color);
 
-    /* Accent & Utility Colors */
+    --color-border-strong: color-mix(in srgb, var(--border-color) 70%, var(--text-color) 30%);
+    --color-border-medium: var(--border-color);
+    --color-border-light: color-mix(in srgb, var(--border-color) 70%, var(--bg-color) 30%);
+    --color-divider: var(--color-border-medium);
+
+    /* Accent & Utility Colors - Define base for light, override in dark if needed */
     --color-accent-gold: #FFB300;
     --color-accent-orange: #E87A00;
-    --color-success: #30C030;
-    --color-error: #D03030;
-    --color-warning: var(--color-accent-orange);
-    --color-info: #30A0FF; /* Using link color for general info accents */
+    --color-success: #28a745; /* WCAG AA compliant on white */
+    --color-error: #dc3545;   /* WCAG AA compliant on white */
+    --color-warning: #ffc107; /* WCAG AA compliant on black text, may need darker for white text */
+    --color-info: #17a2b8;    /* WCAG AA compliant on white */
 
-    /* UI Elements */
-    --color-border-strong: #4a4a4a; /* Adjusted for consistency */
-    --color-border-medium: #333333; /* Guide's border color */
-    --color-border-light: #555555; /* Adjusted for consistency */
-    --color-divider: var(--color-border-medium);
-    --color-overlay-dark-strong: rgba(0, 0, 0, 0.92);
-    --color-overlay-dark-medium: rgba(0, 0, 0, 0.70);
-    --color-backdrop-blur-bg: rgba(22, 22, 24, 0.7); /* var(--color-surface) with alpha for blurred backgrounds */
+    --color-text-on-primary-bg: var(--on-primary-color);
+    --color-text-on-secondary-bg: var(--on-secondary-color);
+    --color-text-error: var(--on-primary-color);
+    --color-text-success: var(--on-primary-color);
 
-    /* Button Specifics */
-    --color-button-primary-bg: var(--color-primary);
-    --color-button-primary-text: var(--color-text-on-primary-bg);
-    --color-button-primary-border: var(--color-primary);
-    --color-button-primary-hover-bg: #009090; /* Darker Teal */
+    --color-overlay-backdrop: rgba(0, 0, 0, 0.5);
+    --color-backdrop-blur-bg: rgba(255, 255, 255, 0.7);
 
-    --color-button-secondary-bg: var(--color-secondary);
-    --color-button-secondary-text: var(--color-text-on-secondary-bg);
-    --color-button-secondary-border: var(--color-secondary);
-    --color-button-secondary-hover-bg: #B00060; /* Darker Magenta */
+    /* --- FONTS (Theme Independent) --- */
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-body: var(--font-ui);
+    --font-display: var(--font-ui);
+    --font-slot-game: 'Black Ops One', 'Arial Black', sans-serif;
 
-    --color-button-neutral-bg: var(--color-surface-medium);
-    --color-button-neutral-text: var(--color-text-base);
-    --color-button-neutral-border: var(--color-border-medium);
-    --color-button-neutral-hover-bg: var(--color-surface-light);
+    /* Typography Scale (from One UI Guide) */
+    --font-size-button: 0.9375rem;  /* 15px */
+    --font-size-body: 1rem;         /* 16px */
+    --font-size-title-small: 1.1875rem; /* 19px */
+    --font-size-dialog-title: 1.25rem;  /* 20px */
+    --font-size-extend-title: 2.5rem;   /* 40px */
 
-    --color-disabled-bg: #28282D;
-    --color-disabled-border: var(--color-border-strong);
-    --color-disabled-text: var(--color-text-disabled);
-
-    /* Chat & Phone UI (Consolidated) */
-    --phone-bg-color: #181818; /* Slightly different from main dark-bg for depth */
-    --phone-header-footer-bg: #1F1F1F;
-    --phone-header-footer-text: var(--color-text-base);
-    --phone-timestamp-text: var(--color-text-muted);
-    --phone-sent-bubble-bg: var(--color-primary);
-    --phone-sent-bubble-text: var(--color-text-on-primary-bg);
-    --phone-received-bubble-bg: var(--color-surface-medium);
-    --phone-received-bubble-text: var(--color-text-base);
-    --phone-narration-text: var(--color-text-muted);
-    --phone-avatar-bg: var(--color-secondary); /* Example */
-    --phone-input-bar-bg: var(--color-surface);
-    --phone-icon-color: var(--color-text-muted);
-    --phone-notification-bg: rgba(30, 30, 30, 0.85);
-    --phone-notification-border: rgba(255, 255, 255, 0.2);
-
-    /* HUD Specifics */
-    --hud-status-bar-bg: var(--color-backdrop-blur-bg);
-    --hud-status-bar-border: var(--color-border-light);
-    --hud-status-item-text: var(--color-text-base);
-    --hud-rival-banner-bg: var(--color-error);
-    --hud-rival-banner-text: var(--color-text-on-primary-bg); /* Assuming error bg is like primary */
-    --hud-nav-button-bg: var(--color-backdrop-blur-bg);
-    --hud-nav-button-border: var(--color-border-light);
-    --hud-nav-button-text: var(--color-text-base);
-    --hud-nav-button-primary-bg: var(--color-secondary); /* Using secondary for the "Next Fiend" button */
-    --hud-nav-button-primary-hover-bg: #B00060; /* Darker secondary */
-    --hud-nav-button-capacity-text: var(--color-text-muted);
-
-
-    /* Heat Level Colors */
-    --color-heat-low: var(--color-success);
-    --color-heat-medium: #FFDD00; /* Yellowish */
-    --color-heat-high: var(--color-accent-orange);
-    --color-heat-critical: var(--color-error);
-
-    /* Sizes & Dimensions */
+    /* --- SIZES & DIMENSIONS (Theme Independent) --- */
     --viewport-max-width: 480px;
-    --viewport-border-radius: 10px; /* Slightly less rounded for a sharper look */
-
+    --viewport-border-radius: 10px;
     --phone-max-width: 340px;
     --phone-max-height: 75vh;
-    --phone-border-radius: 20px; /* Sharper phone corners */
+    --phone-border-radius: 20px;
     --phone-screen-inset-radius: calc(var(--phone-border-radius) - 8px);
 
-    --modal-max-width: 420px;
-    --modal-border-radius: 26px; /* For large blocks like modals */
-    --button-border-radius: 50px; /* For pill-shaped buttons */
-    --chat-bubble-border-radius: 20px; /* Guide's "large thumbnail" radius */
+    --radius-thumbnail-large: 20px;
+    --radius-thumbnail-small: 12px;
+    --modal-border-radius: 26px;
+    --button-border-radius: 50px;
+    --chat-bubble-border-radius: var(--radius-thumbnail-large);
+    --phone-app-icon-radius: var(--radius-thumbnail-large);
     --icon-size: 22px;
 
-    /* Spacing */
+    /* --- SPACING (Theme Independent) --- */
     --spacing-unit: 8px;
     --spacing-xs: calc(var(--spacing-unit) * 0.5); /* 4px */
     --spacing-sm: var(--spacing-unit);             /* 8px */
     --spacing-md: calc(var(--spacing-unit) * 1.5); /* 12px */
     --spacing-lg: calc(var(--spacing-unit) * 2);   /* 16px */
     --spacing-xl: calc(var(--spacing-unit) * 3);   /* 24px */
+    --one-ui-viewing-area-padding-top: calc(var(--spacing-xl) * 3); /* 72px */
 
-    /* Transitions & Animations */
+    /* --- TRANSITIONS (Theme Independent) --- */
     --transition-duration-short: 0.15s;
     --transition-duration-medium: 0.3s;
     --transition-easing: ease-in-out;
     --transition-phone-slide: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* --- COMPONENT SPECIFIC VARS (Derived from theme vars) --- */
+    /* These will automatically update with theme change if they use theme vars like --primary-color, --text-color etc. */
+
+    --color-button-primary-bg: var(--primary-color);
+    --color-button-primary-text: var(--on-primary-color);
+    --color-button-primary-border: var(--primary-color);
+    --color-button-primary-hover-bg: color-mix(in srgb, var(--primary-color) 85%, black);
+
+    --color-button-secondary-bg: var(--secondary-color);
+    --color-button-secondary-text: var(--on-secondary-color);
+    --color-button-secondary-border: var(--secondary-color);
+    --color-button-secondary-hover-bg: color-mix(in srgb, var(--secondary-color) 85%, black);
+
+    --color-button-neutral-bg: var(--card-bg-color);
+    --color-button-neutral-text: var(--text-color);
+    --color-button-neutral-border: var(--border-color);
+    --color-button-neutral-hover-bg: color-mix(in srgb, var(--card-bg-color) 90%, var(--text-color) 10%);
+
+    --color-disabled-bg: color-mix(in srgb, var(--bg-color) 80%, var(--text-color) 20%);
+    --color-disabled-border: color-mix(in srgb, var(--border-color) 70%, var(--text-color) 30%);
+    --color-disabled-text: var(--color-text-disabled);
+
+    /* Chat & Phone UI */
+    --phone-bg-color: var(--bg-color);
+    --phone-header-footer-bg: color-mix(in srgb, var(--card-bg-color) 90%, var(--bg-color) 10%);
+    --phone-header-footer-text: var(--text-color);
+    --phone-timestamp-text: var(--color-text-muted);
+    --phone-sent-bubble-bg: var(--primary-color);
+    --phone-sent-bubble-text: var(--on-primary-color);
+    --phone-received-bubble-bg: var(--card-bg-color);
+    --phone-received-bubble-text: var(--text-color);
+    --phone-narration-text: var(--color-text-muted);
+    --phone-avatar-bg: var(--secondary-color);
+    --phone-input-bar-bg: var(--card-bg-color);
+    --phone-icon-color: var(--color-text-muted);
+    --phone-notification-bg: color-mix(in srgb, var(--card-bg-color) 85%, var(--text-color) 15% alpha 85%);
+    --phone-notification-border: color-mix(in srgb, var(--border-color) 50%, transparent 50%);
+
+    /* HUD Specifics */
+    --hud-status-bar-bg: var(--color-backdrop-blur-bg);
+    --hud-status-bar-border: var(--border-color);
+    --hud-status-item-text: var(--text-color);
+    --hud-rival-banner-bg: var(--color-error);
+    --hud-rival-banner-text: var(--on-primary-color); /* Assuming error bg is like primary */
+    --hud-nav-button-bg: var(--color-backdrop-blur-bg);
+    --hud-nav-button-border: var(--border-color);
+    --hud-nav-button-text: var(--text-color);
+    --hud-nav-button-primary-bg: var(--secondary-color);
+    --hud-nav-button-primary-hover-bg: color-mix(in srgb, var(--secondary-color) 85%, black);
+    --hud-nav-button-capacity-text: var(--color-text-muted);
+
+    /* Heat Level Colors (mostly theme independent but can be adjusted if needed) */
+    --color-heat-low: var(--color-success);
+    --color-heat-medium: #FFDD00;
+    --color-heat-high: var(--color-accent-orange);
+    --color-heat-critical: var(--color-error);
+}
+
+[data-theme="dark"] {
+    /* --- DARK THEME OVERRIDES --- */
+    --bg-color: #121212;
+    --text-color: #e1e1e1;
+    --primary-color: #3e91ff; /* Guide's dark theme primary */
+    --card-bg-color: #252525;
+    --border-color: #333333;
+
+    --on-primary-color: #000000;
+    /* --secondary-color: #8A8A8A; */ /* Example if dark theme needs different secondary */
+    /* --on-secondary-color: #000000; */
+
+    /* Semantic aliases for dark theme */
+    --color-surface-medium: #333333;
+    --color-surface-light: #404040;
+    --color-text-muted: #A0A0A5;
+    --color-text-disabled: #606065;
+
+    /* Accents might need tuning for contrast on dark backgrounds */
+    /* --color-success: #30C030; */ /* Original dark theme success */
+    /* --color-error: #D03030; */   /* Original dark theme error */
+
+    --color-text-error: #ffffff; /* Ensure high contrast on dark error buttons */
+    --color-text-success: #ffffff; /* Ensure high contrast on dark success buttons */
+
+    --color-overlay-backdrop: rgba(0, 0, 0, 0.7);
+    --color-backdrop-blur-bg: rgba(22, 22, 24, 0.7);
+
+    /* Button hover colors for dark theme */
+    --color-button-primary-hover-bg: color-mix(in srgb, var(--primary-color) 85%, white);
+    --color-button-secondary-hover-bg: color-mix(in srgb, var(--secondary-color) 85%, white);
+    --color-button-neutral-hover-bg: color-mix(in srgb, var(--card-bg-color) 90%, var(--text-color) 10%);
+
+    /* Phone UI dark theme adjustments */
+    --phone-bg-color: #181818;
+    --phone-header-footer-bg: #1F1F1F;
+    --phone-received-bubble-bg: #3a3a3a;
+    --phone-input-bar-bg: #2c2c2c;
+    --phone-notification-bg: rgba(40, 40, 40, 0.85);
+    --phone-notification-border: rgba(255, 255, 255, 0.15);
 }

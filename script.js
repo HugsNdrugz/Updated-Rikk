@@ -1351,6 +1351,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const elSettingsError = document.querySelector('.settings-error');
     if (elSettingsLoading) elSettingsLoading.classList.add('hidden');
     if (elSettingsError) elSettingsError.classList.add('hidden');
+
+    // Theme Toggle Logic from UI Design Guide
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) {
+        // Set initial theme based on localStorage or system preference (optional)
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.body.dataset.theme = currentTheme;
+        if (currentTheme === 'dark') {
+            // If there's a visual toggle switch, make sure it's in the 'on' state for dark
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            let newTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+            document.body.dataset.theme = newTheme;
+            localStorage.setItem('theme', newTheme); // Save preference
+            // If using a visual toggle switch, update its state here
+        });
+    } else {
+        if (DEBUG_MODE) console.warn("Theme toggle button #theme-toggle not found.");
+    }
 });
 
 /*

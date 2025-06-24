@@ -10,8 +10,8 @@ html {
 }
 body {
     font-family: var(--font-body);
-    background-color: #000000; /* Keep body background as pure black for contrast with viewport */
-    color: var(--color-text-base); /* Use the new base text color */
+    background-color: var(--bg-color); /* Themed background */
+    color: var(--text-color); /* Themed text color */
     height: 100%;
     display: flex;
     justify-content: center;

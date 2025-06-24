@@ -1,15 +1,19 @@
 /* General Button Styles */
 .game-button, .btn { /* Apply base .btn styles too if used elsewhere */
-    padding: var(--spacing-md) var(--spacing-lg); /* Adjusted default padding */
+    padding: var(--spacing-md) var(--spacing-xl); /* Guide: 12px 24px */
     font-family: var(--font-ui); /* Use UI font for general buttons */
-    font-size: 1rem;
+    font-size: var(--font-size-button); /* One UI: 15px */
     line-height: 1.3;
-    border: 1px solid; /* Thinner border by default */
+    border: none; /* Guide: base button has no border */
     border-radius: var(--button-border-radius);
     cursor: pointer;
     transition: all var(--transition-duration-short) ease-in-out;
     text-align: center;
     font-weight: 500; /* Medium weight for UI buttons */
+    text-transform: capitalize; /* One UI: Capitalize button text */
+}
+.btn:active, .game-button:active {
+    transform: scale(0.97); /* One UI: Tangible feedback */
 }
 
 .game-button.primary-action, .btn.btn-main, .btn-primary { /* Consolidate primary button styles */
@@ -43,6 +47,15 @@
 .btn-neutral:hover {
     background-color: var(--color-button-neutral-hover-bg);
     border-color: var(--color-button-neutral-hover-bg);
+}
+
+.btn-flat {
+    background-color: transparent;
+    color: var(--primary-color);
+    /* border is 'none' from base .btn style */
+}
+.btn-flat:hover {
+    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent 90%); /* Subtle hover for flat */
 }
 
 
@@ -136,9 +149,11 @@
 
 #inventory-dialog .modal-header h2 { /* Target specifically #inventory-modal-title */
     margin: 0;
-    font-size: 1.4rem; /* Adjusted size */
+    font-size: var(--font-size-dialog-title); /* One UI: 20px */
     font-family: var(--font-display);
-    color: var(--color-primary);
+    color: var(--primary-color); /* Or var(--text-color) depending on design for titles */
+    font-weight: 500; /* Guide: Dialog title weight */
+    text-transform: capitalize; /* One UI: Capitalize titles */
 }
 
 #inventory-dialog .modal-body {
