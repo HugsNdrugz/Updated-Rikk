@@ -350,29 +350,40 @@ function setupEventListeners() {
 }
 
 function initializeUIAndSettings() {
+    const attemptAutoLoad = () => {
+        if (loadGameState()) {
+            // Saved game loaded successfully
+            if (DEBUG_MODE) console.log('SCRIPT: Auto-loaded saved game. Starting game flow.');
+            // Ensure main menu lights are off if we bypass the menu
+            uiManager.activateMainMenuLights(false);
+            startGameFlow();
+        } else {
+            // No saved game, or error loading - show main menu
+            if (DEBUG_MODE) console.log('SCRIPT: No saved game to auto-load, or error during load. Showing startScreen/mainMenu.');
+            if (DEBUG_MODE) console.log('[Debug] uiManager.startScreen before showScreen (no auto-load):', uiManager.startScreen);
+            uiManager.showScreen(uiManager.startScreen);
+            if (DEBUG_MODE) console.log('[Debug] uiManager.showScreen(uiManager.startScreen) called (no auto-load).');
+            if (DEBUG_MODE) console.log('SCRIPT: startScreen (or mainMenu) displayed (no auto-load).');
+            uiManager.activateMainMenuLights(true);
+            checkForSavedGame(); // This will correctly set the continue button visibility
+        }
+    };
+
     if (uiManager.splashScreen) {
         if (DEBUG_MODE) console.log('SCRIPT: Showing splash screen.');
         uiManager.showScreen(uiManager.splashScreen);
         setTimeout(() => {
-            if (DEBUG_MODE) console.log('SCRIPT: Attempting to hide splash screen and show startScreen/mainMenu.');
-            if (DEBUG_MODE) console.log('[Debug] uiManager.startScreen before showScreen:', uiManager.startScreen);
-            uiManager.showScreen(uiManager.startScreen);
-            if (DEBUG_MODE) console.log('[Debug] uiManager.showScreen(uiManager.startScreen) called.');
-            if (DEBUG_MODE) console.log('SCRIPT: startScreen (or mainMenu) displayed.');
-            uiManager.activateMainMenuLights(true);
-            checkForSavedGame();
+            if (DEBUG_MODE) console.log('SCRIPT: Splash screen finished. Attempting auto-load or showing main menu.');
+            attemptAutoLoad();
         }, SPLASH_SCREEN_DURATION);
     } else {
         if (DEBUG_MODE) console.warn('SCRIPT: Splash screen element not found by UIManager. Proceeding without splash timeout.');
-        // If splash is not found, proceed to show startScreen directly after a minimal delay or immediately
-        // This ensures the game doesn't halt if splash is missing.
+        // If splash is not found, proceed to attempt auto-load or show startScreen directly
         setTimeout(() => {
-            uiManager.showScreen(uiManager.startScreen);
-            if (DEBUG_MODE) console.log('SCRIPT: startScreen (or mainMenu) displayed (no splash).');
-            uiManager.activateMainMenuLights(true);
-            checkForSavedGame();
-        }, 50);
+            attemptAutoLoad();
+        }, 50); // Minimal delay
     }
+
     uiManager.initStyleControls(saveStyleSettings);
     uiManager.loadAndApplyStyleSettings();
     if (uiManager.rikkPhoneUI) {
