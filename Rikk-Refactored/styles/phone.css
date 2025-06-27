@@ -1,0 +1,123 @@
+/* /styles/phone.css */
+
+#phone {
+    width: 360px; /* Typical phone width */
+    height: 740px; /* Typical phone height */
+    background-color: var(--bg-secondary); /* Phone chassis color */
+    border: 8px solid #111; /* Phone bezel */
+    border-radius: var(--border-radius-lg); /* Rounded corners for the phone */
+    box-shadow: var(--box-shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Clip content within the phone */
+    position: relative; /* For positioning elements like notch or status bar */
+}
+
+body.dark-mode #phone {
+    border-color: #333; /* Darker bezel for dark mode */
+}
+
+#phone-screen {
+    flex-grow: 1;
+    background-color: var(--phone-bg, var(--bg-primary)); /* Specific phone screen bg, fallback to primary */
+    overflow-y: auto; /* Allow scrolling within the phone screen */
+    padding: var(--spacing-2);
+    position: relative; /* For absolute positioning of app content */
+    display: flex; /* Use flex to manage app content */
+    flex-direction: column; /* Stack app content vertically */
+}
+
+/* Optional: Simulate a notch or top bar area if desired */
+/* #phone-top-bar {
+    height: 30px;
+    background-color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--text-sm);
+} */
+
+#phone-home-screen {
+    display: flex;
+    flex-wrap: wrap;
+    padding: var(--spacing-4);
+    gap: var(--spacing-4);
+    justify-content: flex-start; /* Align icons to the start */
+    align-content: flex-start; /* Align icon rows to the start */
+    height: 100%; /* Take full height of the screen */
+}
+
+.app-icon {
+    width: 80px;
+    height: 100px; /* Increased height for text below */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    text-align: center;
+}
+
+.app-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-sm);
+}
+
+.app-icon img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--spacing-1);
+}
+
+.app-icon span {
+    font-size: var(--text-xs);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+
+#phone-bottom-bar {
+    height: 50px;
+    background-color: #222; /* Darker bar for phone controls */
+    display: flex;
+    align-items: center;
+    justify-content: space-around; /* Evenly space out buttons */
+    border-top: 1px solid var(--border-color);
+}
+
+body.dark-mode #phone-bottom-bar {
+    background-color: #000;
+    border-top: 1px solid #444;
+}
+
+#phone-bottom-bar button {
+    background: none;
+    border: none;
+    color: var(--text-primary-dark); /* Light text for dark bar */
+    font-size: var(--text-lg);
+    cursor: pointer;
+}
+
+#phone-bottom-bar button:hover {
+    color: var(--accent-color-dark); /* Highlight on hover */
+}
+
+/* Example of how an app screen might look */
+.app-screen-content {
+    padding: var(--spacing-4);
+    color: var(--text-primary); /* Ensure app text uses theme colors */
+}
+
+.app-screen-content h1 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--spacing-4);
+    color: var(--text-primary);
+}

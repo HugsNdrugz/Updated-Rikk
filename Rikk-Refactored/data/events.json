@@ -1,0 +1,71 @@
+[
+  {
+    "id": "minor_heat_wave",
+    "name": "Minor Heat Wave",
+    "description": "The city sweats, and tempers flare. General discomfort.",
+    "duration": 3,
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "heatGainMultiplier",
+        "value": 1.1,
+        "duration": "event",
+        "notes": "Slightly easier to accumulate heat."
+      }
+    ],
+    "trigger": { "type": "random", "chance": 0.05 },
+    "isToolTriggered": false,
+    "message": "A heat wave hits the city! Tempers might be shorter."
+  },
+  {
+    "id": "police_presence_increase",
+    "name": "Increased Police Presence",
+    "description": "Cops are out in force today. Lay low.",
+    "duration": 2,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "player",
+        "stat": "heat",
+        "amount": 10,
+        "chance": 1.0,
+        "notes": "Immediate heat increase due to heightened police activity."
+      },
+      {
+        "type": "modifier",
+        "stat": "heatGainMultiplier",
+        "value": 1.25,
+        "duration": "event",
+        "notes": "Significantly easier to accumulate heat."
+      }
+    ],
+    "trigger": { "type": "random", "chance": 0.03 },
+    "isToolTriggered": false,
+    "message": "Heads up! Increased police presence reported across several districts."
+  },
+  {
+    "id": "local_festival",
+    "name": "Local Street Festival",
+    "description": "A local festival is underway, distracting everyone.",
+    "duration": 4,
+    "effects": [
+      {
+        "type": "modifier",
+        "stat": "heatGainMultiplier",
+        "value": 0.8,
+        "duration": "event",
+        "notes": "Harder to accumulate heat due to crowds and distractions."
+      },
+      {
+        "type": "modifier",
+        "stat": "customerSpawnMultiplier",
+        "value": 1.2,
+        "duration": "event",
+        "notes": "More potential customers around."
+      }
+    ],
+    "trigger": { "type": "random", "chance": 0.04 },
+    "isToolTriggered": false,
+    "message": "A local street festival is happening! Might be good for business, or good for cover."
+  }
+]

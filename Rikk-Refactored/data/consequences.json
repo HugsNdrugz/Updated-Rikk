@@ -1,0 +1,37 @@
+[
+  {
+    "consequenceId": "example_consequence_1",
+    "description": "An example consequence for testing the system when city despair is high and a placeholder choice has been made.",
+    "triggerConditions": [
+      { "type": "choiceMade", "choiceId": "placeholderChoiceMade", "value": true },
+      { "type": "systemicStat", "statId": "cityDespairLevel", "operator": ">=", "value": 10 }
+    ],
+    "effects": [
+      { "type": "worldEvent", "eventId": "minor_heat_increase_event" },
+      { "type": "newsArticle", "articleId": "news_despair_high_placeholder_choice" },
+      { "type": "gameStateChange", "target": "systemic.cityDespairLevel", "operation": "increase", "value": 1, "notes": "Despair slightly worsens due to inaction or wrong action." }
+    ],
+    "probability": 1.0,
+    "cooldown": 0,
+    "onceOnly": false,
+    "priority": 0,
+    "logMessage": "Consequence triggered: Example Consequence 1 due to high despair and placeholder choice."
+  },
+  {
+    "consequenceId": "total_hard_drugs_negative_impact",
+    "description": "Selling a significant amount of hard drugs starts to visibly affect the city.",
+    "triggerConditions": [
+      { "type": "systemicStat", "statId": "totalHardDrugsSold", "operator": ">=", "value": 50 }
+    ],
+    "effects": [
+      { "type": "gameStateChange", "target": "systemic.cityDespairLevel", "operation": "increase", "value": 5 },
+      { "type": "newsArticle", "articleId": "news_hard_drugs_impact_city" },
+      { "type": "worldEvent", "eventId": "police_h crackdown_drugs_event" }
+    ],
+    "probability": 0.75,
+    "cooldown": 20,
+    "onceOnly": false,
+    "priority": 5,
+    "logMessage": "Consequence triggered: Selling too many hard drugs is impacting the city."
+  }
+]
