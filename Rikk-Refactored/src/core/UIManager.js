@@ -1,9 +1,11 @@
 // src/core/UIManager.js
+import { debugLogger } from './utils.js';
 
 export class UIManager {
     constructor(gameState, appLoader) {
         this.gameState = gameState;
-        this.appLoader = appLoader; // Will be used later for phone interactions
+        this.appLoader = appLoader;
+        debugLogger.log('UIManager', 'Constructor called.');
 
         // HUD Elements
         this.moneyElement = document.getElementById('hud-money');
@@ -94,11 +96,21 @@ export class UIManager {
     }
 
     updateLocationDisplay(locationId) {
-        // Placeholder: In a real game, this might update a map or district name display
-        console.log(`UIManager: Location changed to ${locationId}`);
-        // Example: if there was an element <div id="hud-location"></div>
-        // const locationElement = document.getElementById('hud-location');
-        // if (locationElement) locationElement.textContent = locationId;
+        // This depends on having a DataManager instance to get district details
+        // and a specific DOM element to update.
+        // For now, we'll just log, assuming DataManager isn't directly available here
+        // or that GameState doesn't pass the full district object.
+        // If this.services.dataManager is available (passed via Game.js), we can use it.
+        if (this.services && this.services.dataManager) {
+            const district = this.services.dataManager.getDistrictById(locationId);
+            const districtName = district ? district.name : locationId;
+            debugLogger.log('UIManager', `Location changed to ${districtName}`);
+            // Example: if there was an element <div id="hud-location"></div>
+            // const locationElement = document.getElementById('hud-location');
+            // if (locationElement) locationElement.textContent = districtName;
+        } else {
+            debugLogger.log('UIManager', `Location changed to ${locationId} (DataManager not available for name lookup).`);
+        }
     }
 
     // --- Notification System ---
@@ -129,11 +141,11 @@ export class UIManager {
             this.gameState.setGameFlag('isPhoneActive', !isHidden);
             if (!isHidden && this.appLoader) {
                 // If phone is opened and no app is active, or to ensure home screen is shown
-                if (!this.appLoader.currentApp) {
-                     this.appLoader.openApp('home'); // Or your default app ID
+                if (!this.appLoader.currentApp || this.appLoader.currentAppId === null) { // Check if currentAppId is also null for safety
+                     this.appLoader.openApp('home');
                 }
             }
-            console.log(`Phone visibility toggled. Active: ${!isHidden}`);
+            debugLogger.log('UIManager',`Phone visibility toggled. Active: ${!isHidden}`);
         }
     }
 

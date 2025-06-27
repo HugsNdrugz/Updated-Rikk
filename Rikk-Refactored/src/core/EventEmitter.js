@@ -1,4 +1,5 @@
 // src/core/EventEmitter.js
+import { debugLogger } from './utils.js';
 
 /**
  * A simple Event Emitter class for handling event-driven communication.
@@ -16,7 +17,7 @@ export class EventEmitter {
      */
     on(eventName, listener) {
         if (typeof listener !== 'function') {
-            console.error(`Listener for event "${eventName}" is not a function.`);
+            debugLogger.error('EventEmitter', `Listener for event "${eventName}" is not a function.`);
             return;
         }
         if (!this.events[eventName]) {
@@ -37,7 +38,7 @@ export class EventEmitter {
                 try {
                     listener(data);
                 } catch (error) {
-                    console.error(`Error in listener for event "${eventName}":`, error);
+                    debugLogger.error('EventEmitter', `Error in listener for event "${eventName}":`, error);
                 }
             });
         }
@@ -74,7 +75,7 @@ export class EventEmitter {
      */
     once(eventName, listener) {
         if (typeof listener !== 'function') {
-            console.error(`Listener for event "${eventName}" (once) is not a function.`);
+            debugLogger.error('EventEmitter', `Listener for event "${eventName}" (once) is not a function.`);
             return;
         }
         const onceWrapper = (data) => {

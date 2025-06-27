@@ -1,4 +1,5 @@
 // src/core/DataManager.js
+import { debugLogger } from './utils.js';
 
 class DataManager {
     constructor() {
@@ -61,10 +62,10 @@ class DataManager {
             this.feedbackMessages = feedbackMessagesData;
             this.consequences = consequencesData;
 
-            console.log("DataManager: All game data loaded successfully.");
+            debugLogger.log("DataManager", "All game data loaded successfully.");
 
         } catch (error) {
-            console.error("DataManager: Error loading game data", error);
+            debugLogger.error("DataManager", "Error loading game data", error);
             // Consider how to handle critical data load failures - perhaps a game state that prevents play
         }
     }

@@ -1,4 +1,5 @@
 // src/apps/slots/slots.js
+import { debugLogger } from '../../core/utils.js'; // Adjusted path
 
 class SlotsApp {
     constructor() {
@@ -46,9 +47,9 @@ class SlotsApp {
         this.playerMoneyDisplay = this.container.querySelector('#slots-player-money');
         this.exitButton = this.container.querySelector('#slots-exit-button');
 
-        if (!this.spinButton || !this.exitButton || this.reelElements.some(el => !el)) {
-            console.error("SlotsApp: Could not find all necessary DOM elements after HTML load.");
-            this.uiManager.showNotification("Error initializing Slots App UI.", "error");
+        if (!this.spinButton || !this.exitButton || this.reelElements.some(el => !el) || !this.messageArea || !this.playerMoneyDisplay) {
+            debugLogger.error("SlotsApp", "Could not find all necessary DOM elements after HTML load.");
+            if (this.uiManager) this.uiManager.showNotification("Error initializing Slots App UI.", "error");
             return;
         }
 
@@ -63,7 +64,7 @@ class SlotsApp {
         // Listen for money changes from GameState to keep display in sync
         this.gameState.on('moneyChanged', this._updatePlayerMoneyDisplay);
 
-        console.log("Slots App Initialized.");
+        debugLogger.log("SlotsApp", "Slots App Initialized.");
     }
 
     _updatePlayerMoneyDisplay() {
@@ -191,7 +192,7 @@ class SlotsApp {
         this.uiManager = null;
         this.appLoader = null;
 
-        console.log("Slots App Destroyed. Listeners removed, references cleared.");
+        debugLogger.log("SlotsApp", "Slots App Destroyed. Listeners removed, references cleared.");
     }
 }
 

@@ -1,4 +1,5 @@
 // src/apps/contacts/contacts.js
+import { debugLogger } from '../../core/utils.js'; // Adjusted path
 
 class ContactsApp {
     constructor() {
@@ -51,9 +52,9 @@ class ContactsApp {
         this.backButton = this.container.querySelector('#back-to-contact-list');
         this.exitButton = this.container.querySelector('#contacts-exit-button');
 
-        if (!this.contactListContainer || !this.contactDetailView || !this.backButton || !this.exitButton) {
-            console.error("ContactsApp: Could not find all necessary DOM elements.");
-            this.uiManager.showNotification("Error initializing Contacts App UI.", "error");
+        if (!this.contactListContainer || !this.contactDetailView || !this.backButton || !this.exitButton || !this.contactDetailContent.name) {
+            debugLogger.error("ContactsApp", "Could not find all necessary DOM elements.");
+            if(this.uiManager) this.uiManager.showNotification("Error initializing Contacts App UI.", "error");
             return;
         }
 
@@ -70,7 +71,7 @@ class ContactsApp {
         this.gameState.on('contactMissionCompleted', this.handleContactUpdate.bind(this));
 
 
-        console.log("Contacts App Initialized.");
+        debugLogger.log("ContactsApp", "Contacts App Initialized.");
     }
 
     loadContacts() {
@@ -142,8 +143,8 @@ class ContactsApp {
         const contact = this.contactsData.find(c => c.id === contactId);
 
         if (!contact) {
-            console.error(`Contact with ID ${contactId} not found.`);
-            this.uiManager.showNotification("Contact not found.", "error");
+            debugLogger.error("ContactsApp",`Contact with ID ${contactId} not found.`);
+            if(this.uiManager) this.uiManager.showNotification("Contact not found.", "error");
             this._showContactList();
             return;
         }
@@ -228,7 +229,7 @@ class ContactsApp {
         this.appLoader = null;
         this.contactsData = [];
 
-        console.log("Contacts App Destroyed.");
+        debugLogger.log("ContactsApp", "Contacts App Destroyed.");
     }
 }
 

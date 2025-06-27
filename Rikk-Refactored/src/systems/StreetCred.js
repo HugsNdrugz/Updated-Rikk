@@ -1,4 +1,5 @@
 // Rikk-Refactored/src/systems/StreetCred.js
+import { debugLogger } from '../core/utils.js';
 
 /**
  * StreetCred System
@@ -13,13 +14,9 @@ export class StreetCredSystem {
 
         this.etiquetteRules = [];
         this.feedbackMessages = {};
+        debugLogger.log('StreetCredSystem', 'Constructor called.');
 
         this.loadRulesAndMessages();
-
-        // Example of listening to a game event that might trigger an etiquette check
-        // This is illustrative; specific event triggers would be defined by game actions.
-        // this.gameState.on('playerSoldItem', (eventData) => this.handleItemSale(eventData));
-        // this.gameState.on('playerDeclinedDeal', (eventData) => this.handleDealDeclined(eventData));
     }
 
     loadRulesAndMessages() {
@@ -27,10 +24,14 @@ export class StreetCredSystem {
         this.feedbackMessages = this.dataManager.getAllFeedbackMessages();
 
         if (!this.etiquetteRules || this.etiquetteRules.length === 0) {
-            console.warn("StreetCredSystem: No etiquette rules loaded from DataManager.");
+            debugLogger.warn("StreetCredSystem", "No etiquette rules loaded from DataManager.");
+        } else {
+            debugLogger.log("StreetCredSystem", `Loaded ${this.etiquetteRules.length} etiquette rules.`);
         }
         if (!this.feedbackMessages || Object.keys(this.feedbackMessages).length === 0) {
-            console.warn("StreetCredSystem: No feedback messages loaded from DataManager.");
+            debugLogger.warn("StreetCredSystem", "No feedback messages loaded from DataManager.");
+        } else {
+            debugLogger.log("StreetCredSystem", `Loaded ${Object.keys(this.feedbackMessages).length} feedback messages.`);
         }
     }
 
@@ -54,82 +55,89 @@ export class StreetCredSystem {
      */
     processEtiquetteAction(actionContext) {
         if (!this.etiquetteRules) {
-            console.warn("StreetCredSystem: Etiquette rules not loaded. Cannot process action.");
+            debugLogger.warn("StreetCredSystem", "Etiquette rules not loaded. Cannot process action.");
             return;
         }
 
-        console.log('StreetCredSystem.processEtiquetteAction: Processing action:', actionContext);
+        debugLogger.log('StreetCredSystem', 'Processing etiquette action:', actionContext);
 
         for (const rule of this.etiquetteRules) {
             let conditionsMet = true;
-            // Check if all trigger conditions in the rule are met by the actionContext
             for (const key in rule.trigger) {
-                if (rule.trigger[key] !== actionContext[key]) {
-                    // Special handling for numeric comparisons like ">1.8"
-                    if (typeof rule.trigger[key] === 'string' && rule.trigger[key].startsWith('>')) {
-                        const numericValue = parseFloat(rule.trigger[key].substring(1));
-                        if (isNaN(numericValue) || !(actionContext[key] > numericValue)) {
-                            conditionsMet = false;
-                            break;
-                        }
-                    } else if (typeof rule.trigger[key] === 'string' && rule.trigger[key].startsWith('<')) {
-                         const numericValue = parseFloat(rule.trigger[key].substring(1));
-                        if (isNaN(numericValue) || !(actionContext[key] < numericValue)) {
-                            conditionsMet = false;
-                            break;
-                        }
+                const ruleValue = rule.trigger[key];
+                const contextValue = actionContext[key];
+
+                if (typeof ruleValue === 'string' && (ruleValue.startsWith('>') || ruleValue.startsWith('<'))) {
+                    const operator = ruleValue.substring(0, ruleValue.startsWith('>=') || ruleValue.startsWith('<=') ? 2 : 1);
+                    const numericRuleValue = parseFloat(ruleValue.replace(/[<>=]/g, ''));
+                    const numericContextValue = parseFloat(contextValue);
+
+                    if (isNaN(numericRuleValue) || isNaN(numericContextValue)) {
+                        conditionsMet = false; break;
                     }
-                    else {
-                        conditionsMet = false;
-                        break;
+
+                    switch (operator) {
+                        case '>': if (!(numericContextValue > numericRuleValue)) conditionsMet = false; break;
+                        case '>=': if (!(numericContextValue >= numericRuleValue)) conditionsMet = false; break;
+                        case '<': if (!(numericContextValue < numericRuleValue)) conditionsMet = false; break;
+                        case '<=': if (!(numericContextValue <= numericRuleValue)) conditionsMet = false; break;
+                        default: conditionsMet = false; // Should not happen if parsing is correct
                     }
+                } else if (ruleValue !== contextValue) {
+                    conditionsMet = false;
                 }
+                if (!conditionsMet) break;
             }
 
             if (conditionsMet) {
-                console.log(`StreetCredSystem: Matched etiquette rule: ${rule.id}`, rule);
+                debugLogger.log('StreetCredSystem', `Matched etiquette rule: ${rule.id}`, rule);
 
                 // Apply defined impacts
                 if (typeof rule.impacts.streetCred_global_change === 'number') {
-                    this.gameState.adjustStreetCred(rule.impacts.streetCred_global_change);
+                    this.gameState.adjustStreetCred(rule.impacts.streetCred_global_change, 'global');
+                }
+                // --- FACTION & COMMUNITY FIGURE CRED CHANGES ---
+                if (typeof rule.impacts.streetCred_faction_change === 'number' && actionContext.target_faction_id) {
+                    this.gameState.adjustStreetCred(rule.impacts.streetCred_faction_change, 'factions', actionContext.target_faction_id);
+                }
+                if (typeof rule.impacts.streetCred_community_figure_change === 'number' && actionContext.target_community_figure_id) {
+                    this.gameState.adjustStreetCred(rule.impacts.streetCred_community_figure_change, 'communityFigures', actionContext.target_community_figure_id);
+                }
+                // --- END FACTION & COMMUNITY FIGURE CRED CHANGES ---
+
+
+                if (typeof rule.impacts.loyalty_change === 'number' && actionContext.target_contact_id) {
+                     this.gameState.updateContactLoyalty(actionContext.target_contact_id, rule.impacts.loyalty_change);
+                     debugLogger.log('StreetCredSystem', `Adjusted loyalty for contact ${actionContext.target_contact_id} by ${rule.impacts.loyalty_change} due to rule ${rule.id}`);
+                } else if (typeof rule.impacts.loyalty_change === 'number' && actionContext.target_customer_id) {
+                    // Fallback if only generic customer_id is available, though target_contact_id is preferred
+                    debugLogger.warn(`StreetCredSystem`, `Loyalty change for rule ${rule.id} specified with target_customer_id, but target_contact_id is preferred for persistent contacts.`);
+                    // Potentially map customer_id to contact_id if possible, or log that this loyalty change might be temporary / non-persistent.
                 }
 
-                // Apply loyalty change if specified and a target customer is provided
-                // This assumes LoyaltySystem or direct GameState methods handle loyalty.
-                // For now, we'll assume GameState has a way to update contact loyalty.
-                if (typeof rule.impacts.loyalty_change === 'number' && actionContext.target_customer_id) {
-                    // This interaction needs to be well-defined. GameState has updateContactLoyalty.
-                    // We need the contact's actual ID, not customer_id which might be temporary.
-                    // This part might need refinement based on how customers map to persistent contacts.
-                    // For now, let's assume actionContext.target_contact_id is available if loyalty applies to a persistent contact.
-                    if (actionContext.target_contact_id) {
-                         this.gameState.updateContactLoyalty(actionContext.target_contact_id, rule.impacts.loyalty_change);
-                         console.log(`StreetCredSystem: Adjusted loyalty for contact ${actionContext.target_contact_id} by ${rule.impacts.loyalty_change}`);
-                    } else {
-                        console.warn(`StreetCredSystem: Loyalty change for rule ${rule.id} specified, but no target_contact_id in actionContext.`);
-                    }
-                }
-
-                // Note: Faction/Community Figure specific cred is not in the current GameState structure.
-                // This would require expanding GameState or having separate managers.
-                // For now, only global street cred is handled.
-
-                console.log(`StreetCredSystem: Applied impacts for rule ${rule.id}:`, rule.impacts);
+                debugLogger.log('StreetCredSystem', `Applied impacts for rule ${rule.id}:`, rule.impacts);
 
                 // Display feedback message if available
                 if (rule.impacts.feedback_message_id && this.uiManager && this.feedbackMessages) {
                     const message = this.feedbackMessages[rule.impacts.feedback_message_id];
                     if (message) {
-                        this.uiManager.showNotification(message, "info"); // Or determine type based on cred change
+                        // Determine notification type based on cred/loyalty change
+                        let notificationType = "info";
+                        if (rule.impacts.streetCred_global_change < 0 || rule.impacts.loyalty_change < 0) {
+                            notificationType = "warning";
+                        } else if (rule.impacts.streetCred_global_change > 0 || rule.impacts.loyalty_change > 0) {
+                            notificationType = "success";
+                        }
+                        this.uiManager.showNotification(message, notificationType);
                     } else {
-                        console.warn(`StreetCredSystem: Feedback message ID "${rule.impacts.feedback_message_id}" not found.`);
+                        debugLogger.warn(`StreetCredSystem`, `Feedback message ID "${rule.impacts.feedback_message_id}" not found.`);
                     }
                 }
 
                 return; // Stop after the first matched rule.
             }
         }
-        console.log('StreetCredSystem: No etiquette rule matched for action:', actionContext);
+        debugLogger.log('StreetCredSystem', 'No etiquette rule matched for action:', actionContext);
     }
 
     // Example handler for a game event (illustrative)

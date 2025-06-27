@@ -1,7 +1,10 @@
 // Rikk-Refactored/src/systems/Loyalty.js
+import { debugLogger, clamp } from '../core/utils.js';
 
 const MIN_LOYALTY = 0;
 const MAX_LOYALTY = 100;
+// Default loyalty if a contact is somehow accessed without an initial value from data files.
+const FALLBACK_DEFAULT_LOYALTY = 50;
 
 /**
  * Loyalty System
@@ -12,78 +15,70 @@ const MAX_LOYALTY = 100;
 export class LoyaltySystem {
     constructor(gameState, dataManager) {
         this.gameState = gameState;
-        this.dataManager = dataManager; // To access initial contact data for default loyalty
-
-        // The GameState's _contactsState is expected to store loyalty:
-        // this.gameState._contactsState = { contactId: { loyalty: 50, missionsCompleted: [] }, ... }
-        // This system will primarily use gameState.updateContactLoyalty and gameState.contactsState
+        this.dataManager = dataManager;
+        debugLogger.log('LoyaltySystem', 'Constructor called.');
+        // GameState._contactsState is the source of truth: { contactId: { loyalty: 50, missionsCompleted: [] }, ... }
+        // GameState.updateContactLoyalty and GameState.addCompletedMissionForContact are the primary mutators.
     }
 
     /**
      * Ensures a contact has an entry in the GameState's contact states.
-     * If not, it initializes it using initialLoyalty from DataManager.
+     * If not, it initializes it using initialLoyalty from DataManager via GameState.updateContactLoyalty.
+     * This is mostly a helper for internal consistency if a contact is accessed before any loyalty-adjusting action.
+     * GameState's updateContactLoyalty should ideally handle this transparently.
      * @param {string} contactId - The ID of the contact.
      * @private
      */
-    _ensureContactStateEntry(contactId) {
+    _ensureContactInitialized(contactId) {
         if (!this.gameState.contactsState[contactId]) {
             const contactData = this.dataManager.getContactById(contactId);
-            const initialLoyalty = contactData ? contactData.initialLoyalty : 50; // Default if not found
-
-            // GameState needs to be able to initialize a contact's state
-            // This is a bit of a workaround; ideally, GameState.updateContactLoyalty would handle init.
-            // For now, let's assume GameState._contactsState can be directly manipulated here for init,
-            // or that updateContactLoyalty with amount 0 would init.
-            // Let's use updateContactLoyalty to initialize.
-            this.gameState.updateContactLoyalty(contactId, initialLoyalty - (this.gameState.contactsState[contactId]?.loyalty || 0) );
-             if (!this.gameState.contactsState[contactId].missionsCompleted) {
-                // Ensure missionsCompleted array exists
-                // This direct manipulation is not ideal, GameState should manage its structure.
-                // This suggests GameState's contact state initialization might need to be more robust.
-                // For now, let's assume updateContactLoyalty handles setting up the structure.
-                // If not, a direct GameState method to init contact state would be better.
-                // For the purpose of this refactor, let's assume GameState.updateContactLoyalty
-                // correctly initializes the structure if it doesn't exist.
-            }
-            console.log(`LoyaltySystem: Contact ${contactId} initialized with loyalty: ${this.gameState.contactsState[contactId].loyalty}`);
+            const initialLoyalty = contactData ? contactData.initialLoyalty : FALLBACK_DEFAULT_LOYALTY;
+            // Call updateContactLoyalty with 0 amount. GameState's updateContactLoyalty
+            // has been enhanced to initialize with initialLoyalty if the contact doesn't exist.
+            this.gameState.updateContactLoyalty(contactId, 0 );
+            debugLogger.log('LoyaltySystem', `Ensured contact ${contactId} is initialized in GameState. Initial/Current loyalty: ${this.gameState.contactsState[contactId]?.loyalty}`);
         }
     }
 
+
     /**
      * Adds or removes loyalty for a specific contact.
-     * Uses GameState's updateContactLoyalty method which should handle clamping and events.
+     * Uses GameState's updateContactLoyalty method which handles clamping and events.
      * @param {string} contactId - The ID of the contact.
      * @param {number} amount - Amount to add (can be negative to remove).
      */
     adjustLoyalty(contactId, amount) {
         if (!contactId || typeof amount !== 'number' || isNaN(amount)) {
-            console.warn('LoyaltySystem: Invalid contactId or amount for adjustLoyalty:', contactId, amount);
+            debugLogger.warn('LoyaltySystem', `Invalid contactId or amount for adjustLoyalty:`, {contactId, amount});
             return;
         }
-        // GameState's updateContactLoyalty should handle initialization if not present,
-        // clamping, and emitting events.
+        // GameState.updateContactLoyalty handles initialization, clamping, and event emission.
         this.gameState.updateContactLoyalty(contactId, amount);
-        // console.log(`LoyaltySystem: Loyalty for ${contactId} adjusted by ${amount}. New loyalty: ${this.getLoyalty(contactId)}`);
+        // GameState's updateContactLoyalty should log its own changes.
     }
 
     /**
      * Sets loyalty for a specific contact to a specific value.
-     * Uses GameState's updateContactLoyalty method by calculating the difference.
+     * Calculates the difference and uses GameState's updateContactLoyalty.
      * @param {string} contactId - The ID of the contact.
      * @param {number} value - The new value for loyalty.
      */
     setLoyalty(contactId, value) {
         if (!contactId || typeof value !== 'number' || isNaN(value)) {
-            console.warn('LoyaltySystem: Invalid contactId or value for setLoyalty:', contactId, value);
+            debugLogger.warn('LoyaltySystem', `Invalid contactId or value for setLoyalty:`, {contactId, value});
             return;
         }
 
-        const currentLoyalty = this.getLoyalty(contactId); // This will ensure entry via _ensureContactStateEntry if called by getLoyalty
-        const clampedValue = Math.max(MIN_LOYALTY, Math.min(MAX_LOYALTY, value));
+        this._ensureContactInitialized(contactId); // Ensure contact exists in GameState before getting current loyalty.
+        const currentLoyalty = this.gameState.contactsState[contactId]?.loyalty || FALLBACK_DEFAULT_LOYALTY; // Fallback if still not set
+        const clampedValue = clamp(value, MIN_LOYALTY, MAX_LOYALTY);
         const amountToAdjust = clampedValue - currentLoyalty;
 
-        this.gameState.updateContactLoyalty(contactId, amountToAdjust);
-        // console.log(`LoyaltySystem: Loyalty for ${contactId} set to ${clampedValue}`);
+        // Only adjust if there's a change needed or if it's an initialization scenario.
+        if (amountToAdjust !== 0 || !this.gameState.contactsState[contactId] || this.gameState.contactsState[contactId].loyalty !== clampedValue) {
+            this.gameState.updateContactLoyalty(contactId, amountToAdjust);
+        }
+        // GameState's updateContactLoyalty should log its own changes.
     }
 
     /**
@@ -93,9 +88,8 @@ export class LoyaltySystem {
      */
     getLoyalty(contactId) {
         if (!contactId) {
-            console.warn('LoyaltySystem: Invalid contactId for getLoyalty');
-            const contactData = this.dataManager.getContactById(contactId); // Attempt to get default
-            return contactData ? contactData.initialLoyalty : 50; // Fallback default
+            debugLogger.warn('LoyaltySystem', 'Invalid contactId for getLoyalty');
+            return FALLBACK_DEFAULT_LOYALTY;
         }
 
         const contactState = this.gameState.contactsState[contactId];
@@ -104,25 +98,19 @@ export class LoyaltySystem {
         } else {
             // Contact not in GameState, fetch default from DataManager
             const contactData = this.dataManager.getContactById(contactId);
-            const initialLoyalty = contactData ? contactData.initialLoyalty : 50;
-            // It might be good practice to also initialize them in GameState here if not present
-            // However, updateContactLoyalty in GameState should ideally handle this.
-            // For now, just return the default if not found in active state.
-            // To ensure consistency, we could call _ensureContactStateEntry here,
-            // but that might have side effects if getLoyalty is meant to be purely read-only from GameState perspective.
-            // GameState.updateContactLoyalty should be the single point of write/initialization.
-            // If GameState.contactsState[contactId] is undefined, it means no interaction has modified loyalty yet.
+            const initialLoyalty = contactData ? contactData.initialLoyalty : FALLBACK_DEFAULT_LOYALTY;
+            // Don't log here every time for non-initialized contacts, _ensureContactInitialized will log if it does init.
+            // debugLogger.log('LoyaltySystem', `Contact ${contactId} not in active GameState, returning initial loyalty: ${initialLoyalty}`);
             return initialLoyalty;
         }
     }
 
     /**
      * Retrieves all contacts' loyalty data from GameState.
-     * @returns {object} An object where keys are contact IDs and values are their state objects (including loyalty).
+     * @returns {object} A copy of the contactsState object from GameState.
      */
     getAllLoyaltyData() {
-        // Returns a copy of the contactsState from GameState
-        return this.gameState.contactsState;
+        return this.gameState.contactsState; // GameState getter returns a copy
     }
 
     /**
@@ -133,11 +121,11 @@ export class LoyaltySystem {
      */
     completeMissionForContact(contactId, missionId) {
         if (!contactId || !missionId) {
-            console.warn('LoyaltySystem: Invalid contactId or missionId for completeMissionForContact');
+            debugLogger.warn('LoyaltySystem', 'Invalid contactId or missionId for completeMissionForContact');
             return;
         }
         this.gameState.addCompletedMissionForContact(contactId, missionId);
-        // console.log(`LoyaltySystem: Mission ${missionId} marked as completed for contact ${contactId}.`);
+        // GameState's method should log its own changes.
     }
 
     /**
@@ -148,10 +136,10 @@ export class LoyaltySystem {
      */
     isMissionCompleted(contactId, missionId) {
         if (!contactId || !missionId) {
-            console.warn('LoyaltySystem: Invalid contactId or missionId for isMissionCompleted');
+            debugLogger.warn('LoyaltySystem', 'Invalid contactId or missionId for isMissionCompleted');
             return false;
         }
         const contactState = this.gameState.contactsState[contactId];
-        return contactState && contactState.missionsCompleted && contactState.missionsCompleted.includes(missionId);
+        return !!(contactState && contactState.missionsCompleted && contactState.missionsCompleted.includes(missionId));
     }
 }
