@@ -458,7 +458,7 @@ class UIManager {
         });
     }
 
-    // --- Inventory Modal ---
+    // --- Inventory  Modal ---
     openInventoryModal() {
         if (!this.inventoryModal) return;
         this.updateInventoryDisplay();
