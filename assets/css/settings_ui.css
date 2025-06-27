@@ -1,3 +1,4 @@
+/* assets/css/settings_ui.css (137 lines) */
 /* === Settings Overlay & Preview Styles === */
 
 .settings-loading, .settings-error {
@@ -78,7 +79,8 @@
 }
 /* Removed .settings-controls-container as a specific wrapper unless needed for scroll */
 
-.settings-group h3 { /* Changed from legend to h3 to match HTML */
+/* FIX for BUG-002 (Consistency): Style h2 headers in settings as well */
+.settings-group h2, .settings-group h3 {
     font-weight: 500; /* Medium weight for group titles */
     color: var(--color-primary);
     padding-bottom: var(--spacing-sm);

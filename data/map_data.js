@@ -1,3 +1,4 @@
+// data/map_data.js (39 lines)
 export const districtsData = [
   {
     "id": "downtown_core",

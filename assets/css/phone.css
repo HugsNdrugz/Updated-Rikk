@@ -1,3 +1,4 @@
+/* assets/css/phone.css (572 lines) */
 /* PHONE CONTAINER & STATES */
 .phone-container {
     position: relative;
@@ -157,9 +158,9 @@
     height: 45px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.05); /* More subtle icon background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    /* FIX for BUG-005: Icon alignment */
+    display: grid;
+    place-items: center;
     color: var(--phone-icon-color); /* Themed */
     font-size: 1.3rem;
     cursor: pointer;
@@ -189,7 +190,8 @@
     display: flex; /* Default to flex for internal layout */
     flex-direction: column;
     z-index: 5; /* Above wallpaper */
-    padding-top: calc(var(--spacing-xl) + var(--spacing-xs)); /* Space for notch and status bar */
+    /* FIX for BUG-001: Phone status bar overlap */
+    padding-top: 40px; /* Increased padding to clear status bar and notch */
     padding-bottom: 75px; /* Space for the phone's main dock and home indicator */
     color: var(--phone-header-footer-text); /* Default text color for views */
     background-color: transparent; /* Views are transparent, wallpaper or screen bg shows */
@@ -234,14 +236,9 @@
 }
 
 .app-icon i {
-    font-size: 1.5rem; /* Larger icons */
-    width: 50px; /* Larger touch target */
-    height: 50px;
-    background: rgba(255, 255, 255, 0.08); /* Subtle background */
-    border-radius: var(--phone-app-icon-radius); /* One UI: Rounded square/squircle (20px) */
-    display: grid;
-    place-items: center;
+    font-size: 2.2rem; /* Increased icon size */
     color: var(--color-text-base); /* Brighter icon color for better contrast */
+    /* REMOVED BOX STYLES (width, height, background, border-radius etc.) */
 }
 
 .app-icon .app-label {
@@ -258,7 +255,6 @@
     color: var(--color-primary); /* Highlight on hover */
 }
 .app-icon:hover i {
-    background: rgba(255, 255, 255, 0.15);
     color: var(--color-primary);
 }
 
@@ -348,6 +344,7 @@
       position: relative;
       height: 100%;
       padding-top: 0; /* Override .phone-content-view padding-top */
+      padding-bottom: 0; /* FIX: Remove unnecessary bottom padding */
     }
 
     #game-chat-view .chat-header {
@@ -367,6 +364,8 @@
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+      flex: 1; /* Allow left side to take up space */
+      min-width: 0; /* Crucial for flex + text-overflow */
     }
 
     #game-chat-view .header-right {
@@ -408,12 +407,17 @@
       font-size: 1.2rem; /* Adjusted font size */
       font-weight: 500; /* Bolder initial */
       color: var(--color-text-on-secondary-bg); /* Text on avatar bg */
+      flex-shrink: 0; /* Prevent avatar from shrinking */
     }
 
     #game-chat-view .contact-name {
       font-size: 1rem; /* Adjusted size */
       font-weight: 500;
       color: var(--phone-header-footer-text);
+      /* FIX: Prevent name from overlapping back button */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     #game-chat-view .chat-log {
@@ -774,50 +778,33 @@
     background: var(--color-surface-medium);
 }
 
-/* === One UI Screen Layout === */
-.one-ui-screen-layout {
-    display: flex;
-    flex-direction: column;
+/* === Map App Styles === */
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--spacing-md);
     height: 100%;
-    /* Override default .phone-content-view padding as layout children will handle it */
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    min-height: 200px; /* Ensure grid has some height */
 }
 
-.one-ui-screen-layout .viewing-area {
-    padding: 40px 24px 24px 24px; /* Adjust padding as needed */
-    /* This area holds the non-scrolling title or static content */
-    flex-shrink: 0; /* Prevent viewing area from shrinking */
-    /* Specific styling for titles within viewing-area if not using collapsible-header */
-}
-.one-ui-screen-layout .viewing-area h1, /* For main titles */
-.one-ui-screen-layout .viewing-area h2,
-.one-ui-screen-layout .viewing-area h3 {
+.map-district-cell {
+    background-color: var(--color-surface-medium);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--button-border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    text-align: center;
+    font-size: 1.1rem;
     font-family: var(--font-display);
-    color: var(--color-text-base); /* Or primary, depending on design */
-    margin: 0 0 var(--spacing-md) 0; /* Example margin */
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
 }
 
-
-.one-ui-screen-layout .interaction-area {
-    flex-grow: 1; /* This makes the area fill remaining space */
-    overflow-y: auto; /* This makes ONLY this area scrollable */
-    padding: 0 24px 24px 24px; /* Content padding, adjust as needed */
-    /* Ensure space for phone dock/home indicator if they are globally positioned */
-    /* padding-bottom: 80px; */ /* Example if dock is present and fixed */
-}
-
-/* Scrollbar styling for interaction area (optional, but good for consistency) */
-.one-ui-screen-layout .interaction-area::-webkit-scrollbar {
-    width: var(--spacing-xs);
-}
-.one-ui-screen-layout .interaction-area::-webkit-scrollbar-track {
-    background: var(--phone-bg-color); /* Or transparent */
-}
-.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb {
-    background: var(--color-surface-light);
-    border-radius: var(--spacing-xs);
-}
-.one-ui-screen-layout .interaction-area::-webkit-scrollbar-thumb:hover {
-    background: var(--color-surface-medium);
+.map-district-cell:hover {
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary-bg);
+    transform: scale(1.05);
 }

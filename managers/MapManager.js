@@ -1,3 +1,4 @@
+// managers/MapManager.js (73 lines)
 // managers/MapManager.js
 import { debugLogger } from '../utils.js';
 import { districtsData } from '../data/map_data.js'; // Assuming direct import
@@ -7,7 +8,7 @@ class MapManager {
         console.log("MANAGER: MapManager constructor called");
         this.gameState = gameState;
         this.allDistricts = districtsData;
-
+        
         if (!Array.isArray(this.allDistricts)) {
             console.error("MapManager FATAL: districtsData did not load correctly or is not an array. Halting initialization. Imported data:", this.allDistricts);
             this.allDistricts = [];
@@ -15,25 +16,22 @@ class MapManager {
         } else {
             console.log("MANAGER: MapManager - districtsData loaded successfully. Number of districts:", this.allDistricts.length);
         }
-
+        
         if (this.gameState.DEBUG_MODE && Array.isArray(this.allDistricts)) { // Check if allDistricts is an array
             debugLogger.log('MapManager', 'Initialized with districts data:', this.allDistricts);
         }
         this.initializeMapState();
     }
-
+    
     initializeMapState() {
         console.log("MANAGER: MapManager - initializeMapState() started"); // Added log
         if (!this.gameState.mapState) {
             this.gameState.mapState = {};
         }
-        if (!this.gameState.mapState.discoveredDistricts) {
+        if (!this.gameState.mapState.discoveredDistricts || this.gameState.mapState.discoveredDistricts.length === 0) {
             this.gameState.mapState.discoveredDistricts = [];
-            // For Phase 1, let's assume some districts are discovered by default or all are.
-            // Example: Discover first district or all if no specific discovery mechanic yet.
+            // For Phase 1, let's make all districts initially discovered for simplicity of map display
             if (this.allDistricts.length > 0) {
-                // this.gameState.mapState.discoveredDistricts.push(this.allDistricts[0].id);
-                // For Phase 1, let's make all districts initially discovered for simplicity of map display
                 this.allDistricts.forEach(district => {
                     if (!this.gameState.mapState.discoveredDistricts.includes(district.id)) {
                         this.gameState.mapState.discoveredDistricts.push(district.id);
@@ -49,7 +47,7 @@ class MapManager {
         }
         console.log("MANAGER: MapManager - initializeMapState() completed"); // Added log
     }
-
+    
     /**
      * Retrieves a district definition by its ID.
      * @param {string} districtId - The ID of the district.
@@ -58,7 +56,7 @@ class MapManager {
     getDistrict(districtId) {
         return this.allDistricts.find(district => district.id === districtId);
     }
-
+    
     /**
      * Returns all district definitions.
      * @returns {Array<object>}
@@ -66,7 +64,7 @@ class MapManager {
     getAllDistricts() {
         return this.allDistricts;
     }
-
+    
     /**
      * Returns a list of district definitions that the player has discovered.
      * @returns {Array<object>}
@@ -79,7 +77,7 @@ class MapManager {
             this.gameState.mapState.discoveredDistricts.includes(district.id)
         );
     }
-
+    
     // --- Methods for future dynamic heat and POIs ---
     // updateDistrictHeat(districtId, amount) { ... }
     // getDistrictHeat(districtId) { ... }

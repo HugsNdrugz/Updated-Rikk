@@ -1,3 +1,4 @@
+/* assets/css/main_menu.css (159 lines) */
 /* === REVISED MAIN MENU STYLES === */
 #main-menu-content {
     display: flex;
@@ -13,49 +14,30 @@
 }
 
 /* Settings Cog Button (within #main-menu-nav) */
-#main-menu-nav #settings-menu-btn { /* More specific selector */
-    position: absolute;
-    bottom: var(--spacing-md); /* Use theme spacing */
-    right: var(--spacing-md);  /* Use theme spacing */
-    background: none;
-    border: none;
-    color: var(--color-text-muted); /* Themed */
-    font-size: 1.5rem; /* Larger icon */
-    cursor: pointer;
-    z-index: 15; /* Above main menu content if necessary, but below panels */
-    transition: color var(--transition-duration-short) ease, transform var(--transition-duration-medium) ease;
-    padding: var(--spacing-sm); /* Add some padding for easier click */
+/* This specific selector is no longer needed as the button is part of the split container */
+/*
+#main-menu-nav #settings-menu-btn {
+    ...
 }
+*/
 
-#main-menu-nav #settings-menu-btn:hover {
-    color: var(--color-text-base); /* Themed hover */
-    transform: rotate(45deg);
-}
 
 /* === SPLIT BUTTON MAIN MENU STYLES === */
+/* FIX for BUG-004: Button positioning and stacking */
 .split-button-container {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md); /* Increased gap for better separation */
-    font-family: var(--font-ui); /* Use UI font */
-    position: absolute; /* Positioned within #main-menu-content or #main-menu-nav */
+    position: absolute;
     bottom: var(--spacing-xl);
     left: var(--spacing-xl);
+    display: flex;
+    flex-direction: column-reverse; /* Stack vertically, reverse to have main button on top */
+    align-items: flex-start; /* Align to the start (left) */
+    gap: var(--spacing-md); /* Consistent gap between buttons */
+    font-family: var(--font-ui); /* Use UI font */
 }
 
-/* .btn class is now more generic in components.css, specific overrides here if needed */
-.split-button-container .btn-main {
-    /* Inherits .btn styles from components.css */
-    /* Uses .btn-primary styles from components.css for colors */
-    padding: var(--spacing-lg) var(--spacing-xl); /* Larger padding for main button */
-    font-size: 1.4rem; /* Larger font for main "Run It" button */
-    border-radius: 50px; /* Keep fully rounded style */
-    text-transform: capitalize;
-}
-
-.split-button-container .btn-icon {
-    /* Inherits .btn styles from components.css */
-    /* Uses .btn-secondary styles from components.css for colors */
+/* FIX for BUG-004: Apply icon styles to settings button too */
+.split-button-container .btn-icon,
+.split-button-container #settings-menu-btn {
     width: 50px; /* Fixed size */
     height: 50px;
     border-radius: 50px; /* Pill shape */
@@ -65,7 +47,28 @@
     display: inline-flex; /* Align icon center */
     align-items: center;
     justify-content: center;
+    background-color: var(--color-button-secondary-bg);
+    color: var(--color-button-secondary-text);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-duration-short) ease-in-out;
 }
+
+.split-button-container #settings-menu-btn:hover {
+     background-color: var(--color-button-secondary-hover-bg);
+     transform: rotate(45deg); /* Keep rotation effect */
+}
+
+
+.split-button-container .btn-main {
+    /* Inherits .btn styles from components.css */
+    /* Uses .btn-primary styles from components.css for colors */
+    padding: var(--spacing-lg) var(--spacing-xl); /* Larger padding for main button */
+    font-size: 1.4rem; /* Larger font for main "Run It" button */
+    border-radius: 50px; /* Keep fully rounded style */
+    text-transform: capitalize;
+}
+
 /* Hover states are handled by .btn-primary:hover and .btn-secondary:hover in components.css */
 
 .split-button-container .btn:active { /* Keep specific active state if desired */
@@ -88,6 +91,8 @@
     z-index: 1010; /* Above other screen content */
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
     color: var(--color-text-base); /* Themed */
+    max-height: 85vh; /* FIX: Ensure panel doesn't exceed viewport height */
+    overflow-y: auto; /* FIX: Allow scrolling if content overflows */
 }
 
 .submenu-panel h2 { /* Targets h2 within any submenu-panel, including the ones with specific IDs */
@@ -106,26 +111,13 @@
 }
 
 .submenu-back-btn { /* Style as a neutral button */
-    /* padding: var(--spacing-sm) var(--spacing-lg); from .btn-neutral */
-    /* font-family: var(--font-body); from .btn-neutral or .btn */
-    /* font-size: 0.9rem; from .btn-neutral or .btn */
-    /* font-weight: bold; from .btn-neutral or .btn */
-    /* background-color: var(--color-grey-dark); */ /* Replaced by .btn-neutral */
-    /* color: var(--color-on-surface); */ /* Replaced by .btn-neutral */
-    /* border: 1px solid var(--color-grey-mid); */ /* Replaced by .btn-neutral */
-    /* border-radius: var(--button-border-radius); from .btn */
-    /* cursor: pointer; from .btn */
-    /* transition: background-color 0.2s, border-color 0.2s; from .btn */
     display: block;
     margin: var(--spacing-xl) auto 0;
     min-width: 150px;
-    /* text-align: center; from .btn */
 }
-/* .submenu-back-btn:hover uses .btn-neutral:hover */
 
 
 /* === MAIN MENU LIGHT EFFECT === */
-/* No changes to light effect itself, assuming it's visually correct */
 #start-screen .light-container {
     position: absolute;
     inset: 0;

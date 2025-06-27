@@ -1,3 +1,4 @@
+// GameState.js (316 lines)
 // GameState.js
 import { debugLogger } from './utils.js';
 
@@ -311,8 +312,8 @@ class GameState {
         this.playerSkills = savedState.playerSkills ? { ...this.playerSkills, ...savedState.playerSkills } : this.playerSkills;
         this.inventory = savedState.inventory ? [...savedState.inventory] : [];
         // this.activeWorldEvents = savedState.activeWorldEvents ? [...savedState.activeWorldEvents] : []; // old
-        this.loyalty = savedState.loyalty ? { ...savedState.loyalty } : {}; // Load loyalty
-        this.choices = savedState.choices ? { ...savedState.choices } : {}; // Load choices
+        this.loyalty = savedState.loyalty ? { ...this.loyalty } : {}; // Load loyalty
+        this.choices = savedState.choices ? { ...this.choices } : {}; // Load choices
         this.systemic = savedState.systemic ? { ...savedState.systemic } : { cityDespairLevel: 0, totalHardDrugsSold: 0 }; // Load systemic variables
         this.activeWorldEvents = savedState.activeWorldEvents ? JSON.parse(JSON.stringify(savedState.activeWorldEvents)) : []; // Load active events
         this.activeEventModifiers = savedState.activeEventModifiers ? { ...savedState.activeEventModifiers } : { heatGainMultiplier: 1.0, cashGainMultiplier: 1.0, customerSpawnMultiplier: 1.0 }; // Load modifiers

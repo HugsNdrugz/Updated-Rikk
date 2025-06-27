@@ -1,4 +1,4 @@
-
+// script.js (764 lines)
     // =================================================================================
     // My Nigga Rikk - Main Game Logic Script (Controller) - FINAL, REFACTORED BUILD
     // =================================================================================
@@ -422,7 +422,7 @@ function initializeNewGameState() {
       if (DEBUG_MODE) console.log('SCRIPT: contactsManager re-checked/initialized initial contacts.');
     }
     if (game.mapManager) {
-      // game.mapManager.initializeMapState(); // Also called in constructor.
+      game.mapManager.initializeMapState(); // Also called in constructor.
       if (DEBUG_MODE) console.log('SCRIPT: mapManager re-checked/initialized map state.');
     }
 

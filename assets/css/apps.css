@@ -1,3 +1,4 @@
+/* assets/css/apps.css (444 lines) */
 /* CONTACTS APP STYLES */
 #contacts-app-view {
     background-color: var(--phone-bg-color); /* Use phone theme background */
@@ -23,6 +24,26 @@
 #contacts-app-view .phone-header .icon-btn:hover {
     color: var(--color-primary);
 }
+
+/* === FIX for BUG-002: Contacts Dev View Header === */
+#app-header-contacts {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-divider);
+    flex-shrink: 0;
+}
+#app-header-contacts h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--color-primary);
+}
+.header-icons-contacts {
+    display: flex;
+    gap: var(--spacing-md);
+}
+/* End of FIX for BUG-002 */
 
 
 /* Contacts List Area (#contacts-list-container) */

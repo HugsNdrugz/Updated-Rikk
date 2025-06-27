@@ -1,3 +1,4 @@
+// UIManager.js (1004 lines)
 // UIManager.js
 import { debugLogger } from './utils.js';
 import { ContactsAppManager } from './classes/ContactsAppManager.js'; // Note: This import seems unused in the provided UIManager code.
@@ -248,12 +249,12 @@ class UIManager {
     updateEventTicker() {
         if (!this.eventTicker) return;
         const activeEvents = this.game.getActiveWorldEvents();
+        let textContent = "Word on the street: All quiet... for now.";
         if (activeEvents.length > 0) {
-            this.eventTicker.textContent = `Ongoing: ${activeEvents.map(e => `${e.name} (${e.remainingDuration || e.turnsLeft} turns left)`).join(', ')}`; // Adjusted for remainingDuration
-            this.eventTicker.classList.remove('hidden');
-        } else {
-            this.eventTicker.textContent = "Word on the street: All quiet... for now.";
+            textContent = `Ongoing: ${activeEvents.map(e => `${e.name} (${e.remainingDuration || e.turnsLeft} turns left)`).join(', ')}`;
         }
+        // FIX for BUG-003: Wrap text in a span for CSS animation
+        this.eventTicker.innerHTML = `<span>${textContent}</span>`;
     }
 
     displayKnockEffect() {
