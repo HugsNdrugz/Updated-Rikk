@@ -44,7 +44,9 @@ export class GameState extends EventEmitter {
         };
 
         // Active world events
-        this._activeWorldEvents = []; // Array of event IDs currently active
+        // Now stores event objects: { id, name, description, duration, effects, remainingDuration, messageOnExpire }
+        this._activeWorldEvents = [];
+        this._activeEventModifiers = {}; // Stores combined modifiers from active events
     }
 
     // --- Getters ---
@@ -59,7 +61,8 @@ export class GameState extends EventEmitter {
     get playerSkills() { return {...this._playerSkills}; } // Return a copy
     get currentDay() { return this._currentDay; }
     get currentTime() { return this._currentTime; } // Integer hour
-    get activeWorldEvents() { return [...this._activeWorldEvents]; }
+    get activeWorldEvents() { return [...this._activeWorldEvents]; } // Returns array of active event objects
+    get activeEventModifiers() { return {...this._activeEventModifiers}; }
 
 
     // --- Adjusters (Mutators) ---
@@ -197,6 +200,12 @@ export class GameState extends EventEmitter {
         this._systemicStats[statId] = value;
         this.emit('systemicStatChanged', { statId, newValue: value, oldValue });
         this.emit('gameStateChanged', { type: 'systemicStats', value: {...this._systemicStats} });
+
+        // Special handling for activeEventModifiers as it's a complex object
+        if (statId === 'activeEventModifiers') {
+            this._activeEventModifiers = {...value}; // Ensure it's a new object reference
+            this.emit('activeEventModifiersChanged', {...this._activeEventModifiers});
+        }
     }
 
     adjustSystemicStat(statId, amount) {
@@ -228,19 +237,33 @@ export class GameState extends EventEmitter {
     }
 
     // Active World Events
-    addActiveWorldEvent(eventId) {
-        if (!this._activeWorldEvents.includes(eventId)) {
-            this._activeWorldEvents.push(eventId);
-            this.emit('worldEventStarted', { eventId });
+    addActiveWorldEvent(eventObject) { // Now expects the full event object
+        if (!eventObject || !eventObject.id) {
+            console.warn("GameState: Attempted to add invalid event object to activeWorldEvents", eventObject);
+            return;
+        }
+        // Check if an event with the same ID is already active to prevent duplicates if logic elsewhere doesn't handle it
+        if (!this._activeWorldEvents.some(ev => ev.id === eventObject.id)) {
+            this._activeWorldEvents.push(eventObject);
+            this.emit('worldEventStarted', { eventId: eventObject.id, event: eventObject });
+            this.emit('gameStateChanged', { type: 'activeWorldEvents', value: [...this._activeWorldEvents] });
+        } else {
+            // If event is already active, perhaps update its duration or re-apply effects?
+            // For now, let's just log. WorldEventSystem should manage re-triggering logic.
+            console.log(`GameState: Event ${eventObject.id} is already active or being re-added.`);
+            // To ensure it's the latest version if re-added:
+            const index = this._activeWorldEvents.findIndex(ev => ev.id === eventObject.id);
+            if (index > -1) this._activeWorldEvents[index] = eventObject; // Replace with new object
+            else this._activeWorldEvents.push(eventObject); // Add if somehow not found by findIndex but present in some check
             this.emit('gameStateChanged', { type: 'activeWorldEvents', value: [...this._activeWorldEvents] });
         }
     }
 
     removeActiveWorldEvent(eventId) {
-        const index = this._activeWorldEvents.indexOf(eventId);
+        const index = this._activeWorldEvents.findIndex(event => event.id === eventId);
         if (index > -1) {
-            this._activeWorldEvents.splice(index, 1);
-            this.emit('worldEventEnded', { eventId });
+            const removedEvent = this._activeWorldEvents.splice(index, 1)[0];
+            this.emit('worldEventEnded', { eventId: removedEvent.id, event: removedEvent });
             this.emit('gameStateChanged', { type: 'activeWorldEvents', value: [...this._activeWorldEvents] });
         }
     }

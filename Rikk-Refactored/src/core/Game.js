@@ -4,9 +4,9 @@ import { UIManager } from './UIManager.js';
 import { AppLoader } from './AppLoader.js'; // Will be fully utilized later
 import { dataManager } from './DataManager.js';
 // Import future system modules as they are created
-// import { StreetCredSystem } from '../systems/StreetCred.js';
-// import { LoyaltySystem } from '../systems/Loyalty.js';
-// import { WorldEventSystem } from '../systems/WorldEvents.js';
+import { StreetCredSystem } from '../systems/StreetCred.js';
+import { LoyaltySystem } from '../systems/Loyalty.js';
+import { WorldEventSystem } from '../systems/WorldEvents.js';
 
 export class Game {
     constructor() {
@@ -16,9 +16,9 @@ export class Game {
         this.uiManager = new UIManager(this.gameState, this.appLoader); // Pass gameState and appLoader to UIManager
 
         // Initialize other game systems here, passing dependencies
-        // this.streetCredSystem = new StreetCredSystem(this.gameState, dataManager);
-        // this.loyaltySystem = new LoyaltySystem(this.gameState, dataManager);
-        // this.worldEventSystem = new WorldEventSystem(this.gameState, dataManager, this.uiManager);
+        this.streetCredSystem = new StreetCredSystem(this.gameState, dataManager, this.uiManager);
+        this.loyaltySystem = new LoyaltySystem(this.gameState, dataManager);
+        this.worldEventSystem = new WorldEventSystem(this.gameState, dataManager, this.uiManager);
 
         this.isRunning = false;
         this.lastTick = 0;
@@ -57,7 +57,8 @@ export class Game {
             gameState: this.gameState,
             dataManager: dataManager,
             uiManager: this.uiManager,
-            // Future: Add other services like worldEventSystem, soundManager etc.
+            worldEventSystem: this.worldEventSystem, // Make WorldEventSystem available to apps if needed
+            // Future: Add other services like soundManager etc.
         };
         this.appLoader.init(services); // Initialize AppLoader with core services
         console.log("AppLoader initialized with services.");
@@ -67,7 +68,7 @@ export class Game {
         // initializeUI is called on 'gameStateLoaded'
 
         // 5. Initialize other game systems
-        // Example: this.worldEventSystem.initializeActiveEvents();
+        this.worldEventSystem.initializeActiveEventsFromState(); // Ensure loaded events are processed
 
         // 6. Start the game loop
         this.isRunning = true;
@@ -108,8 +109,10 @@ export class Game {
         // A more robust time system might be its own module
         // this.gameState.advanceTime(deltaTime * TIME_MULTIPLIER); // Where TIME_MULTIPLIER speeds up game time
 
-        // Update active world events
-        // this.worldEventSystem.update(deltaTime);
+        // Update active world events - this should be driven by game time ticks, not every frame.
+        // For now, we can call it here, but it's better tied to game hour/day changes.
+        // Let's assume for now it's okay to call frequently, and it has internal logic for when to act.
+        this.worldEventSystem.update();
 
         // Update current app if it has an update method
         if (this.appLoader.currentApp && typeof this.appLoader.currentApp.update === 'function') {

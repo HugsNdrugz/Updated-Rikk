@@ -1,0 +1,128 @@
+/* /src/apps/slots/slots.css */
+
+#slots-app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    padding: var(--spacing-4);
+    background-color: #2c3e50; /* Dark blue-grey background for the casino feel */
+    color: #ecf0f1; /* Light text color */
+    border-radius: var(--border-radius-sm); /* Match phone screen padding if any */
+}
+
+#slots-app-container h1 {
+    color: #f1c40f; /* Gold color for heading */
+    text-shadow: 1px 1px 2px black;
+    margin-bottom: var(--spacing-4);
+}
+
+#slots-display-area {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: rgba(0,0,0,0.2);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-4);
+    border: 2px solid #f1c40f;
+}
+
+.slot-reel {
+    width: 80px;
+    height: 100px;
+    background-color: var(--bg-secondary-light); /* Light background for reels */
+    color: var(--text-primary-light); /* Dark text for reel symbols */
+    border: 2px solid #7f8c8d; /* Grey border for reels */
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-2xl); /* Large symbols */
+    font-weight: bold;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.reel-symbol {
+    display: inline-block;
+    animation: spinAnimation 0.1s linear infinite; /* Initial spinning state */
+}
+
+@keyframes spinAnimation {
+    0% { transform: translateY(-20px); opacity: 0; }
+    50% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(20px); opacity: 0; }
+}
+
+.reel-symbol.stopped {
+    animation: none; /* Stop animation when symbol is set */
+     transform: translateY(0px);
+    opacity: 1;
+}
+
+
+#slots-message-area {
+    width: 100%;
+    text-align: center;
+    padding: var(--spacing-2);
+    margin-bottom: var(--spacing-4);
+    min-height: 40px; /* Ensure space for messages */
+    background-color: rgba(0,0,0,0.1);
+    border-radius: var(--border-radius-sm);
+}
+
+#slots-message-area p {
+    font-size: var(--text-base);
+    color: #f1c40f; /* Gold for messages */
+}
+#slots-message-area p.error {
+    color: var(--error-color-light); /* Use theme error color */
+    font-weight: bold;
+}
+
+#slots-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: var(--spacing-3);
+}
+
+#slot-spin-button {
+    background-color: #27ae60; /* Green for spin button */
+    color: white;
+    border: none;
+    padding: var(--spacing-3) var(--spacing-6);
+    font-size: var(--text-lg);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#slot-spin-button:hover {
+    background-color: #2ecc71; /* Lighter green on hover */
+}
+
+#slot-spin-button:disabled {
+    background-color: #7f8c8d; /* Grey out when disabled */
+    cursor: not-allowed;
+}
+
+#slots-player-money {
+    font-weight: bold;
+    color: #f1c40f;
+}
+
+#slots-exit-button {
+    margin-top: var(--spacing-4);
+    background-color: var(--error-color-light);
+    color: white;
+    border: none;
+}
+
+#slots-exit-button:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
