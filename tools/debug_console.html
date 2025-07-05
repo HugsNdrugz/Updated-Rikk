@@ -325,6 +325,94 @@
             75% { transform: scale(1.1) rotate(-2deg); opacity: 0.8; }
         }
 
+        /* Archetype Dashboard Styles */
+        .archetype-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .archetype-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            background-color: var(--color-surface);
+            border-radius: var(--radius-card);
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            position: relative; /* For badge positioning */
+        }
+        .archetype-card:hover {
+            transform: translateY(-3px);
+            background-color: #2f2f31; /* Slightly lighter surface */
+        }
+        .archetype-card.active-filter { /* Style for when this card is the active filter */
+            background-color: var(--color-primary);
+            box-shadow: 0 0 15px var(--color-primary);
+        }
+         .archetype-card.active-filter .archetype-name {
+            color: white;
+        }
+
+
+        .archetype-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 22%; /* This creates a "squircle" effect */
+            overflow: hidden; /* Ensures image stays within squircle */
+            margin-bottom: 0.5rem;
+            background-color: #333; /* Fallback bg for avatar */
+        }
+        .archetype-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .archetype-name {
+            font-size: 0.75rem;
+            color: var(--color-text-base);
+            font-weight: 500;
+            line-height: 1.2;
+            /* Ensure text doesn't overflow too much */
+            max-height: 2.4em; /* Approx 2 lines */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .archetype-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: var(--color-status-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--color-surface); /* To make it pop from the card */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .archetype-badge.warning {
+            background-color: var(--color-status-yellow);
+            color: black;
+        }
+        .archetype-badge.ok {
+            background-color: var(--color-status-green-start);
+        }
+         .archetype-badge.empty {
+            display: none; /* Hide if no issues */
+        }
+
+
     </style>
 </head>
 
@@ -357,6 +445,11 @@
             <section class="action-section">
                 <button id="analyze-btn">Analyze now</button>
             </section>
+
+            <h3 class="section-header">Archetype Health Overview</h3>
+            <div id="archetype-dashboard" class="archetype-grid">
+                <!-- Archetype cards will be populated by JS -->
+            </div>
             
             <div class="card">
                 <ul id="stats-list" class="list">
@@ -369,7 +462,7 @@
                  <div id="issue-log" class="issue-log">
                      <!-- Issues will be populated by JS -->
                  </div>
-                 <button id="show-all-issues-btn" style="display:none; width: 100%; margin-top: 1rem; padding: 0.75rem; background-color: var(--color-primary-muted); border: none; color: white; border-radius: var(--radius-btn); cursor: pointer;">Show All Issues</button>
+                 <button id="show-all-issues-btn" style="display:none; width: 100%; margin-top: 1rem; padding: 0.75rem; background-color: #2a2a2c; border: none; color: var(--color-text-base); border-radius: var(--radius-btn); cursor: pointer;">Show All Issues</button>
             </div>
         </main>
     </div>
@@ -418,9 +511,11 @@
                 issueHeader: document.getElementById('issue-header'),
                 issueCard: document.getElementById('issue-card'),
                 issueLog: document.getElementById('issue-log'),
-                showAllIssuesBtn: document.getElementById('show-all-issues-btn')
+                showAllIssuesBtn: document.getElementById('show-all-issues-btn'),
+                archetypeDashboard: document.getElementById('archetype-dashboard') // New DOM element
             };
             this.currentFilter = null; // To keep track of the active filter
+            this.currentArchetypeFilter = null; // For filtering by archetype
             this.wittyLoadingInterval = null;
             this.wittyMessages = [
                 "Brewing some digital coffee...",
@@ -469,9 +564,63 @@
             this.dom.issueHeader.style.display = 'none';
             this.dom.issueLog.innerHTML = '';
             this.dom.showAllIssuesBtn.style.display = 'none';
-            this.currentFilter = null;
-            this._updateActiveFilterUI();
+            this.currentFilter = null; // For stat-based filters
+            this.currentArchetypeFilter = null; // For archetype-based filters
+            this._updateActiveFilterUI(); // Handles stat filter UI
+            this._updateActiveArchetypeFilterUI(); // Handles archetype card filter UI
             this._populateInitialStats();
+            this._populateArchetypeDashboard(); // Populate the new dashboard
+        }
+
+        _populateArchetypeDashboard() {
+            this.dom.archetypeDashboard.innerHTML = ''; // Clear previous cards
+            for (const archetypeKey in customerTemplates) {
+                const archetype = customerTemplates[archetypeKey];
+                const card = document.createElement('div');
+                card.className = 'archetype-card';
+                card.dataset.archetypeKey = archetypeKey;
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'archetype-avatar';
+                const avatarImg = document.createElement('img');
+                // Use baseName for seed, URL encode it. DiceBear uses the seed to generate consistent avatars.
+                avatarImg.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(archetype.baseName || archetypeKey)}`;
+                avatarImg.alt = `${archetype.baseName} avatar`;
+                avatarDiv.appendChild(avatarImg);
+
+                const nameP = document.createElement('p');
+                nameP.className = 'archetype-name';
+                nameP.textContent = archetype.baseName || archetypeKey;
+
+                const badge = document.createElement('div');
+                badge.className = 'archetype-badge empty'; // Start empty and hidden
+                badge.id = `badge-${archetypeKey}`;
+                // badge.textContent = '0'; // Will be updated later
+
+                card.appendChild(avatarDiv);
+                card.appendChild(nameP);
+                card.appendChild(badge);
+
+                card.addEventListener('click', () => this.toggleArchetypeFilter(archetypeKey, card));
+                this.dom.archetypeDashboard.appendChild(card);
+            }
+        }
+
+        toggleArchetypeFilter(archetypeKey, cardElement) {
+            if (this.currentArchetypeFilter === archetypeKey) {
+                // If clicking the already active archetype filter, clear it
+                this.currentArchetypeFilter = null;
+                this._updateActiveArchetypeFilterUI(); // No card is active
+            } else {
+                this.currentArchetypeFilter = archetypeKey;
+                this._updateActiveArchetypeFilterUI(cardElement); // Make this card active
+                // If a stat filter is active, clear it to avoid confusion, or allow combined filtering (current _applyIssueFilter supports it)
+                // For simplicity, let's say archetype filter takes precedence or they combine.
+                // The current _applyIssueFilter handles combined filtering.
+            }
+            this._applyIssueFilter();
+            // Show/hide "Show All" button based on if ANY filter is active
+            this.dom.showAllIssuesBtn.style.display = (this.currentFilter || this.currentArchetypeFilter) ? 'block' : 'none';
         }
 
         _populateInitialStats() {
@@ -507,19 +656,22 @@
 
         toggleFilter(filterKey, statElement) {
             if (this.currentFilter === filterKey) {
-                this.clearFilter();
+                this.currentFilter = null; // Clear only this filter type
+                this._updateActiveFilterUI();
             } else {
                 this.currentFilter = filterKey;
-                this._applyIssueFilter();
                 this._updateActiveFilterUI(statElement);
-                this.dom.showAllIssuesBtn.style.display = 'block';
             }
+            this._applyIssueFilter();
+            this.dom.showAllIssuesBtn.style.display = (this.currentFilter || this.currentArchetypeFilter) ? 'block' : 'none';
         }
 
-        clearFilter() {
+        clearFilter() { // This now clears ALL filters
             this.currentFilter = null;
+            this.currentArchetypeFilter = null;
             this._applyIssueFilter();
             this._updateActiveFilterUI();
+            this._updateActiveArchetypeFilterUI();
             this.dom.showAllIssuesBtn.style.display = 'none';
         }
 
@@ -693,6 +845,27 @@
             this.dom.statusText.textContent = uiDisplayStatusText;
             document.title = finalDocTitle;
         }
+
+        updateArchetypeBadge(archetypeKey, errorCount, warningCount) {
+            const badge = document.getElementById(`badge-${archetypeKey}`);
+            if (!badge) return;
+
+            const totalIssues = errorCount + warningCount;
+
+            if (totalIssues === 0) {
+                badge.className = 'archetype-badge empty'; // Hidden by CSS
+                badge.textContent = '';
+            } else {
+                badge.textContent = totalIssues;
+                if (errorCount > 0) {
+                    badge.className = 'archetype-badge'; // Default red
+                } else if (warningCount > 0) {
+                    badge.className = 'archetype-badge warning'; // Yellow
+                }
+                // Optional: Add a 'ok' class for 0 issues if you want a green check or similar instead of hiding
+                // else { badge.className = 'archetype-badge ok'; badge.innerHTML = '&#10003;'; } // Checkmark
+            }
+        }
     }
 
     class DialogueAnalyzer {
@@ -705,12 +878,14 @@
 
         async run() {
             this.ui.reset();
+            this.ui.reset(); // UI reset now also clears and populates archetype dashboard
             this.ui.setScanningState(true);
-            this.stats = {
+            this.stats = { // Overall stats
                 coverage: { total: 0, passed: 0 },
                 richness: { total: 0, passed: 0, warnings: 0 },
                 consistency: { total: 0, passed: 0, errors: 0 },
             };
+            this.archetypeStats = {}; // For per-archetype error/warning counts
 
             const archetypeKeys = Object.keys(this.templates);
 
@@ -743,6 +918,12 @@
             }
             // Pass the original statusText and subtext to setFinalStatus, which will then apply its own creative versions
             this.ui.setFinalStatus(finalState, statusText, statusSubtext);
+
+            // After overall status, update archetype badges
+            for (const archetypeKey in this.archetypeStats) {
+                const stats = this.archetypeStats[archetypeKey];
+                this.ui.updateArchetypeBadge(archetypeKey, stats.errors, stats.warnings);
+            }
         }
 
         _analyzeArchetype(key) {
@@ -762,11 +943,17 @@
 
                 const path = `<b>${key}</b>.${contextKey}`;
                 
+                // Initialize archetype specific stats if not already present
+                if (!this.archetypeStats[key]) {
+                    this.archetypeStats[key] = { errors: 0, warnings: 0 };
+                }
+
                 this.stats.coverage.total++;
                 if (!dialogue[contextKey]) {
-                    this.stats.consistency.errors++; // This is a consistency error in terms of data presence.
+                    this.stats.consistency.errors++;
+                    this.archetypeStats[key].errors++; // Increment archetype-specific error count
                     const tooltip = `The entire dialogue context for '${contextKey}' is missing in '${key}'. Refer to ANALYSIS_CONFIG for expected structure.`;
-                    this.ui.logIssue('error', `Missing context: ${path}`, 'coverage', tooltip); // Logged as 'coverage' type for filtering
+                    this.ui.logIssue('error', `Missing context: ${path}`, 'coverage', tooltip);
                 } else {
                     this.stats.coverage.passed++;
                     if (contextConfig.parser === 'greeting') {
@@ -783,6 +970,11 @@
             this.stats.consistency.total++;
             if (!Array.isArray(blocks)) {
                 this.stats.consistency.errors++;
+                // Extract archetype key from path (e.g., "<b>ARCHETYPE_KEY</b>...")
+                const archetypeKeyForStat = path.match(/<b>(.*?)<\/b>/)?.[1];
+                if (archetypeKeyForStat && this.archetypeStats[archetypeKeyForStat]) {
+                    this.archetypeStats[archetypeKeyForStat].errors++;
+                }
                 const tooltip = `Data for ${path} should be an Array of dialogue blocks, but it's not. Check customer_templates.js.`;
                 this.ui.logIssue('error', `Invalid data structure: ${path} is not an Array.`, 'consistency', tooltip);
                 return;
