@@ -26,9 +26,12 @@
 /* FIX for BUG-004: Button positioning and stacking */
 /* REPLACE the entire ".split-button-container" rule with this: */
 .split-button-container {
+    position: absolute; /* Use absolute positioning */
+    bottom: var(--spacing-xl); /* Position from the bottom */
+    left: var(--spacing-xl);   /* Position from the left */
     display: flex;
     flex-direction: column; /* This stacks the items vertically */
-    align-items: center;   /* This centers them horizontally */
+    align-items: flex-start;   /* Align items to the start (left) */
     gap: var(--spacing-lg);  /* Adds space between the text and the cog */
 }
 
