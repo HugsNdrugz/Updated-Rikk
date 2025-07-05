@@ -209,39 +209,44 @@ class GameState {
 
     // --- Reset & Initialization ---
     resetToDefault(config = {}) {
-        // Use constructor's logic for defaults by re-assigning properties
-        this.cash = config.STARTING_CASH ?? 0;
+        // Core gameplay loop variables - ALWAYS RESET
         this.fiendsLeft = config.MAX_FIENDS ?? 0;
         this.dayOfWeek = (config.DAYS ?? this.DAYS_ARRAY)[0];
-        this.gameActive = false;
-        this.heat = 0;
-        // this.streetCred = config.STARTING_STREET_CRED ?? 0; // Old
-        this.streetCred = { // Reset to new structure
-            global: config.STARTING_STREET_CRED ?? 0, // Standard reset for street cred
-            factions: { police: 0, zetas_cartel: 0 },
-            districts: { downtown: 0, warrens: 0 },
-            communityFigures: { mama_carter: 0, pastor_jones: 0 }
-        };
-        this.playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 }; // Standard reset for skills
-        this.inventory = config.STARTING_INVENTORY ?? []; // Use preserved inventory if available, else empty
-        // this.activeWorldEvents = []; // Old simple array, now handled by specific reset below
-        this.loyalty = {}; // Standard reset for loyalty
-        this.choices = {}; // Reset choices
-        this.systemic = { cityDespairLevel: 0, totalHardDrugsSold: 0 }; // Reset systemic variables
-
-        this.activeWorldEvents = []; // Reset active world events
-        this.activeEventModifiers = { // Reset modifiers to default
+        this.gameActive = false; // Will be set to true by startGameFlow
+        this.currentCustomerInstance = null;
+        this.activeWorldEvents = []; // Reset active world events for the new run
+        this.activeEventModifiers = { // Reset modifiers to default for the new run
             heatGainMultiplier: 1.0,
             cashGainMultiplier: 1.0,
             customerSpawnMultiplier: 1.0
         };
-        this.playerContacts = {}; // Reset player contacts
-        this.mapState = { discoveredDistricts: [], districtHeatLevels: {} }; // Reset map state
-        this.currentCustomerInstance = null;
-        // this.currentChoices = [];
-        // this.isExpectingChoice = false;
 
-        // Constants are typically set at construction and might not need reset unless config changes
+        // Preserved or Defaulted values based on NG+
+        // config.STARTING_CASH is used here because initializeNewGameState sets it to the preserved cash.
+        this.cash = config.STARTING_CASH ?? 0;
+        this.inventory = config.PRESERVED_INVENTORY ?? [];
+        this.heat = config.PRESERVED_HEAT ?? 0;
+
+        this.streetCred = config.PRESERVED_STREET_CRED ?? {
+            global: config.STARTING_STREET_CRED ?? 0, // Fallback to default starting_street_cred
+            factions: { police: 0, zetas_cartel: 0 },
+            districts: { downtown: 0, warrens: 0 },
+            communityFigures: { mama_carter: 0, pastor_jones: 0 }
+        };
+        this.playerSkills = config.PRESERVED_PLAYER_SKILLS ?? { negotiator: 0, appraiser: 0, lowProfile: 0 };
+        this.loyalty = config.PRESERVED_LOYALTY ?? {};
+        this.choices = config.PRESERVED_CHOICES ?? {};
+        this.systemic = config.PRESERVED_SYSTEMIC ?? { cityDespairLevel: 0, totalHardDrugsSold: 0 };
+        this.playerContacts = config.PRESERVED_PLAYER_CONTACTS ?? {};
+        this.mapState = config.PRESERVED_MAP_STATE ?? { discoveredDistricts: [], districtHeatLevels: {} };
+
+        // customerTemplates are loaded from config if not already set
+        this.customerTemplates = config.defaultCustomerTemplates ? JSON.parse(JSON.stringify(config.defaultCustomerTemplates)) : this.customerTemplates;
+
+        // Constants from config (ensure they are updated if the config object itself changes, e.g. for NG+ rules)
+        this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? this.MAX_INVENTORY_SLOTS;
+        this.MAX_HEAT = config.MAX_HEAT ?? this.MAX_HEAT;
+        this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;
         this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? this.MAX_INVENTORY_SLOTS;
         this.MAX_HEAT = config.MAX_HEAT ?? this.MAX_HEAT;
         this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;

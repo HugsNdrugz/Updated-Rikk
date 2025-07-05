@@ -409,16 +409,42 @@ function initializeNewGameState(preservedState = null) {
 
     // Pass relevant preserved data to resetToDefault
     // gameStateConfig will provide defaults if preservedState or its properties are null/undefined
-    const newGameConfig = { ...gameStateConfig };
+    const newGameConfig = { ...gameStateConfig }; // Start with base game defaults
+
     if (preservedState) {
         if (preservedState.cash !== undefined) {
-            newGameConfig.STARTING_CASH = preservedState.cash;
+            newGameConfig.STARTING_CASH = preservedState.cash; // Overrides default starting cash
         }
-        // Add other properties from preservedState to newGameConfig as needed
         if (preservedState.inventory !== undefined) {
-            newGameConfig.STARTING_INVENTORY = preservedState.inventory; // Carry over inventory
+            newGameConfig.PRESERVED_INVENTORY = preservedState.inventory;
         }
-        // Ensure GameState.resetToDefault can handle these potentially new config fields
+        if (preservedState.streetCred !== undefined) {
+            newGameConfig.PRESERVED_STREET_CRED = preservedState.streetCred;
+        }
+        if (preservedState.heat !== undefined) {
+            newGameConfig.PRESERVED_HEAT = preservedState.heat;
+        }
+        if (preservedState.playerSkills !== undefined) {
+            newGameConfig.PRESERVED_PLAYER_SKILLS = preservedState.playerSkills;
+        }
+        if (preservedState.loyalty !== undefined) {
+            newGameConfig.PRESERVED_LOYALTY = preservedState.loyalty;
+        }
+        if (preservedState.playerContacts !== undefined) {
+            newGameConfig.PRESERVED_PLAYER_CONTACTS = preservedState.playerContacts;
+        }
+        if (preservedState.mapState !== undefined) {
+            newGameConfig.PRESERVED_MAP_STATE = preservedState.mapState;
+        }
+        if (preservedState.choices !== undefined) {
+            newGameConfig.PRESERVED_CHOICES = preservedState.choices;
+        }
+        if (preservedState.systemic !== undefined) {
+            newGameConfig.PRESERVED_SYSTEMIC = preservedState.systemic;
+        }
+        // Note: STARTING_STREET_CRED from gameStateConfig will be used by GameState.resetToDefault
+        // if PRESERVED_STREET_CRED is not provided or is not a full object.
+        // Similar logic applies for other PRESERVED_ values.
     }
 
     game.resetToDefault(newGameConfig); // Pass potentially modified config
@@ -664,8 +690,18 @@ function handleContinueGameClick(event) { // Added "event" parameter
 function handleRestartGameClick() {
     const preservedState = {
         cash: game.getCash(),
-        inventory: game.getInventory()
-        // Add other properties here if they should also be preserved for "Run it Back"
+        inventory: game.getInventory(),
+        streetCred: game.getAllStreetCred(), // Get the whole object
+        heat: game.getHeat(),
+        playerSkills: game.getPlayerSkills(),
+        loyalty: game.loyalty, // Directly access, assuming loyalty is a public property or has a getter
+        playerContacts: game.playerContacts, // Direct access or via getter
+        mapState: game.mapState, // Direct access or via getter
+        choices: game.choices, // Direct access or via getter
+        systemic: game.systemic // Direct access or via getter
+        // Not preserving: fiendsLeft, dayOfWeek, gameActive (will be reset)
+        // Not preserving: activeWorldEvents, activeEventModifiers (will be reset)
+        // Not preserving: currentCustomerInstance (will be reset)
     };
     initializeNewGameState(preservedState);
     startGameFlow();
