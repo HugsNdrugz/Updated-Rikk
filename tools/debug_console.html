@@ -1282,25 +1282,36 @@
 
         _analyzeGreeting(obj, archetypeKey, basePath) {
             if (typeof obj !== 'object' || obj === null) return;
+
+            // Check if obj itself is an array of dialogue blocks (e.g. REGULAR_JOE's greeting)
+            if (Array.isArray(obj) && obj.length > 0 && obj.every(item => item && typeof item === 'object' && item.lines)) {
+                // Ensure basePath itself is initialized as a context
+                if (!this.archetypeStats[archetypeKey].contexts[basePath]) {
+                     this.archetypeStats[archetypeKey].contexts[basePath] = { path: basePath, errors: [], warnings: [], richnessChecks: [] };
+                }
+                // Analyze all blocks under this single basePath
+                this._analyzeContext(obj, { minLines: MIN_LINES_PER_BLOCK }, archetypeKey, basePath);
+                return; // Important: stop further processing of this array by the loop below
+            }
+
+            // Existing logic for objects or arrays of objects (like mood blocks)
             for (const segmentKey in obj) {
                 const value = obj[segmentKey];
                 const newPath = `${basePath}.${segmentKey}`;
 
-                // Initialize this deeper path if it's going to be a context for blocks
                 if (!this.archetypeStats[archetypeKey].contexts[newPath]) {
                      this.archetypeStats[archetypeKey].contexts[newPath] = { path: newPath, errors: [], warnings: [], richnessChecks: [] };
                 }
 
                 if (Array.isArray(value)) {
+                    // This will now typically be an array of mood-block objects, or further nested structures.
+                    // If it's an array of direct dialogue lines (which it shouldn't be at this level based on template structure),
+                    // _analyzeContext will handle it (though it expects blocks).
                     this._analyzeContext(value, { minLines: MIN_LINES_PER_BLOCK }, archetypeKey, newPath);
                 } else if (typeof value === 'object' && value !== null && Object.keys(value).length > 0 && !value.lines && !value.moods) {
-                    // Recurse if it's an object, not empty, and not looking like a block itself
-                    this._analyzeGreeting(value, archetypeKey, newPath);
+                    this._analyzeGreeting(value, archetypeKey, newPath); // Recurse for nested objects
                 } else if (typeof value === 'object' && value !== null && (value.lines || value.moods)) {
-                    // This case handles when a greeting path directly leads to a single block-like object instead of an array of blocks
-                    // e.g. DESPERATE_FIEND.greeting.new_customer.seeking_to_buy (which is an array of blocks with moods)
-                    // but if a deeper path like some_archetype.greeting.specific_case was just one block object:
-                    // We treat it as a context with a single block.
+                    // This handles a single dialogue block object found directly as a property.
                     this._analyzeContext([value], { minLines: MIN_LINES_PER_BLOCK }, archetypeKey, newPath);
                 }
             }
