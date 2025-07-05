@@ -67,10 +67,57 @@ export class CustomerManager {
         this.currentTurn++;
         const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects, customersInteractedThisTurn, heat } = gameState;
 
-        const customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn);
+        let customerInstance = null;
+        let itemContext = null; // This will hold the item being discussed/transacted if customer is selling
+        let customerTemplate = null;
+        const MAX_SELECTION_RETRIES = 10;
+        let selectionRetries = 0;
+        let successfullySelectedCustomer = false;
+        let excludedArchetypesForThisTurnAttempt = []; // Archetypes that failed item gen in this specific generateInteraction call
 
-        if (!customerInstance) {
-            debugLogger.log('CustomerManager', 'No eligible customer could be selected or generated.');
+        do {
+            customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn, excludedArchetypesForThisTurnAttempt);
+
+            if (!customerInstance) {
+                debugLogger.log('CustomerManager', `No eligible customer could be selected or generated after ${selectionRetries} retries or initially.`);
+                return { // Return quiet streets object
+                    instance: null, name: "No One",
+                    dialogue: [{ speaker: "narration", text: "The streets are quiet for now..." }],
+                    choices: [{ text: "Wait a bit.", outcome: { type: "end_interaction_quiet_streets" } }],
+                    isQuietStreets: true
+                };
+            }
+
+            customerTemplate = this.customerTemplates[customerInstance.archetypeKey];
+            if (!customerTemplate) {
+                debugLogger.error('CustomerManager', `Invalid archetypeKey for ID ${customerInstance.id}: ${customerInstance.archetypeKey}. This should not happen.`);
+                return this._createErrorInteraction(customerInstance); // Critical error
+            }
+
+            if (customerTemplate.sellsOnly) {
+                // For sellsOnly characters, try to generate their item immediately.
+                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects);
+                if (itemContext) {
+                    successfullySelectedCustomer = true; // Valid sellsOnly customer with an item.
+                } else {
+                    // This sellsOnly customer couldn't generate an item. Add its archetype to a temporary exclusion list for this turn's re-selection process.
+                    debugLogger.log('CustomerManager', `SellsOnly customer ${customerInstance.name} (Archetype: ${customerInstance.archetypeKey}) failed to generate item. Adding to exclusion for this attempt & retrying selection.`);
+                    if (!excludedArchetypesForThisTurnAttempt.includes(customerInstance.archetypeKey)) {
+                        excludedArchetypesForThisTurnAttempt.push(customerInstance.archetypeKey);
+                    }
+                    customerInstance = null; // Invalidate this selection, loop will retry.
+                    selectionRetries++;
+                }
+            } else {
+                // Customer is not sellsOnly, so they are considered valid for selection.
+                // Their intent to buy/sell and specific items will be determined later.
+                successfullySelectedCustomer = true;
+            }
+
+        } while (!successfullySelectedCustomer && selectionRetries < MAX_SELECTION_RETRIES);
+
+        if (!successfullySelectedCustomer || !customerInstance) {
+            debugLogger.log('CustomerManager', 'Failed to find a valid customer interaction after max retries (e.g., all sellsOnly customers had no items).');
             return {
                 instance: null, name: "No One",
                 dialogue: [{ speaker: "narration", text: "The streets are quiet for now..." }],
@@ -78,21 +125,31 @@ export class CustomerManager {
                 isQuietStreets: true
             };
         }
+        // At this point, customerInstance is valid, and if it's a sellsOnly type, customerTemplate is its template and itemContext is populated.
+        // If it's not sellsOnly, customerTemplate is its template, and itemContext is still null (to be determined by intent).
 
         this.customerCooldowns[customerInstance.id] = this.currentTurn;
-
-        const template = this.customerTemplates[customerInstance.archetypeKey];
-        if (!template) {
-            debugLogger.error('CustomerManager', `Invalid archetypeKey provided for ID ${customerInstance.id}: ${customerInstance.archetypeKey}`);
-            return this._createErrorInteraction(customerInstance);
-        }
+        // customerTemplate is already defined from the loop above.
 
         // --- Contextual Analysis ---
         const isReturningCustomer = customerInstance.hasMetRikkBefore;
         const customerMood = customerInstance.mood;
-        let customerIntent = template.sellsOnly ? 'sell' : (template.buysOnly ? 'buy' : (Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE ? 'sell' : 'buy'));
-        if (inventory.length === 0 && customerIntent === 'buy') customerIntent = 'sell'; // If Rikk has nothing, customer might try to sell
-        if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD && customerIntent === 'sell') customerIntent = 'buy'; // If Rikk is full, customer might try to buy
+        // For sellsOnly customers, intent is fixed. itemContext is already determined.
+        // For others, determine intent.
+        let customerIntent = customerTemplate.sellsOnly ? 'sell' :
+                             (customerTemplate.buysOnly ? 'buy' :
+                             (Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE ? 'sell' : 'buy'));
+
+        // Adjust intent based on Rikk's inventory, but NOT for sellsOnly characters whose item is already set.
+        if (!customerTemplate.sellsOnly) {
+            if (inventory.length === 0 && customerIntent === 'buy') {
+                customerIntent = 'sell'; // If Rikk has nothing, non-sellsOnly customer might try to sell
+            }
+            if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD && customerIntent === 'sell') {
+                customerIntent = 'buy'; // If Rikk is full, non-sellsOnly customer might try to buy
+            }
+        }
+
 
         let isUsualAvailable = false;
         let preferredItemName = "their usual"; // Generic default
@@ -159,16 +216,22 @@ export class CustomerManager {
         }
 
         // --- Mood-Driven Price Tolerance (Example) ---
-        let currentPriceToleranceFactor = template.priceToleranceFactor || 1.0;
+        // Note: customerTemplate is already defined from the selection loop
+        let currentPriceToleranceFactor = customerTemplate.priceToleranceFactor || 1.0;
         if (customerMood === 'angry') currentPriceToleranceFactor *= (customerIntent === 'sell' ? 1.15 : 0.85); // Angry customer wants more if selling, pays less if buying
         if (customerMood === 'desperate' && customerIntent === 'buy') currentPriceToleranceFactor *= 0.85; // Desperate buyer pays more (Rikk effectively gets better price)
 
         // --- Main Interaction Logic based on Intent ---
         if (customerIntent === 'sell') { // Customer wants to sell an item to Rikk
-            // Customer wants to sell an item to Rikk
-            itemContext = this._generateRandomItem(customerInstance, template, combinedWorldEffects);
+            // If customer is 'sellsOnly', itemContext was already populated and validated in the selection loop.
+            // If customer is not 'sellsOnly' but intent is 'sell', generate item now.
+            if (!customerTemplate.sellsOnly) {
+                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects);
+            }
+            // Now itemContext is either populated (for sellsOnly or successful non-sellsOnly generation) or null
 
-            if (!itemContext) { // Customer decided not to sell or had nothing suitable after all
+            if (!itemContext) { // Customer (who is not sellsOnly type) decided not to sell or had nothing suitable.
+                                // sellsOnly types would have been filtered out by the selection loop if itemContext was null.
                 const noItemDialogue = this._getDialogue(customerInstance, 'customerHasNothingToSell') || { line: `${customerInstance.name} shrugs. "Ain't got nothin' for ya today, chief."`, payload: null };
                 dialogue.push({ speaker: "customer", text: noItemDialogue.line });
                 choices.push({ text: "Aight.", outcome: { type: "end_interaction_no_item", payload: noItemDialogue.payload } });
@@ -522,50 +585,65 @@ export class CustomerManager {
         }
     }
     
-    _selectOrGenerateCustomerFromPool(currentTurn, customersInteractedThisTurn = []) {
-        // Filter existing pool: not on cooldown AND not interacted with today
+    _selectOrGenerateCustomerFromPool(currentTurn, customersInteractedThisTurn = [], excludedArchetypes = []) {
+        // Filter existing pool: not on cooldown AND not interacted with today AND not an excluded archetype
         const eligibleReturningCustomers = this.customersPool.filter(customer => {
             const isOnCooldown = this.customerCooldowns[customer.id] &&
                 (currentTurn - this.customerCooldowns[customer.id] <
                     (customer.archetypeKey === this.SNITCH_ARCHETYPE_KEY ? this.SNITCH_COOLDOWN_DURATION : this.REGULAR_COOLDOWN_DURATION)
                 );
             const interactedToday = customersInteractedThisTurn.includes(customer.id);
-            return !isOnCooldown && !interactedToday;
+            const isExcluded = excludedArchetypes.includes(customer.archetypeKey);
+            return !isOnCooldown && !interactedToday && !isExcluded;
         });
 
         if (eligibleReturningCustomers.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
             const returningCustomer = this._getRandomElement(eligibleReturningCustomers);
             // Refresh returning customer's state slightly (e.g., mood, cashOnHand)
-            const template = this.customerTemplates[returningCustomer.archetypeKey];
+            const returnCustomerTemplate = this.customerTemplates[returningCustomer.archetypeKey]; // Use a different variable name
             returningCustomer.hasMetRikkBefore = true; // Should already be true
-            if (template) {
+            if (returnCustomerTemplate) { // Check if template is found
                 returningCustomer.metadata = returningCustomer.metadata || {};
                  if (returningCustomer.metadata.pendingMoodEffect) {
                     returningCustomer.mood = returningCustomer.metadata.pendingMoodEffect;
                     delete returningCustomer.metadata.pendingMoodEffect;
                 } else {
-                    returningCustomer.mood = template.baseStats.mood || 'chill'; // Reset mood or use a dynamic system
+                    returningCustomer.mood = returnCustomerTemplate.baseStats.mood || 'chill'; // Reset mood or use a dynamic system
                 }
-                returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
+                returningCustomer.cashOnHand = Math.floor(Math.random() * ((returnCustomerTemplate.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
                 if (!returningCustomer.addictionStatus) returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
                 if (!returningCustomer.recentlySoldItems) returningCustomer.recentlySoldItems = [];
                  // recentlySoldItems are managed per transaction, not reset here
             }
-            debugLogger.log('CustomerManager', `Selected returning customer: ${returningCustomer.name} (ID: ${returningCustomer.id})`);
+            debugLogger.log('CustomerManager', `Selected returning customer: ${returningCustomer.name} (ID: ${returningCustomer.id}), excludedArchetypes: ${JSON.stringify(excludedArchetypes)}`);
             return returningCustomer;
         }
 
-        // Generate a new customer: ensure their archetype isn't on cooldown (less strict, could be a new instance of same archetype)
-        // OR filter archetypeKeys to exclude those whose *instances* are all on cooldown / interacted today.
-        // For simplicity, we'll allow new instances of archetypes even if other instances are on cooldown,
-        // but the new instance itself won't be on cooldown yet.
-        // We must ensure the *new* customer is not one of the customersInteractedThisTurn (though this is less likely for a brand new ID).
+        const allArchetypeKeys = Object.keys(this.customerTemplates);
+        // Filter out excluded archetypes for new customer generation as well
+        const availableArchetypes = allArchetypeKeys.filter(key => {
+            if (excludedArchetypes.includes(key)) return false;
+            const temp = this.customerTemplates[key];
+            // Ensure we don't select unique customers if they already exist and are on cooldown or interacted today.
+            // This check is more about preventing a *new* instance of a unique if an *existing* one is problematic.
+            // However, the primary exclusion of unique archetypes if already in pool happens if they are in `excludedArchetypes`.
+            if (temp.gameplayConfig && temp.gameplayConfig.isUnique) {
+                const existingUnique = this.customersPool.find(c => c.archetypeKey === key);
+                if (existingUnique) {
+                     const isOnCooldown = this.customerCooldowns[existingUnique.id] &&
+                        (currentTurn - this.customerCooldowns[existingUnique.id] <
+                            (existingUnique.archetypeKey === this.SNITCH_ARCHETYPE_KEY ? this.SNITCH_COOLDOWN_DURATION : this.REGULAR_COOLDOWN_DURATION)
+                        );
+                    const interactedToday = customersInteractedThisTurn.includes(existingUnique.id);
+                    if(isOnCooldown || interactedToday) return false; // Don't generate a new one if the existing unique is on cooldown/interacted
+                }
+            }
+            return true;
+        });
 
-        const archetypeKeys = Object.keys(this.customerTemplates);
-        let availableArchetypes = archetypeKeys; // Can be further filtered if needed
 
         if (availableArchetypes.length === 0) {
-            debugLogger.warn('CustomerManager', 'No available archetypes to generate a new customer.');
+            debugLogger.warn('CustomerManager', `No available archetypes to generate a new customer after exclusions: ${JSON.stringify(excludedArchetypes)}.`);
             return null; // Should not happen if templates exist
         }
 

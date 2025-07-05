@@ -411,30 +411,47 @@ class UIManager {
     displayPhoneMessage(message, speaker) {
         if (!this.chatContainer) return;
         const spacer = this.chatContainer.querySelector('.chat-spacer');
-        const messageRow = document.createElement('div');
-        const bubble = document.createElement('div');
-        let messageClass = '';
 
-        if (speaker === 'rikk') messageClass = 'sent';
-        else if (speaker === 'customer') messageClass = 'received';
-        else messageClass = 'narration';
+        let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
-        if (messageClass === 'narration') {
-            bubble.className = 'timestamp';
-            let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<i>$1</i>');
-            bubble.innerHTML = formattedMessage;
-            if(spacer) this.chatContainer.insertBefore(bubble, spacer);
-            else this.chatContainer.appendChild(bubble);
+        if (speaker === 'narration') {
+            const narrationBubble = document.createElement('div');
+            narrationBubble.className = 'timestamp';
+            // For narration, we can set content and append directly as it's less prone to "flash" issues
+            // and opacity transitions might be undesirable for simple timestamps.
+            narrationBubble.innerHTML = formattedMessage;
+            if(spacer) this.chatContainer.insertBefore(narrationBubble, spacer);
+            else this.chatContainer.appendChild(narrationBubble);
         } else {
+            const messageRow = document.createElement('div');
+            const bubble = document.createElement('div');
+            let messageClass = (speaker === 'rikk') ? 'sent' : 'received';
+
             messageRow.className = `message-row ${messageClass}`;
             bubble.className = `message-bubble ${messageClass}`;
-            let formattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+            // 1. Set content FIRST
             bubble.innerHTML = formattedMessage;
             messageRow.appendChild(bubble);
+
+            // 2. Hide element initially
+            messageRow.style.opacity = 0;
+            // Add a class for potential transition effects if defined in CSS
+            messageRow.classList.add('new-message-entering');
+
+
+            // 3. Append to container
             if (spacer) this.chatContainer.insertBefore(messageRow, spacer);
             else this.chatContainer.appendChild(messageRow);
+
+            // 4. Make it visible in the next frame
+            requestAnimationFrame(() => {
+                messageRow.style.opacity = 1;
+                messageRow.classList.remove('new-message-entering'); // Remove if only used for initial state
+                // Consider adding a class that triggers a CSS transition for opacity
+                // e.g., messageRow.classList.add('new-message-visible');
+            });
         }
         this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }
