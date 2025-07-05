@@ -332,12 +332,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ],
             "usual_unavailable": [
                 {
                     "moods": ["desperate", "angry"],
@@ -862,12 +856,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "REGULAR_JOE": {
@@ -1156,12 +1144,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "INFORMANT": {
@@ -1211,7 +1193,7 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "rikkCannotAfford": [
+            "lowCashRikk": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
                     "lines": [
@@ -1310,12 +1292,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "SNITCH": {
@@ -1477,12 +1453,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "STIMULANT_USER": {
@@ -1671,12 +1641,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "PSYCHEDELIC_EXPLORER": {
@@ -1869,12 +1833,6 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
-            "customerReactsToRudeDismissal": [
-                { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
-            ],
-            "customerReactsToPoliteDismissal": [
-                { "lines": ["Aight, respect. Let me know if you change your mind."] }
-            ]
         }
     },
     "PASTOR_JONES": {
@@ -1894,4 +1852,13 @@ export const customerTemplates = {
         "priceToleranceFactor": 1.0,
         "gameplayConfig": { "isUnique": true, "canSpawnNormally": false }
     }
+};
+
+export const genericDialogueTemplates = {
+    "customerReactsToRudeDismissal": [
+        { "lines": ["Whoa, man... no need for that. Just tryin' to make a buck here."] }
+    ],
+    "customerReactsToPoliteDismissal": [
+        { "lines": ["Aight, respect. Let me know if you change your mind."] }
+    ]
 };

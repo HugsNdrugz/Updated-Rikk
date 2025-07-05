@@ -1,4 +1,5 @@
 import { debugLogger } from '../utils.js';
+import { genericDialogueTemplates } from '../data/customer_templates.js';
 // =================================================================================
 // CustomerManager Class (Refactored)
 // =================================================================================
@@ -381,10 +382,15 @@ export class CustomerManager {
         let dialoguePool = template.dialogue[primaryContextKey];
         debugLogger.log('_getDialogue', `Initial dialoguePool for ${primaryContextKey}:`, JSON.parse(JSON.stringify(dialoguePool || null)));
 
-
         if (!dialoguePool) {
-            debugLogger.warn('CustomerManager', `_getDialogue: Missing primaryContextKey: '${primaryContextKey}' for archetype '${customerInstance.archetypeKey}'.`);
-            return playerSafeFallback;
+            // Attempt to get from genericDialogueTemplates
+            if (genericDialogueTemplates[primaryContextKey]) {
+                dialoguePool = genericDialogueTemplates[primaryContextKey];
+                debugLogger.log('_getDialogue', `Using generic dialogue for ${primaryContextKey} for archetype ${customerInstance.archetypeKey}`);
+            } else {
+                debugLogger.warn('CustomerManager', `_getDialogue: Missing primaryContextKey: '${primaryContextKey}' for archetype '${customerInstance.archetypeKey}' and no generic fallback.`);
+                return playerSafeFallback;
+            }
         }
 
         // Navigate nested structure for 'greeting'
