@@ -412,6 +412,106 @@
             display: none; /* Hide if no issues */
         }
 
+        /* Archetype Detail View Styles */
+        #archetype-detail-view {
+            /* Uses app-main for padding and scroll, initially hidden by inline style */
+            /* Add specific styles if needed, e.g., different background if desired */
+        }
+
+        .detail-back-button {
+            display: flex;
+            align-items: center;
+            background-color: var(--color-surface);
+            color: var(--color-text-base);
+            border: 1px solid #333;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s ease;
+        }
+        .detail-back-button:hover {
+            background-color: #2a2a2c;
+        }
+
+        .detail-archetype-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .detail-contexts-list .context-card {
+            background-color: var(--color-surface);
+            border-radius: var(--radius-card);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .detail-contexts-list .context-path {
+            font-weight: bold;
+            color: var(--color-text-header);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .detail-contexts-list .richness-info,
+        .detail-contexts-list .issue-list-title {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .detail-contexts-list .issue-list {
+            list-style: none;
+            padding-left: 0;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+        .detail-contexts-list .issue-list li {
+            padding: 0.25rem 0;
+            line-height: 1.3;
+        }
+        .detail-contexts-list .issue-list .error { color: var(--color-status-red); }
+        .detail-contexts-list .issue-list .warning { color: var(--color-status-yellow); }
+        .detail-contexts-list .richness-ok { color: var(--color-status-green-start); }
+        .detail-contexts-list .richness-warn { color: var(--color-status-yellow); }
+
+
+        /* View Transitions */
+        #main-dashboard-content, #archetype-detail-view {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+
+        .view-hidden {
+            opacity: 0;
+            transform: translateX(-20px); /* Example: slide out to left */
+            pointer-events: none; /* Prevent interaction when hidden */
+            position: absolute; /* Take out of flow to prevent scroll jumps */
+            width: 100%; /* Maintain width for transition */
+            display: block !important; /* Override inline display:none for transition */
+        }
+
+        .view-visible {
+            opacity: 1;
+            transform: translateX(0);
+            position: relative; /* Or static, depending on original flow */
+            display: block !important; /* Override inline display:none for transition */
+        }
+        /* When detail view is active, main dashboard is hidden to its left */
+        #main-dashboard-content.view-hidden-left {
+            opacity: 0;
+            transform: translateX(-100%);
+            pointer-events: none;
+            position: absolute;
+             width: 100%;
+        }
+        /* When detail view is shown, it slides in from the right */
+        #archetype-detail-view.view-enter-right {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
 
     </style>
 </head>
@@ -430,7 +530,7 @@
             </div>
         </header>
 
-        <main class="app-main">
+        <main class="app-main" id="main-dashboard-content">
             <section class="status-section">
                 <div id="status-icon" class.bind="statusIconClass" class="status-icon">
                     <!-- Default Icon -->
@@ -465,6 +565,24 @@
                  <button id="show-all-issues-btn" style="display:none; width: 100%; margin-top: 1rem; padding: 0.75rem; background-color: #2a2a2c; border: none; color: var(--color-text-base); border-radius: var(--radius-btn); cursor: pointer;">Show All Issues</button>
             </div>
         </main>
+
+        <div id="archetype-detail-view" class="app-main" style="display: none;">
+            <button id="back-to-dashboard-btn" class="detail-back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 20px; height: 20px; margin-right: 8px;">
+                    <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z" clip-rule="evenodd" />
+                </svg>
+                Back to Dashboard
+            </button>
+            <div id="detail-archetype-header" class="detail-archetype-header">
+                <div id="detail-avatar" class="archetype-avatar" style="width: 70px; height: 70px; margin-right: 1rem;">
+                    <!-- Avatar img will be populated by JS -->
+                </div>
+                <h2 id="detail-archetype-name" style="color: var(--color-text-header);">Archetype Name</h2>
+            </div>
+            <div id="detail-contexts-list" class="detail-contexts-list">
+                <!-- Detailed context stats will be populated by JS -->
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -512,11 +630,19 @@
                 issueCard: document.getElementById('issue-card'),
                 issueLog: document.getElementById('issue-log'),
                 showAllIssuesBtn: document.getElementById('show-all-issues-btn'),
-                archetypeDashboard: document.getElementById('archetype-dashboard') // New DOM element
+                archetypeDashboard: document.getElementById('archetype-dashboard'),
+                // For detail view
+                mainDashboardContent: document.getElementById('main-dashboard-content'),
+                archetypeDetailView: document.getElementById('archetype-detail-view'),
+                backToDashboardBtn: document.getElementById('back-to-dashboard-btn'),
+                detailAvatar: document.getElementById('detail-avatar'),
+                detailArchetypeName: document.getElementById('detail-archetype-name'), // Corrected typo
+                detailContextsList: document.getElementById('detail-contexts-list')
             };
-            this.currentFilter = null; // To keep track of the active filter
-            this.currentArchetypeFilter = null; // For filtering by archetype
+            this.currentFilter = null;
+            this.currentArchetypeFilter = null;
             this.wittyLoadingInterval = null;
+            this.dialogueAnalyzer = null; // Will be set by the DialogueAnalyzer instance
             this.wittyMessages = [
                 "Brewing some digital coffee...",
                 "Untangling dialogue spaghetti...",
@@ -546,6 +672,12 @@
                 errorStatus: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>`, // Circle with X
             };
             this.reset();
+            this.dom.backToDashboardBtn.addEventListener('click', () => this.hideArchetypeDetailView());
+        }
+
+        // Method to link DialogueAnalyzer instance
+        setAnalyzer(analyzer) {
+            this.dialogueAnalyzer = analyzer;
         }
 
         reset() {
@@ -583,7 +715,6 @@
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'archetype-avatar';
                 const avatarImg = document.createElement('img');
-                // Use baseName for seed, URL encode it. DiceBear uses the seed to generate consistent avatars.
                 avatarImg.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(archetype.baseName || archetypeKey)}`;
                 avatarImg.alt = `${archetype.baseName} avatar`;
                 avatarDiv.appendChild(avatarImg);
@@ -593,34 +724,162 @@
                 nameP.textContent = archetype.baseName || archetypeKey;
 
                 const badge = document.createElement('div');
-                badge.className = 'archetype-badge empty'; // Start empty and hidden
+                badge.className = 'archetype-badge empty';
                 badge.id = `badge-${archetypeKey}`;
-                // badge.textContent = '0'; // Will be updated later
 
                 card.appendChild(avatarDiv);
                 card.appendChild(nameP);
                 card.appendChild(badge);
 
-                card.addEventListener('click', () => this.toggleArchetypeFilter(archetypeKey, card));
+                // Modified click listener to show detail view
+                card.addEventListener('click', () => this.showArchetypeDetailView(archetypeKey));
                 this.dom.archetypeDashboard.appendChild(card);
             }
         }
 
-        toggleArchetypeFilter(archetypeKey, cardElement) {
-            if (this.currentArchetypeFilter === archetypeKey) {
-                // If clicking the already active archetype filter, clear it
+        // This method is now for the main dashboard's archetype card filtering for the main issue log
+        // The new detail view will handle its own display.
+        // For now, clicking an archetype card will switch to detail view, not filter main log.
+        // If we want dashboard cards to *also* filter main log, this can be re-added or combined.
+        // For simplicity of the new feature, let's make card click go to detail view.
+        // toggleArchetypeFilter(archetypeKey, cardElement) { ... existing logic ... }
+
+        showArchetypeDetailView(archetypeKey) {
+            if (!this.dialogueAnalyzer) return; // Analyzer not set
+
+            // Hide main dashboard, show detail view (animation handled by classes)
+            this.dom.mainDashboardContent.style.display = 'none'; // Or add class like 'view-hidden-left'
+            this.dom.archetypeDetailView.style.display = 'block'; // Or remove class like 'view-hidden' and add 'view-visible'
+
+            // Scroll to top of detail view
+            this.dom.archetypeDetailView.scrollTop = 0;
+
+            this._populateArchetypeDetailView(archetypeKey); // Implement this next
+
+            // For smooth transitions with CSS, you'd toggle classes:
+            // this.dom.mainDashboardContent.classList.add('view-hidden-left');
+            // this.dom.mainDashboardContent.classList.remove('view-visible');
+            // this.dom.archetypeDetailView.classList.remove('view-hidden', 'view-enter-right');
+            // this.dom.archetypeDetailView.classList.add('view-visible');
+            // Ensure initial state for enter animation if using one:
+            // this.dom.archetypeDetailView.classList.add('view-enter-right');
+            // requestAnimationFrame(() => this.dom.archetypeDetailView.classList.remove('view-enter-right'));
+        }
+
+        hideArchetypeDetailView() {
+            this.dom.archetypeDetailView.style.display = 'none'; // Or add 'view-hidden'
+            this.dom.mainDashboardContent.style.display = 'block'; // Or add 'view-visible'
+
+            // this.dom.archetypeDetailView.classList.add('view-hidden');
+            // this.dom.archetypeDetailView.classList.remove('view-visible');
+            // this.dom.mainDashboardContent.classList.remove('view-hidden-left');
+            // this.dom.mainDashboardContent.classList.add('view-visible');
+
+             // Clear archetype-specific filter when going back to dashboard
+            if (this.currentArchetypeFilter) {
                 this.currentArchetypeFilter = null;
-                this._updateActiveArchetypeFilterUI(); // No card is active
-            } else {
-                this.currentArchetypeFilter = archetypeKey;
-                this._updateActiveArchetypeFilterUI(cardElement); // Make this card active
-                // If a stat filter is active, clear it to avoid confusion, or allow combined filtering (current _applyIssueFilter supports it)
-                // For simplicity, let's say archetype filter takes precedence or they combine.
-                // The current _applyIssueFilter handles combined filtering.
+                this._updateActiveArchetypeFilterUI(); // Clear active state from dashboard cards
+                this._applyIssueFilter(); // Re-apply filters for main log (now without archetype filter)
+                this.dom.showAllIssuesBtn.style.display = (this.currentFilter) ? 'block' : 'none';
             }
-            this._applyIssueFilter();
-            // Show/hide "Show All" button based on if ANY filter is active
-            this.dom.showAllIssuesBtn.style.display = (this.currentFilter || this.currentArchetypeFilter) ? 'block' : 'none';
+        }
+
+
+        _populateArchetypeDetailView(archetypeKey) {
+            const archetypeData = customerTemplates[archetypeKey]; // For baseName, avatar
+            const stats = this.dialogueAnalyzer.archetypeStats[archetypeKey];
+
+            if (!archetypeData || !stats) {
+                this.dom.detailContextsList.innerHTML = '<p>Error: Could not load details for this archetype.</p>';
+                return;
+            }
+
+            // Set header
+            this.dom.detailArchetypeName.textContent = archetypeData.baseName || archetypeKey;
+            this.dom.detailAvatar.innerHTML = `<img src="https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(archetypeData.baseName || archetypeKey)}" alt="${archetypeData.baseName} avatar" />`;
+
+            this.dom.detailContextsList.innerHTML = ''; // Clear previous content
+
+            if (Object.keys(stats.contexts).length === 0) {
+                this.dom.detailContextsList.innerHTML = '<p>No specific contexts were analyzed or found for this archetype according to the current ANALYSIS_CONFIG.</p>';
+                // This can happen if an archetype is skipped entirely by config or has no matching contexts.
+                // Or if it's Pastor Jones and only his specific contexts are in ANALYSIS_CONFIG.
+                if (stats.overallErrors > 0 || stats.overallWarnings > 0) {
+                     this.dom.detailContextsList.innerHTML += `<p>However, there are ${stats.overallErrors} general error(s) and ${stats.overallWarnings} general warning(s) associated with this archetype that might not be tied to a specific configured context path (e.g. overall missing dialogue object).</p>`;
+                }
+                return;
+            }
+
+            for (const contextPath in stats.contexts) {
+                const contextData = stats.contexts[contextPath];
+                const contextCard = document.createElement('div');
+                contextCard.className = 'context-card';
+
+                const pathP = document.createElement('p');
+                pathP.className = 'context-path';
+                pathP.innerHTML = contextData.path; // Path already contains <b> formatting for archetype key
+                contextCard.appendChild(pathP);
+
+                // Richness Info
+                if (contextData.richnessChecks && contextData.richnessChecks.length > 0) {
+                    const richnessTitle = document.createElement('p');
+                    richnessTitle.className = 'richness-info';
+                    richnessTitle.textContent = 'Richness Details:';
+                    contextCard.appendChild(richnessTitle);
+
+                    const richnessList = document.createElement('ul');
+                    richnessList.className = 'issue-list'; // Re-use style
+                    contextData.richnessChecks.forEach(check => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `${check.blockIdentifier}: ${check.lines}/${check.minLines} lines - <span class="${check.isRich ? 'richness-ok' : 'richness-warn'}">${check.isRich ? 'Rich' : 'Low Richness'}</span>`;
+                        richnessList.appendChild(li);
+                    });
+                    contextCard.appendChild(richnessList);
+                }
+
+                // Errors
+                if (contextData.errors && contextData.errors.length > 0) {
+                    const errorsTitle = document.createElement('p');
+                    errorsTitle.className = 'issue-list-title';
+                    errorsTitle.textContent = 'Errors:';
+                    contextCard.appendChild(errorsTitle);
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'issue-list';
+                    contextData.errors.forEach(err => {
+                        const li = document.createElement('li');
+                        li.className = 'error';
+                        li.innerHTML = err.message; // err.message already contains formatting like <b>
+                        errorList.appendChild(li);
+                    });
+                    contextCard.appendChild(errorList);
+                }
+
+                // Warnings
+                if (contextData.warnings && contextData.warnings.length > 0) {
+                    const warningsTitle = document.createElement('p');
+                    warningsTitle.className = 'issue-list-title';
+                    warningsTitle.textContent = 'Warnings:';
+                    contextCard.appendChild(warningsTitle);
+                    const warningList = document.createElement('ul');
+                    warningList.className = 'issue-list';
+                    contextData.warnings.forEach(warn => {
+                        const li = document.createElement('li');
+                        li.className = 'warning';
+                        li.innerHTML = warn.message; // warn.message already contains formatting
+                        warningList.appendChild(li);
+                    });
+                    contextCard.appendChild(warningList);
+                }
+
+                if (contextData.errors.length === 0 && contextData.warnings.length === 0 && (!contextData.richnessChecks || contextData.richnessChecks.every(rc => rc.isRich))) {
+                     const noIssuesP = document.createElement('p');
+                     noIssuesP.textContent = 'No issues found for this context.';
+                     noIssuesP.style.color = 'var(--color-status-green-start)';
+                     contextCard.appendChild(noIssuesP);
+                }
+
+                this.dom.detailContextsList.appendChild(contextCard);
+            }
         }
 
         _populateInitialStats() {
@@ -887,21 +1146,29 @@
             this.templates = templates;
             this.config = config;
             this.ui = ui;
+            this.ui.setAnalyzer(this); // Link analyzer instance to UI
             this.ui.dom.analyzeBtn.addEventListener('click', () => this.run());
         }
 
         async run() {
             this.ui.reset();
-            this.ui.reset(); // UI reset now also clears and populates archetype dashboard
+            this.ui.reset();
             this.ui.setScanningState(true);
             this.stats = { // Overall stats
                 coverage: { total: 0, passed: 0 },
                 richness: { total: 0, passed: 0, warnings: 0 },
                 consistency: { total: 0, passed: 0, errors: 0 },
             };
-            this.archetypeStats = {}; // For per-archetype error/warning counts
+            this.archetypeStats = {}; // Will be populated with detailed stats per archetype
 
             const archetypeKeys = Object.keys(this.templates);
+            archetypeKeys.forEach(key => { // Initialize structure for all archetypes
+                this.archetypeStats[key] = {
+                    overallErrors: 0,
+                    overallWarnings: 0,
+                    contexts: {} // Store detailed context issues here
+                };
+            });
 
             for (const key of archetypeKeys) {
                 await new Promise(resolve => setTimeout(resolve, SCAN_DELAY_MS));
@@ -916,116 +1183,149 @@
             this.ui.setScanningState(false);
             const { coverage, richness, consistency } = this.stats;
 
-            let finalState, statusText, statusSubtext; // statusText is now mostly for internal logic, UI class handles display text
+            let finalState, statusText, statusSubtext;
             if (consistency.errors > 0 || coverage.passed < coverage.total) {
                 finalState = 'error';
-                statusText = 'Errors found'; // Internal logic text
+                statusText = 'Errors found';
                 statusSubtext = `${consistency.errors + (coverage.total - coverage.passed)} critical issue(s) need attention.`;
             } else if (richness.warnings > 0) {
                 finalState = 'warn';
-                statusText = 'Warnings found'; // Internal logic text
+                statusText = 'Warnings found';
                 statusSubtext = `${richness.warnings} item(s) can be improved for better richness.`;
             } else {
                 finalState = 'excellent';
-                statusText = 'Excellent'; // Internal logic text
+                statusText = 'Excellent';
                 statusSubtext = 'All dialogue contexts look great and are well-structured!';
             }
-            // Pass the original statusText and subtext to setFinalStatus, which will then apply its own creative versions
             this.ui.setFinalStatus(finalState, statusText, statusSubtext);
 
-            // After overall status, update archetype badges
+            // After overall status, update archetype badges using the new overallError/Warning counts
             for (const archetypeKey in this.archetypeStats) {
                 const stats = this.archetypeStats[archetypeKey];
-                this.ui.updateArchetypeBadge(archetypeKey, stats.errors, stats.warnings);
+                this.ui.updateArchetypeBadge(archetypeKey, stats.overallErrors, stats.overallWarnings);
             }
         }
 
-        _analyzeArchetype(key) {
+        _analyzeArchetype(key) { // archetypeKey is 'key'
             const archetype = this.templates[key];
             const dialogue = archetype.dialogue || {};
             const gameplayConfig = archetype.gameplayConfig || {};
+            const currentArchetypeOverallStats = this.archetypeStats[key]; // Reference to overall error/warning counts
 
             for (const contextKey in this.config) {
                  const contextConfig = this.config[contextKey];
                 
-                // Skip logic
                 if (contextConfig.onlyForArchetypes && !contextConfig.onlyForArchetypes.includes(key)) continue;
                 if (!contextConfig.onlyForArchetypes && key === "PASTOR_JONES") continue;
                 if (contextConfig.skipIf === 'sellsOnly' && gameplayConfig.sellsOnly) continue;
                 if (contextConfig.skipIf === 'buysOnly' && gameplayConfig.buysOnly) continue;
                 if (contextConfig.onlyIf === 'canNegotiate' && gameplayConfig.negotiationResists) continue;
 
-                const path = `<b>${key}</b>.${contextKey}`;
+                const path = `<b>${key}</b>.${contextKey}`; // This is the display path for UI
                 
-                // Initialize archetype specific stats if not already present
-                if (!this.archetypeStats[key]) {
-                    this.archetypeStats[key] = { errors: 0, warnings: 0 };
+                // Initialize context structure within archetypeStats
+                if (!currentArchetypeOverallStats.contexts[path]) {
+                    currentArchetypeOverallStats.contexts[path] = { path: path, errors: [], warnings: [], richnessChecks: [] };
                 }
+                const currentContextDetail = currentArchetypeOverallStats.contexts[path];
 
                 this.stats.coverage.total++;
                 if (!dialogue[contextKey]) {
                     this.stats.consistency.errors++;
-                    this.archetypeStats[key].errors++; // Increment archetype-specific error count
+                    currentArchetypeOverallStats.overallErrors++;
+                    const issueMsg = `Missing context: ${path}`;
                     const tooltip = `The entire dialogue context for '${contextKey}' is missing in '${key}'. Refer to ANALYSIS_CONFIG for expected structure.`;
-                    this.ui.logIssue('error', `Missing context: ${path}`, 'coverage', tooltip);
+                    this.ui.logIssue('error', issueMsg, 'coverage', tooltip);
+                    currentContextDetail.errors.push({ message: issueMsg, level: 'error', type: 'coverage' });
                 } else {
                     this.stats.coverage.passed++;
                     if (contextConfig.parser === 'greeting') {
-                        this._analyzeGreeting(dialogue.greeting, path);
+                        this._analyzeGreeting(dialogue.greeting, key, path); // Pass 'key' as archetypeKey, 'path' as basePath
                     } else {
-                        this._analyzeContext(dialogue[contextKey], contextConfig, path);
+                        this._analyzeContext(dialogue[contextKey], contextConfig, key, path); // Pass 'key' as archetypeKey, 'path' as contextPath
                     }
                 }
             }
-            this._updateUIStats();
+            this._updateUIStats(); // Updates main stat cards
         }
         
-        _analyzeContext(blocks, config, path) {
+        _analyzeContext(blocks, config, archetypeKey, contextPath) {
+            const currentArchetypeOverallStats = this.archetypeStats[archetypeKey];
+            // Ensure contextPath exists in contexts object, it should have been created by _analyzeArchetype or _analyzeGreeting
+            if (!currentArchetypeOverallStats.contexts[contextPath]) {
+                 currentArchetypeOverallStats.contexts[contextPath] = { path: contextPath, errors: [], warnings: [], richnessChecks: [] };
+            }
+            const currentContextDetail = currentArchetypeOverallStats.contexts[contextPath];
+
             this.stats.consistency.total++;
             if (!Array.isArray(blocks)) {
                 this.stats.consistency.errors++;
-                // Extract archetype key from path (e.g., "<b>ARCHETYPE_KEY</b>...")
-                const archetypeKeyForStat = path.match(/<b>(.*?)<\/b>/)?.[1];
-                if (archetypeKeyForStat && this.archetypeStats[archetypeKeyForStat]) {
-                    this.archetypeStats[archetypeKeyForStat].errors++;
-                }
-                const tooltip = `Data for ${path} should be an Array of dialogue blocks, but it's not. Check customer_templates.js.`;
-                this.ui.logIssue('error', `Invalid data structure: ${path} is not an Array.`, 'consistency', tooltip);
+                currentArchetypeOverallStats.overallErrors++;
+                const issueMsg = `Invalid data structure: ${contextPath} is not an Array.`;
+                const tooltip = `Data for ${contextPath} should be an Array of dialogue blocks, but it's not. Check customer_templates.js.`;
+                this.ui.logIssue('error', issueMsg, 'consistency', tooltip);
+                currentContextDetail.errors.push({ message: issueMsg, level: 'error', type: 'consistency' });
                 return;
             }
             this.stats.consistency.passed++;
 
-            blocks.forEach(block => {
-                this._analyzeBlock(block, config.minLines, path);
+            blocks.forEach((block, index) => {
+                this._analyzeBlock(block, config.minLines, archetypeKey, contextPath, index);
             });
         }
 
-        _analyzeGreeting(obj, path) {
+        _analyzeGreeting(obj, archetypeKey, basePath) {
             if (typeof obj !== 'object' || obj === null) return;
-            for (const key in obj) {
-                const value = obj[key];
-                const newPath = `${path}.${key}`;
+            for (const segmentKey in obj) {
+                const value = obj[segmentKey];
+                const newPath = `${basePath}.${segmentKey}`;
+
+                // Initialize this deeper path if it's going to be a context for blocks
+                if (!this.archetypeStats[archetypeKey].contexts[newPath]) {
+                     this.archetypeStats[archetypeKey].contexts[newPath] = { path: newPath, errors: [], warnings: [], richnessChecks: [] };
+                }
+
                 if (Array.isArray(value)) {
-                    this._analyzeContext(value, { minLines: MIN_LINES_PER_BLOCK }, newPath);
-                } else {
-                    this._analyzeGreeting(value, newPath);
+                    this._analyzeContext(value, { minLines: MIN_LINES_PER_BLOCK }, archetypeKey, newPath);
+                } else if (typeof value === 'object' && value !== null && Object.keys(value).length > 0 && !value.lines && !value.moods) {
+                    // Recurse if it's an object, not empty, and not looking like a block itself
+                    this._analyzeGreeting(value, archetypeKey, newPath);
+                } else if (typeof value === 'object' && value !== null && (value.lines || value.moods)) {
+                    // This case handles when a greeting path directly leads to a single block-like object instead of an array of blocks
+                    // e.g. DESPERATE_FIEND.greeting.new_customer.seeking_to_buy (which is an array of blocks with moods)
+                    // but if a deeper path like some_archetype.greeting.specific_case was just one block object:
+                    // We treat it as a context with a single block.
+                    this._analyzeContext([value], { minLines: MIN_LINES_PER_BLOCK }, archetypeKey, newPath);
                 }
             }
         }
         
-        _analyzeBlock(block, minLines, path) {
+        _analyzeBlock(block, minLines, archetypeKey, contextPath, blockIndex) {
+            const currentArchetypeOverallStats = this.archetypeStats[archetypeKey];
+            const currentContextDetail = currentArchetypeOverallStats.contexts[contextPath];
+
+            let richnessDetail = { lines: 0, minLines: minLines, isRich: true, blockIdentifier: `Block ${blockIndex + 1}` };
+
             this.stats.richness.total++;
             if (!block || !Array.isArray(block.lines) || block.lines.length < minLines) {
                  this.stats.richness.warnings++;
+                 currentArchetypeOverallStats.overallWarnings++;
                  const lineCount = (block && block.lines) ? block.lines.length : 0;
-                 const tooltip = `This dialogue block in ${path} has ${lineCount} line(s), but the minimum recommended is ${minLines}. Consider adding more variations.`;
-                 this.ui.logIssue('warn', `Low richness: ${path} has <b>${lineCount}/${minLines}</b> lines.`, 'richness', tooltip);
+                 richnessDetail.lines = lineCount;
+                 richnessDetail.isRich = false;
+                 const issueMsg = `Low richness: ${contextPath} (${richnessDetail.blockIdentifier}) has <b>${lineCount}/${minLines}</b> lines.`;
+                 const tooltip = `This dialogue block in ${contextPath} (${richnessDetail.blockIdentifier}) has ${lineCount} line(s), but the minimum recommended is ${minLines}. Consider adding more variations.`;
+                 this.ui.logIssue('warn', issueMsg, 'richness', tooltip);
+                 // Store detailed warning for this specific block/context
+                 currentContextDetail.warnings.push({ message: issueMsg, level: 'warn', type: 'richness', blockIndex: blockIndex, lineCount: lineCount, minLines: minLines });
             } else {
                 this.stats.richness.passed++;
+                richnessDetail.lines = block.lines.length;
             }
+            currentContextDetail.richnessChecks.push(richnessDetail);
         }
         
-        _updateUIStats() {
+        _updateUIStats() { // This remains for the main stat cards
             this.ui.updateStat('coverage', `${this.stats.coverage.passed}`, this.stats.coverage.total, this.stats.coverage.passed, 'contexts');
             this.ui.updateStat('richness', `${this.stats.richness.warnings > 0 ? this.stats.richness.warnings : 'No'}`, this.stats.richness.total, this.stats.richness.passed, 'blocks');
             this.ui.updateStat('consistency', `${this.stats.consistency.errors > 0 ? this.stats.consistency.errors : 'No'}`, this.stats.consistency.total, this.stats.consistency.passed, 'checks');
