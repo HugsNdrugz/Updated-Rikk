@@ -59,9 +59,9 @@ export const customerTemplates = {
                         },
                         { // Mood-agnostic fallback for new_customer, seeking_to_buy
                             "lines": [
-                                "Yo, you Rikk? Heard you're the one to see. I need something, man.",
-                                "They said ask for Rikk. That you? Got any... party favors?",
-                                "Is this the spot? Looking for Rikk. Got cash, need goods."
+                                "Yo, you Rikk? They said you're the one... please tell me you got something. My nerves are shot, man.",
+                                "Rikk? That you? Heard you're the guy... got anything to make the shadows stop dancing? I'm not picky.",
+                                "Is this the place? Someone said Rikk could help... I need it bad, whatever you got."
                             ]
                         }
                     ],
@@ -69,24 +69,24 @@ export const customerTemplates = {
                         {
                             "moods": ["desperate"],
                             "lines": [
-                                "Rikk... you gotta help me. I got this... thing. Need cash, man, bad.",
-                                "Please, Rikk, I'm desperate. Got something I can sell, just need the money, quick.",
-                                "They said you buy stuff, Rikk. Look, I'm not proud, but I need to unload this for some scratch."
+                                "Rikk... you gotta help me. I got this... thing. Need cash, man, bad. The walls are closing in.",
+                                "Please, Rikk, I'm desperate. Got something I can sell, just need the money, quick. Before they find me.",
+                                "They said you buy stuff, Rikk. Look, I'm not proud, but I need to unload this for some scratch. My luck's run dry."
                             ]
                         },
                          {
                             "moods": ["paranoid"],
                             "lines": [
-                                "(Whispering) Rikk, you buy stuff? Got something... hot. Need to move it. Fast. No questions.",
-                                "(Eyes darting) You Rikk? Someone said you deal in... acquisitions. This is hush-hush, for cash only.",
-                                "Psst, Rikk... word is you're discreet. I got this item, need it gone, no traces, you get me?"
+                                "(Whispering) Rikk, you buy stuff? Got something... hot. Need to move it. Fast. No questions. They're watching.",
+                                "(Eyes darting) You Rikk? Someone said you deal in... acquisitions. This is hush-hush, for cash only. Can't trust anyone else.",
+                                "Psst, Rikk... word is you're discreet. I got this item, need it gone, no traces, you get me? The pigeons are informants."
                             ]
                         },
                         { // Mood-agnostic fallback for new_customer, seeking_to_sell
                             "lines": [
-                                "Heard you buy things, Rikk. Got something I need to move.",
-                                "You Rikk? Got some merchandise here, wondering if you're interested.",
-                                "Got a tip you might be in the market for... this. What do you say, Rikk?"
+                                "(Eyes darting) Rikk? You buy... things? Got something, gotta move it fast. Cash only, no questions, okay?",
+                                "You Rikk? Heard you're in the market for... opportunities. This one's a bit warm, if you catch my drift. What d'ya say?",
+                                "Psst, Rikk. Got a tip you might be interested in this... *item*. Need cash, no paper trail. You the guy for that?"
                             ]
                         }
                     ]
@@ -96,24 +96,24 @@ export const customerTemplates = {
                         {
                             "moods": ["desperate", "addicted"], // 'addicted' can be a mood or derived from addictionStatus
                             "lines": [
-                                "Rikk! Thank god it's you again! You know what I need! Quick!",
-                                "Me again, Rikk. The usual... please tell me you have it. The walls are talkin' again.",
-                                "Rikk, you're a sight for sore eyes! Got my regular fix? The shakes are getting bad."
+                                "Rikk! Thank god it's you again! You know what I need! Quick! The spiders are back!",
+                                "Me again, Rikk. The usual... please tell me you have it. The walls are talkin' again, and they're not making sense!",
+                                "Rikk, you're a sight for sore eyes! Got my regular fix? The shakes are getting bad, and I think my teeth are vibrating."
                             ]
                         },
                         {
-                            "moods": ["happy"],
+                            "moods": ["happy"], // Jerry's "happy" is still pretty desperate/manic
                             "lines": [
-                                "Rikk my man! Back for my favorite! You got it, right?",
-                                "Hey Rikk! Good to see ya! Hook a brother up with the good stuff, the one that makes the colors brighter!",
-                                "It's your favorite customer, Rikk! Ready for another dose of awesome? You know what I like!"
+                                "Rikk my man! Back for my favorite! You got it, right? Tell me you got it! The good stuff!",
+                                "Hey Rikk! Good to see ya! Hook a brother up with the good stuff, the one that makes the colors brighter and the voices quieter!",
+                                "It's your favorite customer, Rikk! Ready for another dose of awesome? You know what I like! The stuff that makes the squirrels seem friendly!"
                             ]
                         },
                         { // Mood-agnostic fallback for returning_customer, seeking_to_buy_usual
                             "lines": [
-                                "Rikk, it's me. You got the usual?",
-                                "Back for my regular, Rikk. Hope you're holding.",
-                                "Hey Rikk, need that same stuff as last time. You got it?"
+                                "Rikk, it's me. You got the usual? Please say yes, the silence is too loud.",
+                                "Back for my regular, Rikk. Hope you're holding. The itch is getting unbearable.",
+                                "Hey Rikk, need that same stuff as last time. You got it? My nerves are frayed wires."
                             ]
                         }
                     ],
@@ -121,24 +121,24 @@ export const customerTemplates = {
                         {
                             "moods": ["desperate", "paranoid"],
                             "lines": [
-                                "Rikk, it's me! My usual connect is dry... or arrested. You holding anything that'll get me right?",
-                                "Alright Rikk, what's on the menu today? My nerves are shot.",
-                                "The usual spot's a ghost town, Rikk. Please tell me you got something, anything, to ease this pain."
+                                "Rikk, it's me! My usual connect is dry... or arrested... or maybe he turned into a pigeon, who knows! You holding anything that'll get me right?",
+                                "Alright Rikk, what's on the menu today? My nerves are shot, and I think the shadows are following me again.",
+                                "The usual spot's a ghost town, Rikk. Please tell me you got something, anything, to ease this pain. The static in my head is deafening."
                             ]
                         },
                         {
-                            "moods": ["happy"],
+                            "moods": ["happy"], // Jerry's "happy"
                             "lines": [
-                                "Hey Rikk! Back for more good times! Whatcha got for me today?",
-                                "Rikk! Feeling adventurous. What's new and exciting on the street menu?",
-                                "My main man Rikk! Ready to explore some new vibes. What do you recommend?"
+                                "Hey Rikk! Back for more good times! Whatcha got for me today? Something to make the world less... pointy?",
+                                "Rikk! Feeling adventurous. What's new and exciting on the street menu? As long as it stops the buzzing!",
+                                "My main man Rikk! Ready to explore some new vibes. What do you recommend? Something that'll make the pigeons sing opera?"
                             ]
                         },
-                        { // This block was already mood-agnostic, ensuring 3 lines.
-                            "lines": [
-                                "Yo Rikk, what's good? Looking to pick something up.",
-                                "Back again, Rikk. Whatcha holding today? Anything interesting?",
-                                "Hey Rikk, it's me. Need to re-up. What's available this time around?"
+                        {
+                            "lines": [ // Mood-agnostic fallback for returning_customer, seeking_to_buy_general
+                                "Yo Rikk, what's good? Looking to pick something up. Anything to quiet the noise.",
+                                "Back again, Rikk. Whatcha holding today? Anything interesting? My brain feels like a shaken snow globe.",
+                                "Hey Rikk, it's me. Need to re-up. What's available this time around? Something strong, man."
                             ]
                         }
                     ],
@@ -146,16 +146,16 @@ export const customerTemplates = {
                         {
                             "moods": ["desperate", "angry"],
                             "lines": [
-                                "Me again, Rikk. Times are tough. Had to find something else to pawn...",
-                                "Rikk, you gotta take this off my hands. No questions, just cash.",
-                                "Look, Rikk, I wouldn't be here if I wasn't desperate. This is all I got. What'll you give me?"
+                                "Me again, Rikk. Times are tough. Had to find something else to pawn... this thing's probably cursed, but so am I.",
+                                "Rikk, you gotta take this off my hands. No questions, just cash. Before *they* realize I have it.",
+                                "Look, Rikk, I wouldn't be here if I wasn't desperate. This is all I got. What'll you give me? It's practically dripping bad luck."
                             ]
                         },
-                        { // This block was already mood-agnostic, ensuring 3 lines.
-                            "lines": [
-                                "Hey Rikk, got something else for you today, if you're interested.",
-                                "Yo Rikk, found another... *treasure*. Wanna take a look this time?",
-                                "Me again. Got a little something I think you might like. Interested in a deal today?"
+                        {
+                            "lines": [ // Mood-agnostic fallback for returning_customer, seeking_to_sell
+                                "Hey Rikk, got something else for you today, if you're interested. It's... *unique*. And I need the cash, like, yesterday.",
+                                "Yo Rikk, found another... *treasure*. Or maybe it's haunted. Wanna take a look this time? Please?",
+                                "Me again. Got a little something I think you might like. Or at least, something you can move. I can't keep it, man."
                             ]
                         }
                     ]
@@ -350,10 +350,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Nothin'? Rikk, you're killin' me! My kingdom for a crumb!",
-                        "Dry as a desert in here, huh? My luck...",
-                                "Seriously, Rikk? Not even a breadcrumb for a starving man? The desperation is real.",
-                                "You're tapped out? Man, the universe really has it in for me today. My soul feels like an empty bag."
+                        "Nothin'?! Rikk, you're killin' me! My kingdom for a crumb! The silence in my head is deafening!",
+                        "Dry as a bone, huh? Just like my nerves. Figures. This is my luck, always.",
+                        "Seriously, Rikk? Not even a speck? The shadow people are gonna have a field day with this. You're empty? My soul just shriveled a bit more."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -362,10 +361,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Thought I had somethin'... must've imagined it. Story of my life.",
-                        "Damn, pockets are empty. Swear I had a gem... or maybe it was a bottle cap.",
-                                "Came all this way thinkin' I had treasure... turns out it was just lint and regret.",
-                                "My bad, Rikk. My brain's playin' tricks. Coulda sworn I had a gold-plated squirrel tooth to sell."
+                        "Thought I had somethin'... must've imagined it. Or maybe the gremlins stole it. Story of my life.",
+                        "Damn, pockets are empty. Swear I had a diamond... or maybe it was a shiny bottle cap. My brain's fried, Rikk.",
+                        "Came all this way thinkin' I had treasure... turns out it was just lint and existential dread. Again. My bad, Rikk, the voices lied."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -376,20 +374,20 @@ export const customerTemplates = {
                         {"stat": "addictionStatus.isAddicted", "op": "is", "value": true}
                     ],
                     "lines": [
-                        "NO! None of this is what I NEED! Rikk, you're telling me you don't have MY STUFF?! This is a nightmare!",
-                        "But... but that's not it... I need MY fix, Rikk! Don't do this to me!",
-                                "You're out of what I need?! My world is ending, Rikk. ENDING.",
-                                "This isn't my brand of relief, Rikk! You understand? The specific kind! The one that stops the spiders from crawling in my brain!"
+                        "NO! None of this is what I NEED! Rikk, you're telling me you don't have MY STUFF?! This is a nightmare! The spiders are gonna win!",
+                        "But... but that's not it... I need MY fix, Rikk! Don't do this to me! The shaking won't stop!",
+                        "You're out of what I need?! My world is ending, Rikk. ENDING. The colors are all wrong!",
+                        "This isn't my brand of relief, Rikk! You understand? The specific kind! The one that stops the spiders from crawling out of my eyes!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [],
                     "lines": [
-                        "Nah, man, that ain't it. Need that *other* stuff, you know? The stuff that quiets the screams.",
-                        "None of this hits the spot, Rikk. You sure you ain't holdin' out the good stuff?",
-                                "My kingdom for something that actually works, Rikk! This ain't it.",
-                                "This menu ain't speaking my language, Rikk. Need something with a bit more... existential punch."
+                        "Nah, man, that ain't it. Need that *other* stuff, you know? The stuff that quiets the screams... or at least makes them sing in tune.",
+                        "None of this hits the spot, Rikk. You sure you ain't holdin' out the good stuff? The stuff that makes the walls stop breathing?",
+                        "My kingdom for something that actually works, Rikk! This ain't it. This is just... colored dust. My demons will laugh at this.",
+                        "This menu ain't speaking my language, Rikk. Need something with a bit more... existential punch. Something to make the lizards in my brain take a nap."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -398,10 +396,10 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "(Eyes darting) Too hot, Rikk, too hot! Gotta bounce!",
-                        "This whole scene is makin' my skin crawl. I'm out!",
-                                "Nah, man, my paranoia is kicking in. I'm gone!",
-                                "(Whispering) The vibe just went sour, Rikk. Real sour. I'm a ghost."
+                        "(Eyes darting wildly) Too hot, Rikk, too hot! The air is buzzing! Gotta bounce before my teeth fall out!",
+                        "This whole scene is makin' my skin crawl. And I think that pigeon is wearing a wire. I'm out!",
+                        "Nah, man, my paranoia is kicking in overdrive! The squirrels are reporting my position! I'm gone!",
+                        "(Whispering frantically) The vibe just went sour, Rikk. Real sour. Like curdled milk and bad news. I'm a ghost. You never saw me."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -410,44 +408,67 @@ export const customerTemplates = {
                 {
                     "moods": ["desperate", "angry"],
                     "lines": [
-                        "What?! No [USUAL_ITEM_NAME]? Rikk, you're killin' me! What else you got then, anything?!",
-                        "OUT?! How can you be out?! Fine, fine... what *do* you have? Make it quick!"
+                        "WHAT?! No [USUAL_ITEM_NAME]?! Rikk, you CANNOT be serious! My whole day, my whole existence, was riding on that! What else you got?! ANYTHING?!",
+                        "OUT?! OF [USUAL_ITEM_NAME]?! That's like... like the sun being out of sunshine! Fine, fine... what *else* can stop the damn shaking?! Make it quick, before I vibrate apart!",
+                        "No [USUAL_ITEM_NAME]?! You're joking, right?! This is a joke! A cruel, twisted joke! Okay, not funny! What's plan B, C, or Z?! I'm not picky, just desperate!"
                     ]
                 },
                 {
                     "moods": ["paranoid"],
-                    "lines": ["They took it, didn't they? The [USUAL_ITEM_NAME]... it's a conspiracy! Okay, okay, what's plan B?"]
+                    "lines": [
+                        "They took it, didn't they? The [USUAL_ITEM_NAME]... it's a conspiracy! The squirrels, the pigeons, maybe even the lamp posts are in on it! Okay, okay, what's the *backup* plan before they come for me too?",
+                        "No [USUAL_ITEM_NAME]? Is this a test? Are you watching me? Are *they* watching me?! Just give me something else, man, something to make the static quieter!",
+                        "Of course you're out of [USUAL_ITEM_NAME]. They probably bugged your supply. Or maybe it's me. Am I bugged?! What else you got that they don't know about?"
+                    ]
                 },
-                {
-                    "lines": ["Damn, Rikk, no [USUAL_ITEM_NAME]? What else is on the menu then?"]
+                { // Mood-agnostic fallback for Jerry
+                    "lines": [
+                        "Damn, Rikk, no [USUAL_ITEM_NAME]? My luck. What else is on the menu then? Something strong, I hope.",
+                        "Seriously? No [USUAL_ITEM_NAME]? My day just went from bad to worse. What else you got that'll do the trick?",
+                        "You're out of [USUAL_ITEM_NAME]? Figures. What other options are there? My nerves are screaming."
+                    ]
                 }
             ],
             "interruption_sirens_nearby": [
                 {
                     "moods": ["desperate", "paranoid", "angry"],
                     "lines": [
-                        "(Eyes wide) Sirens! Oh crap, oh crap! Forget it, I'm out!",
-                        "Five-O! Scatter! I ain't gettin' pinched today, Rikk!"
+                        "(Eyes wide, voice cracking) SIRENS! Oh crap, oh crap! They're coming for me! I knew it! Forget the deal, I'm GHOST!",
+                        "Five-O! Scatter! I ain't gettin' pinched today, Rikk! Not again! Tell 'em I was never here! Or tell 'em I'm a figment of your imagination!",
+                        "COPS?! That's it, deal's off! They probably heard me thinking too loud! I'm outta here before they read my mind!"
                     ]
                 },
-                {
-                    "lines": ["Hear that? Sounds like trouble. I'm gone."]
+                { // Mood-agnostic fallback for Jerry
+                    "lines": [
+                        "Hear that? Sounds like trouble, Rikk! Big trouble! I'm vanishing!",
+                        "Sirens! My cue to not be here! Later! Or maybe never!",
+                        "Nope, nope, nope! Not sticking around for that! I'm gone!"
+                    ]
                 }
             ],
             "sell_success_alternative": [
                 {
-                    "moods": ["desperate", "happy"],
+                    "moods": ["desperate", "happy"], // Jerry's "happy" is still desperate
                     "lines": [
-                        "Alright, Rikk, this ain't my usual, but it'll have to do. Good lookin' out.",
-                        "Not what I came for, but... yeah, okay. Preciate it."
+                        "Alright, Rikk, this ain't my usual, but it'll have to do. Good lookin' out. Anything to stop the damn twitching.",
+                        "Not what I came for, but... yeah, okay. Preciate it. Beggars can't be choosers, right? And I am definitely begging right now.",
+                        "This'll work, I guess. Better than nothing. Which is what I usually have. So, thanks."
                     ]
                 },
                 {
                     "moods": ["angry"],
-                    "lines": ["Fine, whatever. Just ain't the same though. Next time, have my stuff."]
+                    "lines": [
+                        "Fine, whatever. Just ain't the same though. Next time, have my [USUAL_ITEM_NAME], or I'll... I'll be very upset. And jittery. More jittery.",
+                        "This isn't what I wanted, Rikk! But fine! Just... fine! My disappointment is immeasurable.",
+                        "Yeah, yeah, alternative. Story of my life. Just give it here."
+                    ]
                 },
-                {
-                    "lines": ["This'll work for now. Hit me up when you re-up on the [USUAL_ITEM_NAME]."]
+                { // Mood-agnostic fallback for Jerry
+                    "lines": [
+                        "This'll work for now. Hit me up when you re-up on the [USUAL_ITEM_NAME]. Seriously. Call me. Day or night.",
+                        "An alternative... okay. As long as it works. Please tell me it works.",
+                        "Not my first choice, but if it keeps the demons at bay for a few hours... sold."
+                    ]
                 }
             ],
             "usual_unavailable": [
@@ -486,44 +507,63 @@ export const customerTemplates = {
                     "lines": ["This will do. Ensure you have the [USUAL_ITEM_NAME] next time."]
                 }
             ],
-            "usual_unavailable": [
+            "usual_unavailable": [ // Specific to REGULAR_JOE (Chill Chad)
                 {
                     "moods": ["chill", "happy"],
                     "lines": [
-                        "No [USUAL_ITEM_NAME] today, Rikk? Bummer. Whatcha got instead, my dude?",
-                        "Ah, all out? No worries. What else is on the menu?"
+                        "No [USUAL_ITEM_NAME] today, Rikk? Aw man, bummer. Whatcha got instead, my dude? Open to suggestions!",
+                        "Ah, all out of [USUAL_ITEM_NAME]? No worries, man. What else is on the chill menu for today?",
+                        "My usual [USUAL_ITEM_NAME] is MIA? All good. Got any other good vibes for sale?"
                     ]
                 },
                 {
-                    "moods": ["paranoid"],
-                    "lines": ["Whoa, no [USUAL_ITEM_NAME]? Is there a shortage? Okay, okay, what's plan B?"]
-                },
-                {
-                    "lines": ["Damn, no [USUAL_ITEM_NAME]? What else you got cookin'?"]
-                }
-            ],
-            "interruption_sirens_nearby": [
-                {
-                    "moods": ["chill", "paranoid"],
+                    "moods": ["paranoid"], // Chad's version of paranoid is still pretty low-key
                     "lines": [
-                        "Yo, hear that? Sounds like trouble. I'm gonna bounce, Rikk.",
-                        "Sirens? Not good, man. Gotta skate."
+                        "Whoa, no [USUAL_ITEM_NAME]? Is there, like, a shortage I should know about? Okay, okay, what's plan B then, man?",
+                        "Out of [USUAL_ITEM_NAME]? Sketchy. You sure everything's cool? Alright, what else you got that won't attract attention?",
+                        "No [USUAL_ITEM_NAME]... that's weird, dude. Is this a sign? Anyway, what's the alternative that keeps things mellow?"
                     ]
                 },
-                {
-                    "lines": ["That's my cue to leave. Later, Rikk."]
+                { // Mood-agnostic fallback for Chad
+                    "lines": [
+                        "Damn, no [USUAL_ITEM_NAME]? What else you got cookin', Rikk? Hopin' for something decent.",
+                        "Aww, was really hoping for [USUAL_ITEM_NAME]. What's the next best thing you got?",
+                        "No [USUAL_ITEM_NAME] today, huh? That's a shame. Any other recommendations for a chill night?"
+                    ]
                 }
             ],
-            "sell_success_alternative": [
+            "interruption_sirens_nearby": [ // Specific to REGULAR_JOE (Chill Chad)
+                {
+                    "moods": ["chill", "paranoid"], // Chad's paranoid is more cautious than panicked
+                    "lines": [
+                        "Yo, hear that? Sounds like trouble brewing. I'm gonna bounce, Rikk. Don't want no drama.",
+                        "Sirens? Not good, man. Definitely not good. Gotta skate before things get weird. Later!",
+                        "That's the sound of 'not my problem'. Catch you on the flip, Rikk. Stay safe."
+                    ]
+                },
+                { // Mood-agnostic fallback for Chad
+                    "lines": [
+                        "That's my cue to leave, Rikk. Keep it real.",
+                        "Whoop, whoop? Nah, I'm good. Time to make myself scarce. Peace!",
+                        "Sounds like the party's over. Or maybe just starting for someone else. I'm out, man."
+                    ]
+                }
+            ],
+            "sell_success_alternative": [ // Specific to REGULAR_JOE (Chill Chad)
                 {
                     "moods": ["chill", "happy"],
                     "lines": [
-                        "Aight, this works too. Good lookin' out, Rikk.",
-                        "Not what I usually go for, but hey, variety is the spice of life, right? Cheers!"
+                        "Aight, this works too. Good lookin' out, Rikk. Always appreciate a solid backup plan.",
+                        "Not what I usually go for, but hey, variety is the spice of life, right? Cheers, my dude! Still gonna be a good night.",
+                        "This'll do the job just fine. Sometimes a change is as good as a holiday, or so they say. Thanks, Rikk!"
                     ]
                 },
-                {
-                    "lines": ["This'll do the trick. Let me know when you get more [USUAL_ITEM_NAME] though."]
+                { // Mood-agnostic fallback for Chad
+                    "lines": [
+                        "This'll do the trick. Let me know when you get more [USUAL_ITEM_NAME] though, that's my jam.",
+                        "Cool, an alternative. As long as it helps me unwind, I'm good. Appreciate it, Rikk.",
+                        "Not my first pick, but I'm easy. Thanks for sorting me out, man."
+                    ]
                 }
             ],
             "usual_unavailable": [
@@ -552,141 +592,156 @@ export const customerTemplates = {
                     "lines": ["An interesting development. This alternative piece of information will suffice."]
                 }
             ],
-            "usual_unavailable": [
+            "usual_unavailable": [ // Specific to SNITCH (Concerned Carol)
                 {
-                    "moods": ["nosy"],
+                    "moods": ["nosy", "suspicious"],
                     "lines": [
-                        "Oh, you're out of the [USUAL_ITEM_NAME]? How peculiar! What *are* people buying then, Rikk? Do tell!",
-                        "No [USUAL_ITEM_NAME]? That's a shame. I was hoping to... observe its effects. What else is popular?"
+                        "Oh, you're out of the [USUAL_ITEM_NAME]? How peculiar! Is there a reason for that, Rikk? A shortage perhaps? One does hear things about supply chains...",
+                        "No [USUAL_ITEM_NAME]? That's a shame. I was hoping to... observe its typical clientele. So, what *are* people resorting to now, hmm?",
+                        "Out of [USUAL_ITEM_NAME], you say? That's... noteworthy. Does Officer Friendly know about this sudden scarcity? Just wondering."
                     ]
                 },
-                {
-                    "lines": ["No [USUAL_ITEM_NAME]? That's... noteworthy. What else do you have in stock?"]
-                }
-            ],
-            "interruption_sirens_nearby": [
-                {
-                    "moods": ["nosy", "paranoid"],
+                { // Mood-agnostic fallback for Carol
                     "lines": [
-                        "Goodness, sirens! I hope everyone is alright! I should probably go make sure... and take notes.",
-                        "Oh my, that sounds like the authorities! Rikk, is everything... above board here?"
-                    ]
-                },
-                {
-                    "lines": ["Sirens! How exciting! I must document this!"]
-                }
-            ],
-            "sell_success_alternative": [
-                {
-                    "moods": ["nosy", "happy"],
-                    "lines": [
-                        "Oh, an alternative! How fascinating. This will be an interesting data point for my... records.",
-                        "So this is what they get when the [USUAL_ITEM_NAME] isn't available! Good to know, Rikk, good to know."
-                    ]
-                },
-                {
-                    "lines": ["This will do for my... observations. Thank you, Rikk."]
-                }
-            ],
-            "usual_unavailable": [
-                {
-                    "moods": ["manic"],
-                    "lines": [
-                        "NO [USUAL_ITEM_NAME]?! But my genius plan requires EXACTLY THAT! Okay, okay, what's the next best thing?! GOTTA BE FAST!",
-                        "OUT?! My brain was expecting that specific fuel! What else can make my neurons do the Macarena, Rikk?!",
-                        "MY [USUAL_ITEM_NAME] IS GONE?! THIS IS A CRISIS OF EPIC PROPORTIONS! WHAT'S THE CONTINGENCY PLAN, RIKK?!"
-                    ]
-                },
-                {
-                    "lines": [
-                        "No [USUAL_ITEM_NAME]? My inspiration! It's fading! What else can you offer the muse, Rikk?",
-                        "The usual isn't usual today? My entire creative process is thrown off! What other brain-blasters you got?",
-                        "Not the [USUAL_ITEM_NAME] I was hoping for... but destiny waits for no drug! What's the alternative, maestro?"
+                        "No [USUAL_ITEM_NAME]? That's... unexpected. What else do you have in stock that might be... of interest to the community?",
+                        "Hmm, no [USUAL_ITEM_NAME]. I'll make a note of that. What alternatives are you offering these days, Rikk?",
+                        "It's always informative to see what's popular when the [USUAL_ITEM_NAME] isn't available. What's flying off the shelves instead?"
                     ]
                 }
             ],
-            "interruption_sirens_nearby": [
+            "interruption_sirens_nearby": [ // Specific to SNITCH (Concerned Carol)
                 {
-                    "moods": ["manic", "paranoid"],
+                    "moods": ["nosy", "alarmed"], // Carol's "alarmed" is more about the event than personal fear
                     "lines": [
-                        "SIRENS?! Abort! Abort! My ideas are too valuable to be confiscated! Gotta ZOOM!",
-                        "WHOA! That's the sound of creativity being STIFLED! Gotta jet, Rikk, before they patent my thoughts!",
-                        "COPS?! NO TIME! My plan to teach squirrels quantum physics MUST NOT FALL INTO THE WRONG HANDS! LATER!"
+                        "Goodness, sirens! I hope everyone is alright! I should probably go make sure... and take detailed notes for the Neighborhood Watch report. One can never be too thorough!",
+                        "Oh my, that sounds like the authorities! Rikk, is everything... perfectly legal here? One wouldn't want any... misunderstandings with Officer Friendly, would one?",
+                        "Sirens! How exciting! I must document this disturbance for the community records! Perhaps there's a bylaw being broken!"
                     ]
                 },
-                {
+                { // Mood-agnostic fallback for Carol
                     "lines": [
-                        "Bad vibes! My genius is outta here!",
-                        "That's the sound of my exit cue! Catch you on the flip side, Rikk!",
-                        "Sirens mean it's time for Marty to become a blur! Adios!"
+                        "Well, that's certainly a commotion. I suppose I should observe, for... safety reasons, of course.",
+                        "Sirens? One hopes it's nothing too disruptive to our peaceful neighborhood. I'll just... keep an eye out.",
+                        "That sounds like official business. I should probably make myself available in case they need a witness... or a statement."
                     ]
                 }
             ],
-            "sell_success_alternative": [
+            "sell_success_alternative": [ // Specific to SNITCH (Concerned Carol)
                 {
-                    "moods": ["manic", "happy"],
+                    "moods": ["nosy", "satisfied"], // Carol's "satisfied" is about gathering intel
                     "lines": [
-                        "ALRIGHT! Not the rocket fuel I ordered, but this'll get me to... a slightly lower orbit! THANKS, RIKK!",
-                        "This isn't Plan A, but Plan B still has POTENTIAL! My brain is already adapting! INNOVATION!",
-                        "Different fuel, same destination: GENIUS! This'll work, Rikk! My mind is already buzzing with NEW ideas!"
+                        "Oh, an alternative! How fascinating. This will be an interesting data point for my... records. One learns so much about people's secondary choices.",
+                        "So this is what they get when the [USUAL_ITEM_NAME] isn't available! Good to know, Rikk, very good to know. Adds another layer to the... local commerce report.",
+                        "An alternative purchase. Noted. It's always wise to understand the full spectrum of... market demands. Thank you for the insight, Rikk."
                     ]
                 },
-                {
+                { // Mood-agnostic fallback for Carol
                     "lines": [
-                        "This'll work! My next big idea is still on schedule! Mostly!",
-                        "Not the usual, but hey, variety is the spice of... RAPID THOUGHT! Thanks, Rikk!",
-                        "An unexpected twist in the formula! I LIKE IT! Let's see where this new path takes my brain-train!"
+                        "This will do for my... observations. Thank you, Rikk. Very informative.",
+                        "An interesting substitute. I'll add it to my notes on local... consumer habits.",
+                        "Good to know what else is moving when the primary choice is unavailable. Thank you."
                     ]
                 }
             ],
-            "usual_unavailable": [
+            "usual_unavailable": [ // Specific to STIMULANT_USER (Motor-Mouth Marty)
                 {
-                    "moods": ["dreamy"],
+                    "moods": ["manic", "frantic"], // Marty is always a bit manic
                     "lines": [
-                        "The universe isn't providing the [USUAL_ITEM_NAME] today, huh? That's cool, man. What other cosmic pathways are open?",
-                        "No [USUAL_ITEM_NAME]? The vibes must be off for that particular journey. What else resonates with the now, Rikk?",
-                        "Ah, the [USUAL_ITEM_NAME] is hiding from us. The cosmos has other plans. What alternative realities are you stocking, my friend?"
+                        "NO [USUAL_ITEM_NAME]?! IMPOSSIBLE! My entire theory of sentient pigeon traffic control depended on its specific molecular structure! WHAT ELSE HAVE YOU GOT?! ANYTHING?! My brain is deflating like a sad bouncy castle!",
+                        "OUT?! OF [USUAL_ITEM_NAME]?! Rikk, you don't understand! The fate of my self-stirring coffee cup invention hangs in the balance! I need that spark! That ZING! What's the next best thing for MAXIMUM BRAIN POWER?!",
+                        "MY [USUAL_ITEM_NAME] IS GONE?! THIS IS A CATASTROPHE! A CONSPIRACY! Were the llamas involved?! They know I'm onto their global economic takeover! QUICK, RIKK, what's your most potent alternative before my ideas escape?!"
                     ]
                 },
-                {
+                { // Mood-agnostic fallback for Marty (still manic)
                     "lines": [
-                        "The [USUAL_ITEM_NAME] isn't flowing? What other truths are you serving today, my friend?",
-                        "My usual portal is closed, it seems. What other doors of perception can you open for me, Rikk?",
-                        "No [USUAL_ITEM_NAME]? It's all part of the cosmic dance, man. What's the next step?"
+                        "No [USUAL_ITEM_NAME]? My inspiration! It's fading like a cheap hologram! What else can you offer the muse of manic invention, Rikk?! GOTTA BE QUICK!",
+                        "The usual isn't usual today? My entire creative process to invent edible glitter is thrown off! What other brain-blasters you got that can handle this level of genius?!",
+                        "Not the [USUAL_ITEM_NAME] I was hoping for... but destiny waits for no drug! What's the alternative, maestro? My plan to teach squirrels philosophy is on a TIGHT deadline!"
                     ]
                 }
             ],
-            "interruption_sirens_nearby": [
+            "interruption_sirens_nearby": [ // Specific to STIMULANT_USER (Motor-Mouth Marty)
                 {
-                    "moods": ["dreamy", "paranoid"],
+                    "moods": ["manic", "paranoid"], // Marty's paranoia is also hyper-active
                     "lines": [
-                        "Whoa, man, those are some heavy frequencies. My aura is telling me to, like, float away.",
-                        "The collective unconscious is screaming 'run,' Rikk. Or maybe that's just, like, regular sirens. Either way, peace out!",
-                        "The vibe just got... *angular*, Rikk. My spirit guide says 'nope'. Gotta follow the flow, and it's flowing away from here."
+                        "SIRENS?! Abort! Abort! My ideas for a self-folding laundry empire are too valuable to be confiscated by the thought police! Gotta ZOOM! They're probably after my blueprints for squirrel-sized battle armor!",
+                        "WHOA! That's the sound of creativity being STIFLED by THE MAN! Gotta jet, Rikk, before they patent my thoughts on breathable coffee! My genius must remain FREE!",
+                        "COPS?! NO TIME! My plan to teach pigeons quantum physics via interpretive dance MUST NOT FALL INTO THE WRONG HANDS! LATER, RIKK! I'M A BLUR OF PURE INNOVATION AND ESCAPE VELOCITY!"
                     ]
                 },
-                {
+                { // Mood-agnostic fallback for Marty (still manic)
                     "lines": [
-                        "The energy shifted. Time to be elsewhere.",
-                        "Those sounds are, like, totally clashing with my chakras. I'm gonna go find a quieter dimension.",
-                        "My third eye sees flashing lights and bad times. Later, Rikk!"
+                        "Bad vibes! My genius is outta here like a rocket-powered hamster! THEY'LL NEVER TAKE ME ALIVE... OR MY IDEAS!",
+                        "That's the sound of my exit cue! Catch you on the flip side, Rikk! If I don't accidentally invent teleportation first!",
+                        "Sirens mean it's time for Marty to become a blur of pure, unadulterated SPEED! Adios, Rikk! Don't tell them which way my brilliance went!"
                     ]
                 }
             ],
-            "sell_success_alternative": [
+            "sell_success_alternative": [ // Specific to STIMULANT_USER (Motor-Mouth Marty)
                 {
-                    "moods": ["dreamy", "happy"],
+                    "moods": ["manic", "happy"], // Marty's happy is... still manic
                     "lines": [
-                        "This path is different, but the destination is still enlightenment, right? Far out, Rikk.",
-                        "Not the usual portal, but this one looks interesting too. Thanks for the alternative route to the cosmos!",
-                        "A surprise journey! The universe works in mysterious and groovy ways. This new vibe... I dig it, Rikk."
+                        "ALRIGHT! Not the rocket fuel I ordered for my brain-ship, but this'll get me to... a slightly lower, yet still ASTOUNDING orbit! THANKS, RIKK! My project to make clouds taste like cotton candy LIVES ON!",
+                        "This isn't Plan A for my idea-generating engine, but Plan B still has POTENTIAL! My brain is already adapting, Rikk! INNOVATION! Now I can finish my opera about cheese in HALF THE TIME!",
+                        "Different fuel, same destination: GENIUS! This'll work, Rikk! My mind is already buzzing with NEW ideas for self-solving Rubik's cubes! This is even BETTER! MAYBE!"
                     ]
                 },
-                {
+                { // Mood-agnostic fallback for Marty (still manic)
                     "lines": [
-                        "A new experience! The universe provides in mysterious ways. Thanks!",
-                        "This wasn't on my astral itinerary, but I'm open to the cosmic detour. Right on, Rikk.",
-                        "Sometimes the unexpected path leads to the most profound truths. Or at least a really interesting afternoon. Cheers!"
+                        "This'll work! My next big idea to create sentient dust bunnies is still on schedule! Mostly! Gotta be flexible when you're this brilliant!",
+                        "Not the usual brain-boost, but hey, variety is the spice of... RAPID-FIRE THOUGHT! Thanks, Rikk! This could be the missing ingredient for my emotional support toaster!",
+                        "An unexpected twist in the formula! I LIKE IT! Let's see where this new path takes my brain-train! Maybe I'll invent square bubbles! Or singings slugs! The possibilities are ENDLESS!"
+                    ]
+                }
+            ],
+            "usual_unavailable": [ // Specific to PSYCHEDELIC_EXPLORER (Cosmic Connie)
+                {
+                    "moods": ["dreamy", "accepting"], // Connie's default state
+                    "lines": [
+                        "The universe isn't providing the [USUAL_ITEM_NAME] today, huh? That's cool, man. It means another path is opening. What other cosmic pathways are illuminated, Rikk?",
+                        "No [USUAL_ITEM_NAME]? The vibes must be off for that particular journey. My spirit guide, Bartholomew, says it's a sign to explore new frequencies. What else resonates with the now, my friend?",
+                        "Ah, the [USUAL_ITEM_NAME] is hiding from us. The cosmos has other plans, like a surprise astral detour! What alternative realities are you stocking, Rikk, that might show me the color of sound?"
+                    ]
+                },
+                { // Mood-agnostic fallback for Connie (still dreamy)
+                    "lines": [
+                        "The [USUAL_ITEM_NAME] isn't flowing? What other truths are you serving today, my friend? Perhaps a journey to the land of talking mushrooms?",
+                        "My usual portal is closed, it seems. The stars must be misaligned for that trip. What other doors of perception can you open for me, Rikk? My aura is ready for a new shade.",
+                        "No [USUAL_ITEM_NAME]? It's all part of the cosmic dance, man. The universe is nudging me elsewhere. What's the next step on this grand, spiraling journey?"
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [ // Specific to PSYCHEDELIC_EXPLORER (Cosmic Connie)
+                {
+                    "moods": ["dreamy", "concerned"], // Connie's "paranoid" is more like "concerned about bad vibes"
+                    "lines": [
+                        "Whoa, man, those are some heavy, discordant frequencies. My aura is telling me to, like, float away before the colors get too jagged.",
+                        "The collective unconscious is screaming 'bad vibes,' Rikk. Or maybe that's just, like, regular sirens. Either way, my spirit guide Bartholomew says 'peace out, find a gentler reality!'",
+                        "The vibe just got... *angular* and loud, Rikk. My spirit guide says 'nope, this ain't it'. Gotta follow the flow, and it's flowing swiftly away from here, towards quieter dimensions."
+                    ]
+                },
+                { // Mood-agnostic fallback for Connie (still dreamy)
+                    "lines": [
+                        "The energy shifted, Rikk. Time to be elsewhere, where the music of the spheres is a bit more harmonious.",
+                        "Those sounds are, like, totally clashing with my chakras, man. I'm gonna go find a quieter dimension, maybe one where squirrels can teach me to fly.",
+                        "My third eye sees flashing lights and... just, like, really uncomfortable geometric patterns. Later, Rikk! May your aura be shielded!"
+                    ]
+                }
+            ],
+            "sell_success_alternative": [ // Specific to PSYCHEDELIC_EXPLORER (Cosmic Connie)
+                {
+                    "moods": ["dreamy", "happy"], // Connie's happy is an expanded state of cosmic joy
+                    "lines": [
+                        "This path is different, but the destination is still enlightenment, right? Far out, Rikk! My soul is already doing a little spiral dance. Thanks for the unexpected cosmic map!",
+                        "Not the usual portal, but this one looks interesting too! Like a secret garden in the astral plane! Thanks for the alternative route to the cosmos, my friend!",
+                        "A surprise journey! The universe works in mysterious and groovy ways, doesn't it? This new vibe... I dig it, Rikk. Bartholomew the badger will be so intrigued!"
+                    ]
+                },
+                { // Mood-agnostic fallback for Connie (still dreamy)
+                    "lines": [
+                        "A new experience! The universe provides in such wonderfully weird ways. Thanks, Rikk! This will surely help me understand what my cat dreams about.",
+                        "This wasn't on my astral itinerary, but I'm open to the cosmic detour. Right on, Rikk! Maybe I'll finally learn the language of trees.",
+                        "Sometimes the unexpected path leads to the most profound truths. Or at least a really interesting afternoon watching the clouds shapeshift. Cheers, fellow traveler!"
                     ]
                 }
             ]
@@ -852,7 +907,8 @@ export const customerTemplates = {
                     "lines": [
                         "This is... unacceptable, Rikk. **I deal in excellence, not adequacy. Do you have something that doesn't scream 'bargain bin'?**",
                         "Rikk, Rikk, Rikk. **Are we playing games? This is amateur hour. Show me what a *professional* has.**",
-                        "Surely you jest. This wouldn't even pass muster with my third-string associates. Bring out the real selection."
+                        "Surely you jest. This wouldn't even pass muster with my third-string associates. Bring out the real selection.",
+                        "This item lacks a certain... gravitas, Rikk. My acquisitions are investments, not fleeting amusements."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -863,7 +919,8 @@ export const customerTemplates = {
                     "lines": [
                         "An ambitious valuation, Rikk. **Particularly for an item of... uncertain provenance. One hopes this price doesn't include a surcharge for unwanted attention.** My offer stands.",
                                 "That price is... theatrical. **Particularly for an item of... uncertain provenance. One hopes this price doesn't include a surcharge for unwanted attention.** My offer stands.",
-                                "For that figure, Rikk, I expect it to arrive gift-wrapped in the silence of the grave. My counter-offer is firm."
+                                "For that figure, Rikk, I expect it to arrive gift-wrapped in the silence of the grave. My counter-offer is firm.",
+                                "Such a price invites scrutiny, Rikk. Something I actively avoid. My number is more... discreet."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -872,7 +929,8 @@ export const customerTemplates = {
                     "lines": [
                         "An ambitious valuation, Rikk. **While I appreciate a spirited attempt, my appraisers would value this differently. I'm generous, not a simpleton.** However, for expediency...",
                                 "A bold gambit, Rikk. **While I appreciate a spirited attempt, my appraisers would value this differently. I'm generous, not a simpleton.** However, for expediency...",
-                                "(Chuckles) Your audacity is almost charming, Rikk. Almost. Let's discuss a number that doesn't require me to liquidate a minor asset."
+                                "(Chuckles) Your audacity is almost charming, Rikk. Almost. Let's discuss a number that doesn't require me to liquidate a minor asset.",
+                                "Ah, the optimism of the street merchant! Commendable, Rikk. But my figure is grounded in reality, not aspiration."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -881,7 +939,8 @@ export const customerTemplates = {
                     "lines": [
                         "A bold gambit, Rikk. **I am prepared to offer a fair sum for genuine quality, not subsidize your aspirations.** My figure is non-negotiable.",
                                 "Rikk, please. **That price is an insult to both my intelligence and my tailor.** I have a counter-proposal, if you're wise enough to hear it.",
-                                "That number is... quaint. My offer reflects the item's true value, not its sentimental value to you, Rikk."
+                                "That number is... quaint. My offer reflects the item's true value, not its sentimental value to you, Rikk.",
+                                "Your asking price is... imaginative. My offer is based on tangible value. Take it or leave it."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -892,7 +951,8 @@ export const customerTemplates = {
                     "lines": [
                         "(Secures item, a curt nod) Prudent. **Ensure all traces of this transaction are... vaporized. I trust your discretion is as valuable as your wares.**",
                                 "Acceptable. **The less said, the better. For all involved.**",
-                                "This exchange never happened, Rikk. See that it remains that way. The item is secured."
+                                "This exchange never happened, Rikk. See that it remains that way. The item is secured.",
+                                "Good. This item now ceases to exist in your records. And our conversation with it."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -901,7 +961,8 @@ export const customerTemplates = {
                     "lines": [
                         "Excellent. A worthy acquisition. **Your network is... surprisingly effective for this locale. One might almost consider it a legitimate enterprise. Almost.**",
                                 "Marvelous. This will serve its purpose admirably. **You have a certain... raw talent, Rikk.**",
-                                "Splendid choice, Rikk. This will add a certain... *je ne sais quoi* to my collection. And your coffers, I presume."
+                                "Splendid choice, Rikk. This will add a certain... *je ne sais quoi* to my collection. And your coffers, I presume.",
+                                "A fine piece for a fair price. Your eye for quality is... improving, Rikk."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -910,7 +971,8 @@ export const customerTemplates = {
                     "lines": [
                         "Satisfactory. **Your service is noted, Rikk. Continue to provide this level of quality, and our association will be mutually beneficial.**",
                                 "As expected. **Keep this standard, Rikk. My associates have... high expectations.**",
-                                "A pleasure, as always, when competence is involved. Until next time, Rikk."
+                                "A pleasure, as always, when competence is involved. Until next time, Rikk.",
+                                "The transaction is complete. Your efficiency is appreciated, Rikk."
                     ],
                     "payload": {
                         "type": "EFFECT",
@@ -924,7 +986,8 @@ export const customerTemplates = {
                     "lines": [
                         "(Accepts item with a discerning glance) Acceptable. **See to it that our... interaction remains unrecorded. By any entity.**",
                                 "Very well. **Discretion, Rikk. Above all else.**",
-                                "This transaction concludes our business. Erase any record. I trust you understand the implications."
+                                "This transaction concludes our business. Erase any record. I trust you understand the implications.",
+                                "The item is satisfactory. Ensure our mutual anonymity in this matter."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -933,7 +996,8 @@ export const customerTemplates = {
                     "lines": [
                         "Marvelous! This will pair exquisitely with my evening's... *endeavors*. **You have a talent, Rikk. A raw, unpolished, slightly illegal talent. Cultivate it.**",
                                 "Splendid! **This is precisely the caliber I've come to expect. Or at least, hope for.**",
-                                "Ah, perfection. You've outdone yourself, Rikk. Or perhaps, simply met my baseline expectations. Delightful either way."
+                                "Ah, perfection. You've outdone yourself, Rikk. Or perhaps, simply met my baseline expectations. Delightful either way.",
+                                "Excellent. This will serve its intended purpose quite well. Your sourcing is commendable, for this tier."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -942,7 +1006,8 @@ export const customerTemplates = {
                     "lines": [
                         "Indeed. This meets the standard. **Until our next transaction, Rikk. Maintain the quality.**",
                                 "Precisely. **You may inform your... lesser clients that this level of product is reserved.**",
-                                "An adequate transaction. Continue to source such quality, and we shall speak again."
+                                "An adequate transaction. Continue to source such quality, and we shall speak again.",
+                                "This will suffice. Keep me appraised of similar opportunities, Rikk."
                     ],
                     "payload": {
                         "type": "EFFECT",
@@ -1044,7 +1109,8 @@ export const customerTemplates = {
                         "One must have hobbies, Rikk. Mine include hostile takeovers and collecting experiences that would make lesser men weep. **This is merely... inventory acquisition.**",
                         "**My tailor informs me that this neighborhood is 'an assault on the senses'.** I find his lack of imagination... disappointing. There is profit in all kinds of filth.",
                                 "The air here has a certain... texture. **The scent of desperation and cheap takeout. It is... grounding, in a pathetic sort of way.**",
-                                "Tell me, Rikk, do you ever aspire to something... grander than this? Or is this the apex of your ambition?"
+                                "Tell me, Rikk, do you ever aspire to something... grander than this? Or is this the apex of your ambition?",
+                                "My driver is double-parked, Rikk. Let's expedite this, shall we?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1200,12 +1266,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
-                {
+                { // Mood-agnostic fallback for Chad
                     "conditions": [],
                     "lines": [
-                        "Cool, appreciate it. **Keeps the dream alive, or at least the Wi-Fi on.**",
-                                "Right on. Good deal. **Later, Rikk.**",
-                                "Solid trade, my friend. Pleasure doing business."
+                        "Cool, appreciate it. This'll help with the... uh... 'creative projects fund.' You know how it is.",
+                        "Right on. Good deal. Always a pleasure, Rikk. Later, my dude.",
+                        "Solid trade, my friend. This cash is gonna see some good times... or pay some bills. Probably bills."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1214,27 +1280,27 @@ export const customerTemplates = {
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
                     "lines": [
-                        "Sweet. Got it. **Later, Rikk. And if anyone asks, we were discussing... sustainable gardening.**",
-                                "Nice one. **Now, if you see me running, try to keep up. Or don't. Probably better if you don't.**",
-                                "Secured. **Gotta go, pretty sure that pigeon is a government drone. It winked at me.**"
+                        "Sweet. Got it. Later, Rikk. And if anyone asks, we were discussing... sustainable gardening. Or, like, the weather.",
+                        "Nice one. Now, if you see me running, try to keep up. Or don't. Probably better if you don't. Less complicated.",
+                        "Secured. Gotta go, pretty sure that pigeon is a government drone. It winked at me. Or maybe it was just a regular pigeon. Who knows?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
-                        "Right on! This is gonna be a good one. **Time to go ponder the mysteries of the universe, or just what's for dinner. Big questions, man.**",
-                                "Excellent! **My couch and I have a very important meeting scheduled, and this is the guest of honor!**",
-                                "Perfecto! **This weekend is officially gonna be legendary. Or at least, spent mostly horizontal.** Thanks, Rikk!"
+                        "Right on! This is gonna be a good one. Time to go ponder the mysteries of the universe, or just what's for dinner. Big questions, man.",
+                        "Excellent! My couch and I have a very important meeting scheduled, and this is the guest of honor! Gonna be epic.",
+                        "Perfecto! This weekend is officially gonna be legendary. Or at least, spent mostly horizontal with good snacks. Thanks, Rikk!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
-                {
+                { // Mood-agnostic fallback for Chad
                     "conditions": [],
                     "lines": [
-                        "Nice one, Rikk. **Just what the doctor didn't order, but what my soul needed.**",
-                                "Perfect. **Time to kick back and let the good times roll.**",
-                                "Exactly what I was looking for. You're a mind reader, Rikk. Or just good at your job."
+                        "Nice one, Rikk. Just what the doctor didn't order, but what my soul needed for a chill evening.",
+                        "Perfect. Time to kick back, relax, and let the good times roll. You're a legend, man.",
+                        "Exactly what I was looking for. You're a mind reader, Rikk. Or just really good at your job. Either way, thanks!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1243,10 +1309,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Ah, bummer, man. Wallet's light, huh? **All good, happens to the best of us.** Hit me up when the ATM gods have blessed you.",
-                        "No cash? No worries, dude. **The universe is telling me to save my money anyway. Probably for pizza.** Catch you on the flip side.",
-                                "All good, Rikk. No stress. Just let me know when you're liquid again. I'll be around.",
-                                "Short on funds, eh? Story of my life, bro. Catch you later."
+                        "Ah, bummer, man. Wallet's light, huh? All good, happens to the best of us. Hit me up when the ATM gods have blessed you, no rush.",
+                        "No cash? No worries, dude. The universe is telling me to save my money anyway... probably for pizza or something. Catch you on the flip side.",
+                        "All good, Rikk. No stress. Just let me know when you're liquid again. I'll be around, probably trying to figure out my Netflix password."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1255,11 +1320,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Not feelin' it? Cool, cool. **No hard feelings.** My buddy's cousin might be into it anyway. Worth a shot.",
-                        "All good, man. **If it ain't your vibe, it ain't your vibe.** I'll find another home for this... thing.",
-                        "No worries. Just figured I'd ask. Thanks for lookin', anyway.",
-                                "No go? Fair enough, man. Can't win 'em all.",
-                                "Aight, your call. Maybe it's too avant-garde for this market anyway."
+                        "Not feelin' it? Cool, cool. No hard feelings, man. My buddy's cousin might be into it anyway, he collects weird stuff. Worth a shot.",
+                        "All good, Rikk. If it ain't your vibe, it ain't your vibe. I'll find another home for this... *thing*. Maybe the internet will want it.",
+                        "No worries. Just figured I'd ask, you know? Thanks for lookin' anyway, my dude. Keep it real."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1268,10 +1331,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Not for sale? Aight, I respect it. **Gotta keep the good stuff for the right moment, I get that.** Maybe next time then.",
-                        "Can't part with it, huh? No worries, man. **Just means I gotta find another way to chill.** The quest continues.",
-                                "Ah, for sure. No problem. Let me know if that changes, my dude.",
-                                "Keeping that one for yourself, eh? Can't blame ya. Hit me up if you change your mind."
+                        "Not for sale? Aight, I respect it. Gotta keep the good stuff for the right moment, I get that. Maybe next time then, my man.",
+                        "Can't part with it, huh? No worries, man. Just means I gotta find another way to chill. The quest for ultimate relaxation continues!",
+                        "Ah, for sure. No problem. Let me know if that changes, my dude. My couch will be waiting patiently."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1280,10 +1342,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Whoa, shelves are lookin' pretty bare, Rikk. Tough times, huh?",
-                        "Nothin' today, man? All good, maybe next time.",
-                                "Slim pickings, eh Rikk? No worries, man.",
-                                "Inventory's looking a bit sparse, my dude. Re-up soon?"
+                        "Whoa, shelves are lookin' pretty bare, Rikk. Tough times, huh? Hope you get a restock soon, for both our sakes!",
+                        "Nothin' today, man? All good, maybe next time. Gives my wallet a chance to recover too, haha.",
+                        "Slim pickings, eh Rikk? No worries, man. I'll just have to find my zen some other way tonight."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1292,10 +1353,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Ah man, thought I had something for ya, but I must've left it. My bad.",
-                        "Pockets are empty today, Rikk. Next time for sure.",
-                                "Coulda sworn I had a little something to trade... guess not. Oh well.",
-                                "False alarm, Rikk. Thought I had a winner, but it was just pocket lint and dreams."
+                        "Ah man, thought I had something for ya, but I must've left it at home... or maybe it was just a really vivid dream. My bad, Rikk.",
+                        "Pockets are empty today, Rikk. Next time for sure. Unless I find a winning lottery ticket on the sidewalk, then it's on me!",
+                        "Coulda sworn I had a little something to trade... guess not. Oh well, more room for good vibes, right?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1304,10 +1364,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Hmm, nothin' really jumpin' out at me today, Rikk.",
-                        "Appreciate you showin' me, but not quite what I'm after.",
-                                "Gotcha. Maybe your next shipment will have my name on it.",
-                                "Not seeing my usual vibe here, Rikk. All good, I'll check back."
+                        "Hmm, nothin' really jumpin' out at me today, Rikk. All good though, man. Appreciate you showin' me the goods.",
+                        "Appreciate you showin' me, but not quite what I'm after for this particular chill session. Maybe next time!",
+                        "Gotcha. Maybe your next shipment will have my name on it. Keep me posted if anything new and mellow comes in!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1316,10 +1375,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Yo, this vibe is getting a little too weird for me. I'm gonna bail.",
-                        "Something feels off, Rikk. Think I'm gonna take off.",
-                                "Not liking the look of this, man. Catch you later.",
-                                "My spidey-senses are tingling, and not in a fun way. Peace out, Rikk."
+                        "Yo, this vibe is getting a little too weird for me, Rikk. I'm gonna bail before it gets any stranger. Peace!",
+                        "Something feels off, Rikk. Think I'm gonna take off. Don't need any bad juju messing with my chill.",
+                        "Not liking the look of this, man. My gut says 'nope'. Catch you later, stay out of trouble!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1401,7 +1459,8 @@ export const customerTemplates = {
                                 "You Rikk? Name's [CUSTOMER_NAME]. Heard you trade in... *information*. **I got some prime cuts.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
                                 "Rikk. Word on the street is you're looking for an edge. I might have just the thing. **Information broker, at your service... for a fee.**",
                                 "They call you Rikk? Good. I hear things. **Things people pay to know.** Interested?",
-                                "Rikk. I've got a whisper that's worth its weight in gold. You buying?"
+                                "Rikk. I've got a whisper that's worth its weight in gold. You buying?",
+                                "You Rikk? The name on the street is you're a man who knows the value of... * whispers*. I've got a fresh one."
                             ]
                         },
                         {
@@ -1409,7 +1468,8 @@ export const customerTemplates = {
                             "lines": [
                                 "(Hushed, jumpy, clutching a worn notepad) Rikk, keep your voice down! **They're listening, man, the walls have ears, and the rats are wearing wires!** I got intel, grade-A, but this drop needs to be ghost. **My contact lens just transmitted a warning.**",
                                 "(Looks over both shoulders, pulls hat lower) Rikk. We need to talk. Quietly. **I've got something that could fry bigger fish than you... or me.** Info's hot. Price is hotter. You in?",
-                                "Rikk, you didn't see me, I wasn't here. **But I got a whisper that could change the weather.** You interested before the wind changes?"
+                                "Rikk, you didn't see me, I wasn't here. **But I got a whisper that could change the weather.** You interested before the wind changes?",
+                                "This ain't just info, Rikk, it's a lit fuse. But the boom could be profitable. You game, or just a window shopper?"
                             ]
                         },
                         {
@@ -1417,7 +1477,8 @@ export const customerTemplates = {
                             "lines": [
                                 "(A sly, self-satisfied grin) Rikk, my friend! You've caught me on a banner day. **The streets are singing to me, and their song is pure profit.** I've got a symphony of secrets that'll make your ears tingle and your wallet bulge. **This ain't just intel, it's a golden ticket.**",
                                 "(Leans in conspiratorially) Rikk! Good timing. **I just heard something that'll make your jaw drop and your pockets jingle.** This is exclusive. Very exclusive. And very, very lucrative for the right buyer.",
-                                "Ah, Rikk! Just the man. **The city's been generous with her secrets today, and I'm feeling generous in turn... for a price.** What say you?"
+                                "Ah, Rikk! Just the man. **The city's been generous with her secrets today, and I'm feeling generous in turn... for a price.** What say you?",
+                                "Rikk, my man of the hour! The city's been whispering sweet nothings in my ear, and they all spell profit for you... if you're buying."
                             ]
                         }
                     ]
@@ -1439,7 +1500,9 @@ export const customerTemplates = {
                             "lines": [
                                 "Rikk. Back with another tidbit. This one's fresh.",
                                 "Got some more information for your consideration, Rikk. Standard rates apply.",
-                                "Heard you might be in the market for what I'm selling. The usual quality, Rikk."
+                                "Heard you might be in the market for what I'm selling. The usual quality, Rikk.",
+                                "The usual arrangement, Rikk? I talk, you listen... and pay.",
+                                "Another day, another secret. You know the drill, Rikk."
                             ]
                         },
                         {
@@ -1485,7 +1548,8 @@ export const customerTemplates = {
                     "lines": [
                         "This ain't a charity, Rikk. **My whispers have value. You want the dirt, you gotta pay for the shovel.**",
                         "Look, Rikk. **Good intel costs. Bad intel costs more.** Your call.",
-                        "My sources don't work for free, Rikk. This quality of intel has a premium."
+                        "My sources don't work for free, Rikk. This quality of intel has a premium.",
+                        "Can't cover the consultation fee, Rikk? Well, some secrets remain untold then. Pity."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1496,7 +1560,8 @@ export const customerTemplates = {
                     "lines": [
                         "(Slips info quickly, eyes darting) Use it, don't lose it. **And burn this conversation from your memory. And maybe your clothes.** They know things, Rikk. **They know what you had for breakfast.**",
                                 "There. **Now act like we were discussing the weather. Bad weather. Very bad.**",
-                                "Done. **This conversation is now a figment of your imagination. And mine. Especially mine.**"
+                                "Done. **This conversation is now a figment of your imagination. And mine. Especially mine.**",
+                                "Good. Consider this conversation redacted from reality. You never saw me."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -1505,7 +1570,8 @@ export const customerTemplates = {
                     "lines": [
                         "There you go. Pure gold. **Handle it with care, Rikk. Some secrets have teeth.** Pleasure doing business. **Now, if you'll excuse me, I have more... listening to do.**",
                                 "Excellent choice, Rikk. **This little nugget will pay dividends. Or, you know, keep you out of jail. Potato, potahto.**",
-                                "A wise investment, Rikk. **May this information serve you as well as it served my... source.** Until next time."
+                                "A wise investment, Rikk. **May this information serve you as well as it served my... source.** Until next time.",
+                                "That's what I like to hear, Rikk. May this knowledge pave your way to... less trouble. Or more profit. Your choice."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -1514,7 +1580,8 @@ export const customerTemplates = {
                     "lines": [
                         "Solid. **Use that wisely, it could save your hide. Or make you a mint.** Keep my number.",
                         "Good. **Remember where you got it. And remember, some doors are best left unopened... unless you have a key. Which I just sold you.**",
-                        "Pleasure doing business. Remember, loose lips sink ships... and operations."
+                        "Pleasure doing business. Remember, loose lips sink ships... and operations.",
+                        "Another successful transaction. My network delivers, Rikk. Remember that."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1550,7 +1617,8 @@ export const customerTemplates = {
                         "Suit yourself, Rikk. **Some people prefer to walk around in the dark. Makes for an easier target.** Don't say I didn't warn you.",
                         "Your call. But don't come knocking when things go sideways. **Good information has a shelf life. This particular vintage is about to expire... probably all over your operation.**",
                                 "Passing on this? A bold move. **Let's hope for your sake it's an informed one.** My job is done here.",
-                                "Alright, Rikk. But when the hammer falls, don't say I didn't offer you an umbrella."
+                                "Alright, Rikk. But when the hammer falls, don't say I didn't offer you an umbrella.",
+                                "Refusing my intel? Bold, Rikk. Let's hope ignorance truly is bliss for you. It rarely is in this town."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1609,13 +1677,12 @@ export const customerTemplates = {
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
-                {
+                { // Mood-agnostic fallback for Carol
                     "conditions": [],
                     "lines": [
-                        "Well hello there, Rikk! **Such a... *dynamic* street, isn't it?** My, my, what are you involved with today? **You always seem to be around the most... *unique* things. Tell me all about it! For... research, of course!**",
-                        "Oh, Rikk! It's me, [CUSTOMER_NAME], just out for a stroll. **Trying to keep an eye on things, you know. For the good of the community.** What's that you've got there? Looks... *special*.",
-                                "Oh, Rikk! Just observing the... *local color*. Anything interesting you're involved with today?",
-                                "Rikk, always a pleasure. **One tries to stay informed about the... comings and goings. What have you got for me today?**"
+                        "Well hello there, Rikk! Such a... *dynamic* street, isn't it? My, my, what are you involved with today? You always seem to be around the most... *unique* individuals. One must stay informed, for the neighborhood's sake!",
+                        "Oh, Rikk! It's [CUSTOMER_NAME], just out for a stroll and keeping an eye on things. For the good of the community, of course. What's that you've got there? Anything... noteworthy?",
+                        "Rikk, always a pleasure. One tries to stay informed about the... comings and goings. What interesting items are you... *circulating* today? Purely for my own curiosity, you understand."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1624,12 +1691,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Oh, lovely. Thank you, Rikk. **This will be... cataloged. For... posterity. Yes.** Now, I really must be going, **I think my petunias need me. And they have excellent hearing.**",
-                        "Very good. **I'll just... file this away. Under 'miscellaneous curiosities'.**",
-                        "Splendid! Thank you, Rikk! **This is just perfect for my... collection. You're such a vital part of the... local color! The police will be so interested... I mean, the historical society!**",
-                        "Oh, wonderful! **This will make an excellent... *exhibit* in my report... I mean, my scrapbook!**",
-                        "Oh, that's... *noted*. Thanks, Rikk. **Very... informative.**",
-                                "Interesting. **I'll be sure to... remember this.** Thanks. And so will Officer Friendly, I imagine."
+                        "Oh, lovely. Thank you, Rikk. This will be... cataloged. For... posterity, and perhaps a chat with Officer Friendly. He does so enjoy local anecdotes.",
+                        "Very good. I'll just... file this away. Under 'items of community interest'. One never knows when such information might be useful.",
+                        "Splendid! Thank you, Rikk! This is just perfect for my... collection. You're such a vital part of the... local color! The authorities... I mean, *historians*... will be fascinated."
                     ],
                     "payload": {
                         "type": "EFFECT",
@@ -1639,30 +1703,29 @@ export const customerTemplates = {
             ],
             "rikkDeclinesToSell": [
                 {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
+                    "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}], // Carol's paranoia is about missing out on info
                     "lines": [
-                        "Oh, a pity. No matter. **Just... making conversation. One has to be vigilant, you know. So many... *variables* in this neighborhood.**",
-                                "Not for sale? Understood. **Completely understood. No need to elaborate. At all.**",
-                                "Keeping secrets, Rikk? **That's... understandable. But secrets have a way of coming out, don't they?**"
+                        "Oh, a pity. No matter. Just... making conversation. One has to be vigilant, you know. So many... *undocumented transactions* in this neighborhood. It's good to have records.",
+                        "Not for sale? Understood. Completely understood. No need to elaborate. At all. Though Officer Friendly does appreciate transparency...",
+                        "Keeping secrets, Rikk? That's... understandable. But secrets have a way of coming out, don't they? Especially when concerned citizens are watching."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
+                    "conditions": [{"stat": "mood", "op": "is", "value": "happy"}], // Carol's "happy" is feigned, hiding suspicion
                     "lines": [
-                        "Oh, that's quite alright, Rikk! **Just curious, you know me! Always eager to learn! Perhaps another time. I'll just make a little note... for myself, of course!**",
-                                "No problem at all! **More for others, then! Sharing is caring, after all! Unless it's illegal. Then it's evidence.**",
-                                "Playing coy, Rikk? **Adds to your mystique, I suppose! I'll just... make a mental note of your... discretion.**"
+                        "Oh, that's quite alright, Rikk! Just curious, you know me! Always eager to learn about... local enterprise! Perhaps another time. I'll just make a little mental note... for the community watch newsletter, of course!",
+                        "No problem at all! More for others, then! Sharing is caring, after all! Unless it's... something one shouldn't be sharing. Then it's evidence for the authorities.",
+                        "Playing coy, Rikk? Adds to your mystique, I suppose! I'll just... make a mental note of your... discretion. Officer Friendly often asks about such things."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
-                {
+                { // Mood-agnostic fallback for Carol
                     "conditions": [],
                     "lines": [
-                        "Oh, really? Well, alright then. **Just trying to be friendly! One never knows what interesting things are about!**",
-                        "Keeping it to yourself, Rikk? **Mysterious! I like a good mystery.**",
-                                "Oh, secretive today, are we? No matter, I'm sure it will all come out in the wash.",
-                                "Not today? **A shame. I do so enjoy learning about new... *products* on the market.**"
+                        "Oh, really? Well, alright then. Just trying to be a helpful neighbor! One never knows what interesting items are about... or who might be interested in them.",
+                        "Keeping it to yourself, Rikk? Mysterious! I like a good mystery. Though, the police often prefer clear answers, don't they?",
+                        "Not today? A shame. I do so enjoy learning about new... *products* on the market. It helps me keep the neighborhood... informed."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1671,10 +1734,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Oh, nothing to show today, Rikk? Keeping a low profile, are we?",
-                        "Shelves are a bit bare... makes it hard for a concerned citizen to stay informed.",
-                                "No items on display? Most unusual. I'll make a note of this... for the community newsletter, of course.",
-                                "Inventory looking a bit light, Rikk? **Perhaps the... *supply chain*... is disrupted? Most curious.**"
+                        "Oh, nothing to show today, Rikk? Keeping a low profile, are we? Wise, perhaps. Or perhaps business is slow. I'll note the... *lull in activity*.",
+                        "Shelves are a bit bare... makes it hard for a concerned citizen to stay informed about local... trends. Officer Friendly often asks about such things.",
+                        "No items on display? Most unusual. I'll make a note of this... for the community newsletter, of course. And perhaps for other interested parties."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1683,10 +1745,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Goodness me, this is all a bit much! I should be going!",
-                        "This situation seems... volatile. I'll be on my way, thank you.",
-                                "I... I think I left my oven on. Must dash!",
-                                "Oh dear, this is escalating beyond simple observation! Time for a tactical retreat!"
+                        "Goodness me, this is all a bit much! I should be going. One must know when to... observe from a distance. And make a phone call.",
+                        "This situation seems... volatile. I'll be on my way, thank you. I believe Officer Friendly should be made aware of this... *instability*.",
+                        "I... I think I left my oven on. And I need to make a report... I mean, a reminder to myself. Must dash!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1695,10 +1756,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Oh, my. This one looks a bit... *weathered*. **Was there an incident? It's so important to document these things for the community record.**",
-                        "This seems... of a lesser quality than your usual fare, Rikk. **Are things... difficult right now? The historical society is always interested in periods of economic... flux.**",
-                                "How unusual. This one is quite different. **Tell me, what's the story behind it? Every little thing has a story, doesn't it?**",
-                                "This particular item... it doesn't quite scream 'high value target', does it Rikk? **Noted, nonetheless.**"
+                        "Oh, my. This one looks a bit... *substandard*, doesn't it? One hopes you're not cutting corners, Rikk. Quality control is so important for... community standards.",
+                        "This seems... of a lesser quality than your usual fare, Rikk. Are things... difficult right now? The authorities are always interested in businesses under duress.",
+                        "How unusual. This one is quite different. Not quite up to par, is it? It's so important to document these... *variations* for the record."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1707,10 +1767,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Goodness, that much? **It must be a very... *sought-after* item to command such a price. How fascinating!** I'll have to make a note of that.",
-                        "Oh! That's quite a price tag. **Is there a... 'special circumstances' surcharge I should know about? Things must be very exciting for you right now.**",
-                                "My, my. That's a premium price for a premium product, I suppose. **Your business must be doing very well, Rikk. Very well indeed.**",
-                                "Such a high price! **One wonders about the... *overhead* involved in such an enterprise. Fascinating.**"
+                        "Goodness, that much? It must be a very... *sought-after* item to command such a price. Or perhaps the price is... inflated? How fascinating! I'll have to make a note of that for the... consumer protection agency.",
+                        "Oh! That's quite a price tag. Is there a... 'special circumstances' surcharge I should know about? Such high prices can attract... unwanted attention, you know.",
+                        "My, my. That's a premium price. One hopes it's justified and not... exploitative. Officer Friendly is very keen on fair trade, you see."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1719,10 +1778,9 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Oh? You can't make the sale? **How... peculiar. Is everything alright with your... cash flow?** One hears things.",
-                        "No sale today? That's a shame. **I do hope there isn't a problem. The community relies on its local businesses to be... operational.**",
-                        "That's quite alright, Rikk. **But it is... unusual. I'll just make a little note of it. For my records.**",
-                                "Experiencing a... shortfall, Rikk? Most unusual. I'll make a note of this market fluctuation. For the... *economic forecast*."
+                        "Oh? You can't make the sale? How... peculiar. Is everything alright with your... cash flow, Rikk? One hears things about businesses that struggle. It can be a sign.",
+                        "No sale today? That's a shame. I do hope there isn't a problem. The community relies on its local businesses to be... solvent and above board.",
+                        "That's quite alright, Rikk. But it is... unusual. I'll just make a little note of it. For my records, and perhaps for Officer Friendly's awareness."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
