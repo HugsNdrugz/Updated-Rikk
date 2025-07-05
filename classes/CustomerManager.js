@@ -36,68 +36,103 @@ export class CustomerManager {
      * @param {object} itemQualityModifiersData - Data from data_items.js.
      */
     constructor(customerTemplatesData, itemTypesData, itemQualityLevelsData, itemQualityModifiersData) {
-        console.log("MANAGER: CustomerManager constructor called"); // Added log (using MANAGER prefix for consistency)
-        // Store references to all required game data.
+        console.log("MANAGER: CustomerManager constructor called");
         this.customerTemplates = customerTemplatesData;
         this.itemTypes = itemTypesData;
         this.itemQualityLevels = itemQualityLevelsData;
         this.itemQualityModifiers = itemQualityModifiersData;
 
-        // Internal state for managing the pool of unique customer instances.
         this.customersPool = [];
         this.nextCustomerId = 1;
+        this.customerCooldowns = {}; // { customerId: turnLastInteracted }
+        this.currentTurn = 0; // Simple turn counter, incremented each time an interaction is generated
+
+        // Cooldown durations in turns
+        this.REGULAR_COOLDOWN_DURATION = 3; // e.g., 3 turns
+        this.SNITCH_COOLDOWN_DURATION = 10; // e.g., 10 turns (Concerned Carol is SNITCH_ARCHETYPE_KEY)
+        this.SNITCH_ARCHETYPE_KEY = "SNITCH"; // Make sure this matches the key in customer_templates.js
+
+        // For Oddity generation
+        this.CRAVING_THRESHOLD_FOR_ODDITIES = 4; // Defined in CONFIG before, now class member for clarity
+        this.ODDITY_SELL_CHANCE_HIGH_CRAVING = 0.10; // 10% chance if craving is high
     }
 
     /**
      * The main public method to generate a complete customer interaction object.
-     * @param {object} gameState - An object containing relevant state from the main script.
+     * @param {object} gameState - An object containing relevant state from the main script (e.g., inventory, cash, skills, currentTurn, customersInteractedThisTurn).
      * @returns {object} A fully-formed interaction object for the main script to use.
      */
     generateInteraction(gameState) {
-        const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects } = gameState;
-        const customerInstance = this._selectOrGenerateCustomerFromPool();
+        this.currentTurn++; // Increment turn counter for cooldowns
+        const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects, customersInteractedThisTurn } = gameState;
 
-        // Apply customerScareChance from world effects
+        const customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn);
+
+        if (!customerInstance) {
+            // This can happen if all potential customers are on cooldown or already interacted today
+            debugLogger.log('CustomerManager', 'No eligible customer could be selected or generated.');
+            return {
+                instance: null,
+                name: "No One",
+                dialogue: [{ speaker: "narration", text: "The streets are quiet for now..." }],
+                choices: [{ text: "Wait a bit.", outcome: { type: "end_interaction_quiet_streets" } }],
+                isQuietStreets: true // Special flag
+            };
+        }
+
+        // Update cooldown for the selected customer
+        this.customerCooldowns[customerInstance.id] = this.currentTurn;
+
+        const template = this.customerTemplates[customerInstance.archetypeKey];
+        if (!template) {
+            debugLogger.error('CustomerManager', `Invalid archetypeKey provided for ID ${customerInstance.id}: ${customerInstance.archetypeKey}`);
+            return this._createErrorInteraction(customerInstance);
+        }
+
+        // Apply customerScareChance from world effects (can happen after selecting customer, before they speak)
         if (combinedWorldEffects && combinedWorldEffects.customerScareChance > 0 && Math.random() < combinedWorldEffects.customerScareChance) {
-            const scareDialogue = this._getDialogue(customerInstance, 'customerScaredOff') || { line: `${customerInstance.name} looks around nervously and walks away.`, payload: null };
+            const scareDialogue = this._getDialogue(customerInstance, 'customerScaredOff') || { line: `${customerInstance.name} looks around nervously and bolts.`, payload: null };
             return {
                 instance: customerInstance,
                 name: customerInstance.name,
                 dialogue: [{ speaker: "narration", text: scareDialogue.line }],
-                choices: [{ text: "Unlucky.", outcome: { type: "end_interaction_scared", payload: scareDialogue.payload } }],
+                choices: [{ text: "Damn.", outcome: { type: "end_interaction_scared", payload: scareDialogue.payload } }],
                 itemContext: null,
                 archetypeKey: customerInstance.archetypeKey,
-                mood: customerInstance.mood,
+                mood: customerInstance.mood, // or a specific 'scared' mood
                 isScaredOff: true
             };
         }
 
-        const template = this.customerTemplates[customerInstance.archetypeKey];
-        if (!template) {
-            debugLogger.error('CustomerManager', `Invalid archetypeKey provided: ${customerInstance.archetypeKey}`);
-            return this._createErrorInteraction(customerInstance);
+        // Determine customer's intent *before* greeting or generating items
+        let customerIntentIsToSellToRikk;
+        if (template.sellsOnly) {
+            customerIntentIsToSellToRikk = true;
+        } else if (template.buysOnly) {
+            customerIntentIsToSellToRikk = false;
+        } else {
+            // Default logic if not buysOnly/sellsOnly
+            customerIntentIsToSellToRikk = Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE;
+            if (inventory.length === 0) customerIntentIsToSellToRikk = true; // If Rikk has nothing, customer more likely to offer
+            if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD) customerIntentIsToSellToRikk = false; // If Rikk's inventory is full, less likely to be sold to
         }
 
+        // Fetch general greeting (should be neutral to intent now)
         const greetingResult = this._getDialogue(customerInstance, 'greeting');
         let dialogue = [
             { speaker: "customer", text: greetingResult.line },
-            { speaker: "rikk", text: this._getRandomElement(["Aight, what's the word?", "Yo. Lay it on me.", "Speak."]) }
+            // Rikk's response can also be more general now
+            { speaker: "rikk", text: this._getRandomElement(["Yo.", "Aight.", "What's good?", "Speak to me."]) }
         ];
 
         let choices = [];
         let itemContext = null;
 
-        let customerWillOfferItemToRikk = Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE;
-        if (inventory.length === 0) customerWillOfferItemToRikk = true;
-        if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD) customerWillOfferItemToRikk = false;
-        if (template.sellsOnly) {
-            customerWillOfferItemToRikk = true;
-        }
+        if (customerIntentIsToSellToRikk) {
+            // Customer wants to sell an item to Rikk
+            itemContext = this._generateRandomItem(customerInstance, template, combinedWorldEffects);
 
-        if (customerWillOfferItemToRikk) {
-            itemContext = this._generateRandomItem(customerInstance, template, combinedWorldEffects); // Pass customerInstance
-
-            if (!itemContext) {
+            if (!itemContext) { // Customer decided not to sell or had nothing suitable after all
                 const noItemDialogue = this._getDialogue(customerInstance, 'customerHasNothingToSell') || { line: `${customerInstance.name} shrugs. "Ain't got nothin' for ya today, chief."`, payload: null };
                 dialogue.push({ speaker: "customer", text: noItemDialogue.line });
                 choices.push({ text: "Aight.", outcome: { type: "end_interaction_no_item", payload: noItemDialogue.payload } });
@@ -352,43 +387,69 @@ export class CustomerManager {
         }
     }
     
-    _selectOrGenerateCustomerFromPool() {
-        if (this.customersPool.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
-            const returningCustomer = this._getRandomElement(this.customersPool);
+    _selectOrGenerateCustomerFromPool(currentTurn, customersInteractedThisTurn = []) {
+        // Filter existing pool: not on cooldown AND not interacted with today
+        const eligibleReturningCustomers = this.customersPool.filter(customer => {
+            const isOnCooldown = this.customerCooldowns[customer.id] &&
+                (currentTurn - this.customerCooldowns[customer.id] <
+                    (customer.archetypeKey === this.SNITCH_ARCHETYPE_KEY ? this.SNITCH_COOLDOWN_DURATION : this.REGULAR_COOLDOWN_DURATION)
+                );
+            const interactedToday = customersInteractedThisTurn.includes(customer.id);
+            return !isOnCooldown && !interactedToday;
+        });
+
+        if (eligibleReturningCustomers.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
+            const returningCustomer = this._getRandomElement(eligibleReturningCustomers);
+            // Refresh returning customer's state slightly (e.g., mood, cashOnHand)
             const template = this.customerTemplates[returningCustomer.archetypeKey];
-            returningCustomer.hasMetRikkBefore = true;
+            returningCustomer.hasMetRikkBefore = true; // Should already be true
             if (template) {
                 returningCustomer.metadata = returningCustomer.metadata || {};
-                if (returningCustomer.metadata.pendingMoodEffect) {
+                 if (returningCustomer.metadata.pendingMoodEffect) {
                     returningCustomer.mood = returningCustomer.metadata.pendingMoodEffect;
                     delete returningCustomer.metadata.pendingMoodEffect;
-                    debugLogger.log('CustomerManager', `Applied pending mood '${returningCustomer.mood}' to ${returningCustomer.name}`);
                 } else {
-                    returningCustomer.mood = template.baseStats.mood || 'chill';
+                    returningCustomer.mood = template.baseStats.mood || 'chill'; // Reset mood or use a dynamic system
                 }
                 returningCustomer.cashOnHand = Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
-                if (!returningCustomer.addictionStatus) {
-                    returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
-                }
-                if (!returningCustomer.recentlySoldItems) {
-                    returningCustomer.recentlySoldItems = [];
-                }
-                if (returningCustomer.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
-                    returningCustomer.recentlySoldItems = returningCustomer.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
-                }
+                if (!returningCustomer.addictionStatus) returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
+                if (!returningCustomer.recentlySoldItems) returningCustomer.recentlySoldItems = [];
+                 // recentlySoldItems are managed per transaction, not reset here
             }
+            debugLogger.log('CustomerManager', `Selected returning customer: ${returningCustomer.name} (ID: ${returningCustomer.id})`);
             return returningCustomer;
         }
 
+        // Generate a new customer: ensure their archetype isn't on cooldown (less strict, could be a new instance of same archetype)
+        // OR filter archetypeKeys to exclude those whose *instances* are all on cooldown / interacted today.
+        // For simplicity, we'll allow new instances of archetypes even if other instances are on cooldown,
+        // but the new instance itself won't be on cooldown yet.
+        // We must ensure the *new* customer is not one of the customersInteractedThisTurn (though this is less likely for a brand new ID).
+
         const archetypeKeys = Object.keys(this.customerTemplates);
-        const selectedArchetypeKey = this._getRandomElement(archetypeKeys);
+        let availableArchetypes = archetypeKeys; // Can be further filtered if needed
+
+        if (availableArchetypes.length === 0) {
+            debugLogger.warn('CustomerManager', 'No available archetypes to generate a new customer.');
+            return null; // Should not happen if templates exist
+        }
+
+        const selectedArchetypeKey = this._getRandomElement(availableArchetypes);
         const template = this.customerTemplates[selectedArchetypeKey];
-        const customerId = this.nextCustomerId++;
+        const customerId = `customer_${this.nextCustomerId++}`;
+
+        // Check if this new ID (though unique) somehow conflicts with interacted today (highly improbable, but good for robustness)
+        if (customersInteractedThisTurn.includes(customerId)) {
+             debugLogger.warn('CustomerManager', `Generated new customer ID ${customerId} that was already in customersInteractedThisTurn. This is highly unlikely. Skipping.`);
+             return null; // Or retry generation, but this indicates a deeper issue if it happens.
+        }
+        // Also, a new customer cannot be on cooldown.
+
         const newCustomerInstance = {
-            id: `customer_${customerId}`,
-            name: `${template.baseName} #${customerId}`,
+            id: customerId,
+            name: `${template.baseName} #${customerId.split('_')[1]}`, // More readable name
             archetypeKey: selectedArchetypeKey,
-            ...JSON.parse(JSON.stringify(template.baseStats)), 
+            ...JSON.parse(JSON.stringify(template.baseStats)),
             cashOnHand: Math.floor(Math.random() * ((template.priceToleranceFactor || 1) * CONFIG.NEW_CUSTOMER_CASH_RANGE)) + CONFIG.NEW_CUSTOMER_CASH_BASE,
             hasMetRikkBefore: false,
             addictionStatus: { isAddicted: false, drugId: null, cravingLevel: 0 },
@@ -396,16 +457,18 @@ export class CustomerManager {
             metadata: {}
         };
 
-        if (newCustomerInstance.recentlySoldItems.length > CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER) {
-            newCustomerInstance.recentlySoldItems = newCustomerInstance.recentlySoldItems.slice(-CONFIG.MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER);
-        }
-
         if (this.customersPool.length < CONFIG.MAX_CUSTOMERS_IN_POOL) {
             this.customersPool.push(newCustomerInstance);
         } else {
+            // Replace a random customer if pool is full - could be smarter (e.g., oldest, least interacted)
             const randomIndex = Math.floor(Math.random() * CONFIG.MAX_CUSTOMERS_IN_POOL);
+            // Before replacing, remove the old customer's cooldown entry
+            if(this.customersPool[randomIndex] && this.customerCooldowns[this.customersPool[randomIndex].id]) {
+                delete this.customerCooldowns[this.customersPool[randomIndex].id];
+            }
             this.customersPool[randomIndex] = newCustomerInstance;
         }
+        debugLogger.log('CustomerManager', `Generated new customer: ${newCustomerInstance.name} (ID: ${newCustomerInstance.id})`);
         return newCustomerInstance;
     }
 
@@ -450,64 +513,51 @@ export class CustomerManager {
             return null;
         }
         if (template && template.gameplayConfig && template.gameplayConfig.sellPreference && template.gameplayConfig.sellPreference.any === false) {
-            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} has sellPreference.any === false, will not sell.`);
+            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} has sellPreference.any === false, will not sell anything.`);
             return null;
         }
         let itemToSell = null;
 
-        // --- Start of Modified Weird Item Generation Section ---
-        let proceedWithWeirdItemGeneration = false;
-        const CRAVING_THRESHOLD_FOR_ODDITIES = 4; // Define "very addicted" threshold
-
+        // 1. Attempt to generate ODDITY based on high craving
         if (customerInstance &&
             customerInstance.addictionStatus &&
             customerInstance.addictionStatus.isAddicted &&
-            customerInstance.addictionStatus.cravingLevel >= CRAVING_THRESHOLD_FOR_ODDITIES) {
+            customerInstance.addictionStatus.cravingLevel >= this.CRAVING_THRESHOLD_FOR_ODDITIES) {
 
-            // Use CONFIG.CHANCE_SELL_WEIRD_ITEM for very addicted customers (e.g., 5%)
-            if (Math.random() < CONFIG.CHANCE_SELL_WEIRD_ITEM) {
-                proceedWithWeirdItemGeneration = true;
-                debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is very addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) and rolled to sell an oddity.`);
-            } else {
-                debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is very addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) but did NOT roll to sell an oddity.`);
-            }
-        } else {
-            // Not very addicted, zero chance of selling oddity through this general random path.
-            debugLogger.log('CustomerManager', `Customer ${customerInstance.name} (Addiction status: ${JSON.stringify(customerInstance.addictionStatus)}) is not "very addicted" enough or at all, no random oddity generation path taken here.`);
-        }
-
-        if (proceedWithWeirdItemGeneration) {
-            let weirdItemPool = [];
-            if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
-                weirdItemPool = template.itemPoolWeird;
-            } else {
-                weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
-            }
-
-            if (weirdItemPool.length > 0) {
-                const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
-                const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
-                if (selectedType) {
-                    const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
-                    const qualityIndex = 0;
-                    const quality = qualityLevelsForType[qualityIndex];
-
-                    itemToSell = {
-                        id: selectedType.id,
-                        name: selectedType.name,
-                        itemTypeObj: selectedType,
-                        quality,
-                        qualityIndex,
-                        description: selectedType.description,
-                        purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * (this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0) * (0.2 + Math.random() * 0.2))),
-                    };
-                    debugLogger.log('CustomerManager', `Generated weird item for addicted customer: ${itemToSell.name}`);
-                    return itemToSell;
+            if (Math.random() < this.ODDITY_SELL_CHANCE_HIGH_CRAVING) {
+                let weirdItemPool = [];
+                if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
+                    weirdItemPool = template.itemPoolWeird;
+                } else {
+                    weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
                 }
+
+                if (weirdItemPool.length > 0) {
+                    const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
+                    const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
+                    if (selectedType) {
+                        const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
+                        const qualityIndex = 0; // Oddities usually have one quality
+                        const quality = qualityLevelsForType[qualityIndex];
+                        itemToSell = {
+                            id: selectedType.id,
+                            name: selectedType.name,
+                            itemTypeObj: selectedType,
+                            quality,
+                            qualityIndex,
+                            description: selectedType.description,
+                            purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * (this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0) * (0.2 + Math.random() * 0.2))),
+                        };
+                        debugLogger.log('CustomerManager', `Generated ODDITY item for addicted customer ${customerInstance.name}: ${itemToSell.name}`);
+                        return itemToSell; // Successfully generated an oddity
+                    }
+                }
+            } else {
+                 debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is highly addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) but did NOT roll to sell an ODDITY this time.`);
             }
         }
-        // --- End of Modified Weird Item Generation Section ---
 
+        // 2. If no oddity, try to generate item based on customer's sellPreference (template.gameplayConfig.sellPreference)
         if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
             let chosenPreference = null;

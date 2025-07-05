@@ -83,6 +83,7 @@ class GameState {
         this.DAYS_ARRAY = config.DAYS ?? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
         this.DEBUG_MODE = config.DEBUG_MODE ?? false;
+        this.customersInteractedThisTurn = []; // Initialize for daily interaction tracking
 
         // Initial console log to confirm instantiation and config
         if (this.DEBUG_MODE) {
@@ -93,6 +94,7 @@ class GameState {
     // --- Getters ---
     getCash() { return this.cash; }
     getFiendsLeft() { return this.fiendsLeft; }
+    getCustomersInteractedThisTurn() { return [...this.customersInteractedThisTurn]; }
     getDayOfWeek() { return this.dayOfWeek; }
     isGameActive() { return this.gameActive; }
     getHeat() { return this.heat; }
@@ -124,6 +126,15 @@ class GameState {
     setCash(amount) { this.cash = amount; }
     addCash(amount) { this.cash += amount; }
     removeCash(amount) { this.cash -= amount; }
+
+    addCustomerInteractedThisTurn(customerId) {
+        if (!this.customersInteractedThisTurn.includes(customerId)) {
+            this.customersInteractedThisTurn.push(customerId);
+        }
+    }
+    clearCustomersInteractedThisTurn() {
+        this.customersInteractedThisTurn = [];
+    }
 
     setFiendsLeft(count) { this.fiendsLeft = count; }
     decrementFiendsLeft() { this.fiendsLeft--; }
@@ -239,6 +250,7 @@ class GameState {
         this.systemic = config.PRESERVED_SYSTEMIC ?? { cityDespairLevel: 0, totalHardDrugsSold: 0 };
         this.playerContacts = config.PRESERVED_PLAYER_CONTACTS ?? {};
         this.mapState = config.PRESERVED_MAP_STATE ?? { discoveredDistricts: [], districtHeatLevels: {} };
+        this.customersInteractedThisTurn = []; // Always reset for a new turn/day cycle
 
         // customerTemplates are loaded from config if not already set
         this.customerTemplates = config.defaultCustomerTemplates ? JSON.parse(JSON.stringify(config.defaultCustomerTemplates)) : this.customerTemplates;
@@ -247,12 +259,8 @@ class GameState {
         this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? this.MAX_INVENTORY_SLOTS;
         this.MAX_HEAT = config.MAX_HEAT ?? this.MAX_HEAT;
         this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;
-        this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? this.MAX_INVENTORY_SLOTS;
-        this.MAX_HEAT = config.MAX_HEAT ?? this.MAX_HEAT;
-        this.DAYS_ARRAY = config.DAYS ?? this.DAYS_ARRAY;
-        this.customerTemplates = config.defaultCustomerTemplates ? JSON.parse(JSON.stringify(config.defaultCustomerTemplates)) : this.customerTemplates;
 
-        if (this.DEBUG_MODE) debugLogger.log('GameState', 'State reset to defaults.');
+        if (this.DEBUG_MODE) debugLogger.log('GameState', 'State reset with config:', config);
     }
 
     // --- Persistence ---
@@ -272,12 +280,10 @@ class GameState {
             systemic: { ...this.systemic }, // Save systemic variables
             activeWorldEvents: JSON.parse(JSON.stringify(this.activeWorldEvents)), // Deep copy for saving
             activeEventModifiers: { ...this.activeEventModifiers }, // Save modifiers
-            playerContacts: { ...this.playerContacts }, // Save player contacts
-            mapState: JSON.parse(JSON.stringify(this.mapState)), // Deep copy for saving mapState
-            // currentChoices: JSON.parse(JSON.stringify(this.currentChoices)),
-            // isExpectingChoice: this.isExpectingChoice,
-            // customerTemplates are saved/loaded separately by script.js
-            // MAX_INVENTORY_SLOTS, MAX_HEAT, DAYS_ARRAY are part of config, not dynamic state to save
+            playerContacts: { ...this.playerContacts },
+            mapState: JSON.parse(JSON.stringify(this.mapState)),
+            customersInteractedThisTurn: [...this.customersInteractedThisTurn]
+            // currentChoices, isExpectingChoice, customerTemplates, MAX_*, DAYS_ARRAY are not part of dynamic save state here
         };
     }
 
@@ -285,11 +291,10 @@ class GameState {
         this.cash = savedState.cash ?? (config.STARTING_CASH ?? 0);
         this.fiendsLeft = savedState.fiendsLeft ?? (config.MAX_FIENDS ?? 0);
         this.dayOfWeek = savedState.dayOfWeek ?? ((config.DAYS ?? this.DAYS_ARRAY)[0]);
-        this.gameActive = savedState.gameActive ?? false; // Usually start inactive from a load
+        this.gameActive = savedState.gameActive ?? false;
         this.heat = savedState.heat ?? 0;
-        // this.streetCred = savedState.streetCred ?? (config.STARTING_STREET_CRED ?? 0); // Old
+
         if (savedState.streetCred && typeof savedState.streetCred === 'object') {
-            // Deep merge for streetCred to handle potentially missing new sub-objects in old saves
             this.streetCred = {
                 global: savedState.streetCred.global ?? config.STARTING_STREET_CRED ?? 0,
                 factions: {

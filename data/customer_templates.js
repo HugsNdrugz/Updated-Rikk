@@ -42,8 +42,8 @@ export const customerTemplates = {
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
                     "lines": [
-                        "(Eyes wide, whispering, twitching) Rikk? Rikk, man, you gotta help me! **The shadows are whispering my PIN number!** I need that [ITEM_NAME] **before the squirrels start judging my life choices.** How much? And tell me that pigeon isn't a cop! **It's wearing a tiny earpiece, I swear!**",
-                        "(Voice trembling) Rikk? You alone? **I heard a click on my phone... pretty sure it was the Feds, or maybe just my teeth chattering too loud.** Need that [ITEM_NAME], man, **my brain's trying to do sudoku with my anxieties.** What's the toll, and make it snappy, **the streetlights are blinking in Morse code!**"
+                        "(Eyes wide, whispering, twitching) Rikk? Rikk, man, you gotta help me! **The shadows are whispering my PIN number!** I need somethin', anything, **before the squirrels start judging my life choices!** You got something? And tell me that pigeon isn't a cop! **It's wearing a tiny earpiece, I swear!**",
+                        "(Voice trembling) Rikk? You alone? **I heard a click on my phone... pretty sure it was the Feds, or maybe just my teeth chattering too loud.** Need somethin' strong, man, **my brain's trying to do sudoku with my anxieties.** What's the toll, and make it snappy, **the streetlights are blinking in Morse code!**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
@@ -53,45 +53,45 @@ export const customerTemplates = {
                         {"stat": "mood", "op": "isNot", "value": "happy"}
                     ],
                     "lines": [
-                        "Rikk! You GOTTA have it, man! The shakes are comin' back! That good [ITEM_NAME], please!",
-                        "Don't care the price, Rikk, just tell me you got the [ITEM_NAME]... I *need* it. Bad.",
-                        "(Twitching) The craving... it's a beast, Rikk. Got my fix? That sweet [ITEM_NAME]?"
+                        "Rikk! You GOTTA have something for me, man! The shakes are comin' back!",
+                        "Don't care the price, Rikk, just tell me you got somethin'... I *need* it. Bad.",
+                        "(Twitching) The craving... it's a beast, Rikk. Got my fix? Anything?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
-                        "(Grinning ear-to-ear, slightly too loud) RIKK! My savior! You're like a guardian angel, but with better connections! **Last batch had me convinced I could talk to cats! Turns out, they're terrible conversationalists.** Got more of that magic [ITEM_NAME]? Price is just a number when you're floating! **My rent can wait, my sanity can't!**",
-                        "(Beaming) Woo! Rikk! Feeling like a king today! Or at least a moderately successful duke! That last score? *Chef's kiss*. Got more of that [ITEM_NAME]? **I'm ready to solve all the world's problems, starting with my own lack of... this.**"
+                        "(Grinning ear-to-ear, slightly too loud) RIKK! My savior! You're like a guardian angel, but with better connections! **Last batch had me convinced I could talk to cats! Turns out, they're terrible conversationalists.** Got more of that magic stuff? Price is just a number when you're floating! **My rent can wait, my sanity can't!**",
+                        "(Beaming) Woo! Rikk! Feeling like a king today! Or at least a moderately successful duke! That last score? *Chef's kiss*. Got more of that good stuff? **I'm ready to solve all the world's problems, starting with my own lack of... this.**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "angry"}],
                     "lines": [
-                        "Alright Rikk, enough games! It's me, [CUSTOMER_NAME], and I'm **about two seconds from screaming into a traffic cone!** I need my [ITEM_NAME], and I need it YESTERDAY! How much, and don't you dare jerk me around!",
-                        "Rikk! You see me? Good. Because I'm seeing RED. Need that [ITEM_NAME]. NOW. Price better be right, or **I'm gonna start reviewing your \"establishment\" on Yelp, and it won't be pretty.**"
+                        "Alright Rikk, enough games! It's me, [CUSTOMER_NAME], and I'm **about two seconds from screaming into a traffic cone!** I need my relief, and I need it YESTERDAY! How much, and don't you dare jerk me around!",
+                        "Rikk! You see me? Good. Because I'm seeing RED. Need something. NOW. Price better be right, or **I'm gonna start reviewing your \"establishment\" on Yelp, and it won't be pretty.**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
                     "lines": [
-                        "Rikk! Thank god it's you again! You know what I need... that [ITEM_NAME]! Quick!",
-                        "Me again, Rikk. The usual... please tell me you have the [ITEM_NAME]. The walls are talkin' again."
+                        "Rikk! Thank god it's you again! You know what I need! Quick!",
+                        "Me again, Rikk. The usual... please tell me you have something. The walls are talkin' again."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [],
                     "lines": [
-                        "Rikk! Thank god! It's me, [CUSTOMER_NAME]! **My soul is trying to escape through my eyeballs.** I'm hurtin' bad, need that [ITEM_NAME]... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
-                        "Yo, uh, you Rikk? **They said you were the shaman of the streets.** I'm hurtin' bad, need that [ITEM_NAME]... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
-                        "Rikk, my man! [CUSTOMER_NAME] here! **My insides feel like a washing machine full of angry badgers.** That [ITEM_NAME], what's the damage? And please, tell me it's the good stuff, **my disappointment tolerance is at an all-time low.**",
-                        "You Rikk? Heard you're the guy. **Got that... *medicine*?** Specifically the [ITEM_NAME] kind. Price? And be gentle, **my wallet's already crying.**",
-                        "Rikk, man, you're a sight for sore eyes! The walls are starting to melt again. Got that [ITEM_NAME]?",
-                        "Is that you, Rikk? The static in my head is getting loud. Need that [ITEM_NAME] to turn down the volume. What's the cost for some quiet?"
+                        "Rikk! Thank god! It's me, [CUSTOMER_NAME]! **My soul is trying to escape through my eyeballs.** I'm hurtin' bad, need somethin'... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
+                        "Yo, uh, you Rikk? **They said you were the shaman of the streets.** I'm hurtin' bad, need somethin'... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
+                        "Rikk, my man! [CUSTOMER_NAME] here! **My insides feel like a washing machine full of angry badgers.** What's the damage for some peace? And please, tell me it's the good stuff, **my disappointment tolerance is at an all-time low.**",
+                        "You Rikk? Heard you're the guy. **Got that... *medicine*?** Price? And be gentle, **my wallet's already crying.**",
+                        "Rikk, man, you're a sight for sore eyes! The walls are starting to melt again. Got anything for that?",
+                        "Is that you, Rikk? The static in my head is getting loud. Need something to turn down the volume. What's the cost for some quiet?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -371,26 +371,26 @@ export const customerTemplates = {
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
-                        "(A charming, yet slightly condescending smile) Ah, Rikk, my purveyor of peccadilloes! I trust your offerings today are as refined as my taste in... well, everything. **Life's too short for cheap thrills, or cheap people, for that matter.** What delicacy do you have for my discerning palate regarding [ITEM_NAME]? **I hope it pairs well with my vintage Bordeaux and impending world domination.**",
-                        "(Chuckles lightly) Rikk. Always a pleasure. Or, at least, a necessary transaction. The [ITEM_NAME] – I expect nothing less than your finest. **Mediocrity is a contagion I actively avoid.**"
+                        "(A charming, yet slightly condescending smile) Ah, Rikk, my purveyor of peccadilloes! I trust your offerings today are as refined as my taste in... well, everything. **Life's too short for cheap thrills, or cheap people, for that matter.** What delicacy do you have for my discerning palate today? **I hope it pairs well with my vintage Bordeaux and impending world domination.**",
+                        "(Chuckles lightly) Rikk. Always a pleasure. Or, at least, a necessary transaction. I expect nothing less than your finest. **Mediocrity is a contagion I actively avoid.**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
                     "lines": [
-                        "Rikk. We meet again. I trust your standards for [ITEM_NAME] haven't slipped since our last transaction.",
-                        "Ah, Rikk. Let's dispense with the pleasantries. You know my expectations regarding [ITEM_NAME]."
+                        "Rikk. We meet again. I trust your standards haven't slipped since our last transaction.",
+                        "Ah, Rikk. Let's dispense with the pleasantries. You know my expectations."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [],
                     "lines": [
-                        "Rikk. I trust my expectations for [ITEM_NAME] will be met today. Promptly.",
-                        "I am given to understand you are the Rikk of renown? One hopes the rumors of quality are not... exaggerated. I am in the market for the most... *efficacious* [ITEM_NAME] available. **Time is a luxury I do not squander on subpar experiences.**",
-                        "Rikk. Let's not dally. My interest lies in your premium [ITEM_NAME].",
-                        "You are Rikk, I presume? My sources indicate you may have access to the caliber of [ITEM_NAME] I require. **Impress me.**"
+                        "Rikk. I trust my expectations will be met today. Promptly.",
+                        "I am given to understand you are the Rikk of renown? One hopes the rumors of quality are not... exaggerated. I am in the market for the most... *efficacious* wares available. **Time is a luxury I do not squander on subpar experiences.**",
+                        "Rikk. Let's not dally. My interest lies in your premium stock.",
+                        "You are Rikk, I presume? My sources indicate you may have access to the caliber of product I require. **Impress me.**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -640,35 +640,35 @@ export const customerTemplates = {
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
                     "lines": [
-                        "(Lowering voice, glancing around) Yo Rikk, quick word. **Feel like the squirrels are judging me today, man. And that one dude is definitely not just 'walking his dog'.** Just need my usual [ITEM_NAME], nothing too wild. Let's keep it low-pro, yeah? **My grandma thinks I'm a youth pastor.**",
-                        "Rikk, hey. Uh, you see that van parked down the street? Been there for like, an hour. **Probably nothing, right?** Anyway, got any of that [ITEM_NAME]? Keep it on the DL."
+                        "(Lowering voice, glancing around) Yo Rikk, quick word. **Feel like the squirrels are judging me today, man. And that one dude is definitely not just 'walking his dog'.** Just need something to chill, nothing too wild. Let's keep it low-pro, yeah? **My grandma thinks I'm a youth pastor.**",
+                        "Rikk, hey. Uh, you see that van parked down the street? Been there for like, an hour. **Probably nothing, right?** Anyway, got anything for the nerves? Keep it on the DL."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
-                        "(Big smile, relaxed posture) Rikk, my dude! What's good? **Sun's shining, birds are singing, and I haven't lost my keys yet today – it's a miracle!** Got that smooth [ITEM_NAME] for a fair price? **Trying to ride this good wave all the way to... well, probably just my couch, but a happy couch!**",
-                        "Yo Rikk! Feelin' golden today! Just cashed my paycheck – **which means I have exactly enough for rent and one good time.** You got that [ITEM_NAME] to make it count?"
+                        "(Big smile, relaxed posture) Rikk, my dude! What's good? **Sun's shining, birds are singing, and I haven't lost my keys yet today – it's a miracle!** Got something smooth for a fair price? **Trying to ride this good wave all the way to... well, probably just my couch, but a happy couch!**",
+                        "Yo Rikk! Feelin' golden today! Just cashed my paycheck – **which means I have exactly enough for rent and one good time.** You got something to make it count?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
                     "lines": [
-                        "Rikk, my man! Back again. Whatcha got for me today regarding that [ITEM_NAME]?",
-                        "Yo Rikk, good to see your face. Still holding onto that [ITEM_NAME] for your boy?",
-                        "Chad's back in the house! What's the word, Rikk? Still got that [ITEM_NAME]?"
+                        "Rikk, my man! Back again. Whatcha got for me today?",
+                        "Yo Rikk, good to see your face. Still holding onto the good stuff for your boy?",
+                        "Chad's back in the house! What's the word, Rikk? Got anything interesting?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [],
                     "lines": [
-                        "Yo Rikk, it's [CUSTOMER_NAME]! Good to see ya. Just looking for a **chill hookup** for some [ITEM_NAME]. **No drama, just good vibes and a fair shake, you know?**",
-                        "Hey, you Rikk? Heard good things. Just looking for a **chill hookup** for some [ITEM_NAME]. **No drama, just good vibes and a fair shake, you know?**",
-                        "What up, Rikk! [CUSTOMER_NAME] in the house. Or, you know, at your door. Need that [ITEM_NAME]. **Keepin' it mellow.**",
-                        "Yo, Rikk right? My buddy said you're the man for that [ITEM_NAME]. **Hoping to just... y'know, chill.**"
+                        "Yo Rikk, it's [CUSTOMER_NAME]! Good to see ya. Just looking for a **chill hookup**. **No drama, just good vibes and a fair shake, you know?** What are you holding?",
+                        "Hey, you Rikk? Heard good things. Just looking for a **chill hookup**. **No drama, just good vibes and a fair shake, you know?** Got anything?",
+                        "What up, Rikk! [CUSTOMER_NAME] in the house. Or, you know, at your door. Need something to unwind. **Keepin' it mellow.**",
+                        "Yo, Rikk right? My buddy said you're the man. **Hoping to just... y'know, chill.** What's available?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1076,25 +1076,25 @@ export const customerTemplates = {
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
                     "lines": [
-                        "(Forced, shaky smile, clutching a \"Neighborhood Watch\" pamphlet) Oh, Rikk! Fancy meeting you here! **Just... patrolling. For safety!** Is that... [ITEM_NAME]? My, that's an... *unusual* brand. **Not illegal, I hope? Officer Friendly was just asking about unusual brands...**",
-                        "Anything... *unusual* happening today, Rikk? **Just trying to keep our community... pristine! So many shadows these days!**"
+                        "(Forced, shaky smile, clutching a \"Neighborhood Watch\" pamphlet) Oh, Rikk! Fancy meeting you here! **Just... patrolling. For safety!** That's an... *unusual* item you might have there. **Not illegal, I hope? Officer Friendly was just asking about unusual items...**",
+                        "Anything... *unusual* happening today, Rikk? **Just trying to keep our community... pristine! So many shadows these days! Anything to report?**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
                     "lines": [
-                        "(Beaming, perhaps a little too eagerly) Rikk! Hello there! **Just taking in the vibrant tapestry of our neighborhood! So much... activity!** Oh, is that some [ITEM_NAME]? How... *intriguing*! **Always interested in local commerce, you know! For the community newsletter!**",
-                        "What's the good word, Rikk? **Any juicy tidbits for a concerned citizen? Knowledge is power, especially for neighborhood safety!**"
+                        "(Beaming, perhaps a little too eagerly) Rikk! Hello there! **Just taking in the vibrant tapestry of our neighborhood! So much... activity!** Oh, what interesting things are you involved with today? **Always interested in local commerce, you know! For the community newsletter!**",
+                        "What's the good word, Rikk? **Any juicy tidbits for a concerned citizen? Knowledge is power, especially for neighborhood safety! What are you up to?**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 },
                 {
                     "conditions": [],
                     "lines": [
-                        "Well hello there, Rikk! **Such a... *dynamic* street, isn't it?** My, my, what have we here? Some [ITEM_NAME]? **You always have the most... *unique* things. Tell me all about it! For... research, of course!**",
-                        "Oh, Rikk! It's me, [CUSTOMER_NAME], just out for a stroll. **Trying to keep an eye on things, you know. For the good of the community.** That [ITEM_NAME] looks... *special*. What's its story?",
-                        "Oh, Rikk! Just observing the... *local color*. Anything interesting to report today? About [ITEM_NAME], perhaps?"
+                        "Well hello there, Rikk! **Such a... *dynamic* street, isn't it?** My, my, what are you involved with today? **You always seem to be around the most... *unique* things. Tell me all about it! For... research, of course!**",
+                        "Oh, Rikk! It's me, [CUSTOMER_NAME], just out for a stroll. **Trying to keep an eye on things, you know. For the good of the community.** What's that you've got there? Looks... *special*.",
+                        "Oh, Rikk! Just observing the... *local color*. Anything interesting you're involved with today?"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1254,11 +1254,11 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Rikk! My man! My legend! You will NOT believe the idea I just had! **We're talking revolutionary, Rikk, REVOLUTIONARY!** It involves pigeons, a thousand tiny jetpacks, and a synchronized aerial ballet that will solve rush hour traffic! PERMANENTLY! Oh, right, yeah, you got any of that **[ITEM_NAME]**? My brain's going a million miles a minute, and I need to keep up with it! **How much for the zoom-zoom juice? And have you ever wondered if squirrels are just tiny, furry spies? Because I have. Extensively.**",
-                        "Whoa, Rikk, TIMING! I was just explaining to this lamppost here how the entire global economy is secretly controlled by llamas! **It's all in the wool, Rikk, the WOOL!** They're playing the long game! Anyway, you got that **[ITEM_NAME]**? I need to, uh, *process* some very important data. Very, very fast. **Price? Don't care, just NEED IT! You ever try to teach a fish to play poker? It's harder than it looks, man, way harder!**",
-                        "Marty! No, wait, Rikk! It's me, [CUSTOMER_NAME]! Or am I Marty? Doesn't matter! **Got any of that [ITEM_NAME]? I'm onto something HUGE! Bigger than breadboxes! Bigger than... than... BIG THINGS!** My thoughts are racing like caffeinated cheetahs, Rikk! **We should invent a new color! Something... LOUDER!** How much for the go-go powder?",
-                        "You Rikk? Heard you're the wizard of WHIZZ! The sultan of SPEED! The... uh... guy with the good stuff! Name's [CUSTOMER_NAME], and I'm on a MISSION! **A mission fueled by ideas and, hopefully, soon, by that sweet, sweet [ITEM_NAME]!** So, what's the word, bird? **And why DO birds suddenly appear? Is it a government conspiracy? Let's discuss!**",
-                        "RIKK! **I figured it out! The meaning of life! It's... oh, hang on, it's fading... FADING!** I need that **[ITEM_NAME]** before the signal drops completely! **It's like my soul has bad reception! What's the price for a metaphysical signal booster?!**"
+                        "Rikk! My man! My legend! You will NOT believe the idea I just had! **We're talking revolutionary, Rikk, REVOLUTIONARY!** It involves pigeons, a thousand tiny jetpacks, and a synchronized aerial ballet that will solve rush hour traffic! PERMANENTLY! Oh, right, yeah, you got any of that **good stuff**? My brain's going a million miles a minute, and I need to keep up with it! **How much for the zoom-zoom juice?**",
+                        "Whoa, Rikk, TIMING! I was just explaining to this lamppost here how the entire global economy is secretly controlled by llamas! **It's all in the wool, Rikk, the WOOL!** They're playing the long game! Anyway, you got that **special something**? I need to, uh, *process* some very important data. Very, very fast. **Price? Don't care, just NEED IT!**",
+                        "Marty! No, wait, Rikk! It's me, [CUSTOMER_NAME]! Or am I Marty? Doesn't matter! **Got any of that brain fuel? I'm onto something HUGE! Bigger than breadboxes! Bigger than... than... BIG THINGS!** My thoughts are racing like caffeinated cheetahs, Rikk! **We should invent a new color! Something... LOUDER!** How much for the go-go powder?",
+                        "You Rikk? Heard you're the wizard of WHIZZ! The sultan of SPEED! The... uh... guy with the good stuff! Name's [CUSTOMER_NAME], and I'm on a MISSION! **A mission fueled by ideas and, hopefully, soon, by that sweet, sweet inspiration!** So, what's the word, bird?",
+                        "RIKK! **I figured it out! The meaning of life! It's... oh, hang on, it's fading... FADING!** I need that **focus potion** before the signal drops completely! **It's like my soul has bad reception! What's the price for a metaphysical signal booster?!**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1294,7 +1294,7 @@ export const customerTemplates = {
                         "**NO DEAL?! But I can feel my ideas slowing down, Rikk!** It's like watching a Ferrari run out of gas in slow motion! **Tragic! Utterly tragic!** Don't you understand the URGENCY?! **I'm on the verge of discovering why cats purr! THE WORLD NEEDS TO KNOW!**",
                         "You're cutting me off?! **Rikk, I'm like a rocket ship, and you're withholding the fuel!** My trajectory was set for GENIUS! **Now I'm just... orbiting mediocrity! This is NOT GOOD!**",
                         "Can't sell?! **But I was about to write a seven-act opera about the philosophical implications of cheese!** This is a major setback for the arts, Rikk! **A MAJOR SETBACK!**",
-                        "**But... but... my brain is about to have its most brilliant idea EVER! I can feel it bubbling!** Withholding the [ITEM_NAME] now is like taking the canvas away from Da Vinci as he was painting the Mona Lisa's eyebrows! **THINK OF HISTORY, RIKK!**"
+                        "**But... but... my brain is about to have its most brilliant idea EVER! I can feel it bubbling!** Withholding the good stuff now is like taking the canvas away from Da Vinci as he was painting the Mona Lisa's eyebrows! **THINK OF HISTORY, RIKK!**"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1452,11 +1452,11 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Greetings, fellow traveler! Rikk, is it? Or are you just, like, a *reflection* of Rikk? Whoa. Heavy. I was just pondering the interconnectedness of all things, you know? Like, what if this sidewalk is actually, like, the *eyebrow* of a giant? Anyway, you got any of **[ITEM_NAME]**? My soul is trying to dial into the cosmic modem.",
-                        "Rikk, my dude! I had this *epiphany*! What if, like, colors are just, like, opinions, man? And we all see them differently? *Mind blown, right?* So, about that **[ITEM_NAME]**... I'm trying to paint a sound, and I think that's the missing ingredient. You feel me? The universe is singing, Rikk, but I think it's off-key.",
-                        "Connie! No, wait, that's me. You're Rikk! Or are we all Rikk? *Lost in the cosmic sauce again, man.* Got any of that **[ITEM_NAME]**? The patterns in my ceiling are telling me it's time for a spiritual tune-up. They speak in, like, *very insistent paisley*, you know?",
-                        "Hey... are you Rikk? The name vibes with my aura. I'm [CUSTOMER_NAME], or maybe I'm just a collection of stardust experiencing itself. *Pretty wild, huh?* I'm on a quest for some **[ITEM_NAME]**. My spirit guide, a talking badger named Bartholomew, said you'd have the good stuff. He's usually right about these things. *Especially after three cups of herbal tea.*",
-                        "Whoa, Rikk... your aura is, like, super... *purple* today. That's a good sign. It means you're open to cosmic transactions. I'm seeking some **[ITEM_NAME]** to help me have a conversation with a particularly wise-looking houseplant. It has answers, I can feel it."
+                        "Greetings, fellow traveler! Rikk, is it? Or are you just, like, a *reflection* of Rikk? Whoa. Heavy. I was just pondering the interconnectedness of all things, you know? Like, what if this sidewalk is actually, like, the *eyebrow* of a giant? Anyway, you got any of that **good vibration stuff**? My soul is trying to dial into the cosmic modem.",
+                        "Rikk, my dude! I had this *epiphany*! What if, like, colors are just, like, opinions, man? And we all see them differently? *Mind blown, right?* So, about that **transcendental paint**... I'm trying to paint a sound, and I think that's the missing ingredient. You feel me? The universe is singing, Rikk, but I think it's off-key.",
+                        "Connie! No, wait, that's me. You're Rikk! Or are we all Rikk? *Lost in the cosmic sauce again, man.* Got any of that **reality-bender**? The patterns in my ceiling are telling me it's time for a spiritual tune-up. They speak in, like, *very insistent paisley*, you know?",
+                        "Hey... are you Rikk? The name vibes with my aura. I'm [CUSTOMER_NAME], or maybe I'm just a collection of stardust experiencing itself. *Pretty wild, huh?* I'm on a quest for some **mind-expanders**. My spirit guide, a talking badger named Bartholomew, said you'd have the good stuff. He's usually right about these things. *Especially after three cups of herbal tea.*",
+                        "Whoa, Rikk... your aura is, like, super... *purple* today. That's a good sign. It means you're open to cosmic transactions. I'm seeking some **enlightenment enhancers** to help me have a conversation with a particularly wise-looking houseplant. It has answers, I can feel it."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1489,8 +1489,8 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "It's cool, Rikk. The universe will provide the [ITEM_NAME] when the time is right... or maybe that pigeon outside has some. *It looked like it had shifty eyes. And really colorful feathers.*",
-                        "No worries, my dude. *The path to enlightenment is, like, totally winding.* If the [ITEM_NAME] isn't flowing today, maybe it's a sign I should try to, like, *photosynthesize my own high*. Worth a shot, right?",
+                        "It's cool, Rikk. The universe will provide the good stuff when the time is right... or maybe that pigeon outside has some. *It looked like it had shifty eyes. And really colorful feathers.*",
+                        "No worries, my dude. *The path to enlightenment is, like, totally winding.* If the vibe isn't flowing today, maybe it's a sign I should try to, like, *photosynthesize my own high*. Worth a shot, right?",
                         "*That's alright, Rikk.* The cosmic flow is just redirecting my journey. Perhaps I'm meant to find clarity in, like, a really good cup of tea. Or by staring at my own hands for an hour. *They're like... maps, man! Maps of... hands!*",
                         "The universe says no, huh? Far out. *Guess my chakras are on backorder.* All good, I'll just go find out what the clouds are trying to tell me. They're looking extra puffy today."
                     ],
@@ -1513,10 +1513,10 @@ export const customerTemplates = {
                 {
                     "conditions": [],
                     "lines": [
-                        "Far out, man! This [ITEM_NAME] is gonna take me on a journey to the very fabric of reality... or at least to the corner store for snacks. *It's all connected, you know?* Thanks, Rikk!",
-                        "*Cosmic!* This [ITEM_NAME] is just what my third eye was craving. Time to go explore the space between thoughts. *Wish me luck, or, like, don't. Time is an illusion anyway.* Peace!",
-                        "Beautiful, Rikk. This [ITEM_NAME] feels... *correct*. My spirit animal, which is currently a mildly confused sloth, thanks you. *He says you have good vibes. For a carbon-based biped.*",
-                        "Awesome! With this [ITEM_NAME], I can finally find out if my cat is secretly a time traveler. *He has that look, you know? Like he's seen things.* Later, space-time!"
+                        "Far out, man! This is gonna take me on a journey to the very fabric of reality... or at least to the corner store for snacks. *It's all connected, you know?* Thanks, Rikk!",
+                        "*Cosmic!* This is just what my third eye was craving. Time to go explore the space between thoughts. *Wish me luck, or, like, don't. Time is an illusion anyway.* Peace!",
+                        "Beautiful, Rikk. This feels... *correct*. My spirit animal, which is currently a mildly confused sloth, thanks you. *He says you have good vibes. For a carbon-based biped.*",
+                        "Awesome! With this, I can finally find out if my cat is secretly a time traveler. *He has that look, you know? Like he's seen things.* Later, space-time!"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -1582,8 +1582,8 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Whoa, heavy price, man. Does it come with, like, a map to the Astral Plane for that much? *Or maybe a user manual for the universe?* My spirit guide says my wallet is feeling a bit... *deflated* right now.",
-                        "Oof, Rikk, that's a lot of Earth credits. *Is this [ITEM_NAME] artisanally mined from the moon by enlightened gnomes or something?* My pockets are feeling a bit too... *Newtonian* for that price.",
-                        "*That's a cosmic number, my friend!* For that much, I'd expect this [ITEM_NAME] to also, like, do my dishes and tell me the meaning of life. *Can we find a more... harmonious price point?*",
+                        "Oof, Rikk, that's a lot of Earth credits. *Is this stuff artisanally mined from the moon by enlightened gnomes or something?* My pockets are feeling a bit too... *Newtonian* for that price.",
+                        "*That's a cosmic number, my friend!* For that much, I'd expect this to also, like, do my dishes and tell me the meaning of life. *Can we find a more... harmonious price point?*",
                         "That's a bit too much material energy for me to part with right now, Rikk. *Can we trade for, like, three good vibes and a hug? No? Okay, back to numbers, I guess.*"
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }

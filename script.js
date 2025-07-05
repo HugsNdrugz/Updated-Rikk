@@ -513,6 +513,7 @@ function endGame(reason) {
 }
 
 function handleTurnProgressionAndEvents() {
+    game.clearCustomersInteractedThisTurn(); // Clear at the start of a new turn/day
     game.advanceDayOfWeek();
     let currentEvents = game.getActiveWorldEvents();
     currentEvents.forEach(eventState => eventState.turnsLeft--);
@@ -584,9 +585,24 @@ function generateAndStartCustomerInteraction() {
         cash: game.getCash(),
         playerSkills: game.getPlayerSkills(),
         activeWorldEvents: game.getActiveWorldEvents(),
-        combinedWorldEffects: combinedWorldEffects
+        combinedWorldEffects: combinedWorldEffects,
+        customersInteractedThisTurn: game.getCustomersInteractedThisTurn() // Pass the list
     };
     const interaction = game.customerManager.generateInteraction(gameStateForCustomerManager);
+
+    // Handle case where no customer is available (e.g., all on cooldown)
+    if (interaction.isQuietStreets) {
+        uiManager.displayPhoneMessage(interaction.dialogue[0].text, interaction.dialogue[0].speaker);
+        // Potentially set a short timer to enable nextCustomerBtn again or auto-advance
+        // For now, player can click "Next Fiend" again after a delay if they wish.
+        if (game.isGameActive() && game.getFiendsLeft() > 0) {
+             uiManager.setNextCustomerButtonDisabled(false); // Allow trying again
+        } else if (game.isGameActive()) {
+            endGame("completed"); // Or other appropriate end state
+        }
+        return; // Stop further processing for this "quiet streets" interaction
+    }
+
     game.setCurrentCustomerInstance(interaction.instance);
     startCustomerInteraction(interaction);
 }
@@ -858,6 +874,7 @@ function handleChoice(outcome) {
                     narrationText = `Rikk copped "${outcome.item.name}".`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkBuysSuccess';
+                    if (currentCustomer && currentCustomer.id) game.addCustomerInteractedThisTurn(currentCustomer.id);
                 } else {
                     dealSuccess = false;
                     loyaltyChange = -1; // Failed buy
@@ -891,6 +908,8 @@ function handleChoice(outcome) {
                     narrationText = `Flipped "${soldItem.name}" for $${price}.`;
                     uiManager.playSound(uiManager.cashSound);
                     dialogueContextKey = 'rikkSellsSuccess';
+                    if (currentCustomer && currentCustomer.id) game.addCustomerInteractedThisTurn(currentCustomer.id);
+
                     if (game.customerManager && typeof game.customerManager.processPotentialAddiction === 'function') {
                         game.customerManager.processPotentialAddiction(currentCustomer, soldItem);
                     }
