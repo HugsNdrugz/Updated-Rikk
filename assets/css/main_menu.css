@@ -25,7 +25,7 @@
 /* === SPLIT BUTTON MAIN MENU STYLES === */
 /* FIX for BUG-004: Button positioning and stacking */
 .split-button-container {
-    position: absolute;
+    position: bottom;
     bottom: var(--spacing-xl);
     left: var(--spacing-xl);
     display: flex;
