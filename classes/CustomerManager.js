@@ -362,29 +362,34 @@ export class CustomerManager {
         };
     }
     
-    getOutcomeDialogue(customerInstance, contextKey, subContext = {}) { // Pass subContext if needed for outcome dialogues too
+    getOutcomeDialogue(customerInstance, contextKey, subContext = {}) {
         return this._getDialogue(customerInstance, contextKey, subContext);
     }
 
     _getDialogue(customerInstance, primaryContextKey, subContext = {}) {
+        debugLogger.log('_getDialogue', `Called for ${customerInstance.archetypeKey}, ContextKey: ${primaryContextKey}, SubContext: ${JSON.stringify(subContext)}`);
         const template = this.customerTemplates[customerInstance.archetypeKey];
         const playerSafeFallback = { line: "...", payload: null };
-        const mood = subContext.mood || customerInstance.mood || 'neutral'; // Fallback mood
+        const mood = subContext.mood || customerInstance.mood || 'neutral';
+        debugLogger.log('_getDialogue', `Effective mood: ${mood}`);
 
         if (!template || !template.dialogue) {
-            debugLogger.warn('CustomerManager', `No dialogue template for archetype '${customerInstance.archetypeKey}'.`);
+            debugLogger.warn('CustomerManager', `_getDialogue: No dialogue template for archetype '${customerInstance.archetypeKey}'.`);
             return playerSafeFallback;
         }
 
         let dialoguePool = template.dialogue[primaryContextKey];
+        debugLogger.log('_getDialogue', `Initial dialoguePool for ${primaryContextKey}:`, JSON.parse(JSON.stringify(dialoguePool || null)));
+
 
         if (!dialoguePool) {
-            debugLogger.warn('CustomerManager', `Missing primaryContextKey: '${primaryContextKey}' for archetype '${customerInstance.archetypeKey}'.`);
+            debugLogger.warn('CustomerManager', `_getDialogue: Missing primaryContextKey: '${primaryContextKey}' for archetype '${customerInstance.archetypeKey}'.`);
             return playerSafeFallback;
         }
 
         // Navigate nested structure for 'greeting'
         if (primaryContextKey === 'greeting') {
+            debugLogger.log('_getDialogue', 'Processing "greeting" context.');
             const historyKey = subContext.isNew ? 'new_customer' : 'returning_customer';
             if (!dialoguePool[historyKey]) {
                 debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'.`);
