@@ -643,6 +643,31 @@
             this.currentArchetypeFilter = null;
             this.wittyLoadingInterval = null;
             this.dialogueAnalyzer = null; // Will be set by the DialogueAnalyzer instance
+
+            this.CONTEXT_TITLE_MAP = {
+                greeting: "Greeting Sequences",
+                lowCashRikk: "Rikk's Low on Cash: Customer Reactions",
+                rikkDeclinesToBuy: "Rikk Declines to Buy: Customer Reactions",
+                rikkDeclinesToSell: "Rikk Declines to Sell: Customer Reactions",
+                rikkBuysSuccess: "Rikk Buys Successfully: Customer Reactions",
+                rikkSellsSuccess: "Rikk Sells Successfully: Customer Reactions",
+                itemNotGoodEnough: "Item Not Good Enough: Customer Reactions",
+                rikkPriceTooHigh: "Rikk's Price Too High: Customer Reactions",
+                acknowledge_empty_stash: "Rikk's Stash is Empty: Customer Acknowledgement",
+                customerHasNothingToSell: "Customer Has Nothing to Sell: Dialogue",
+                rikkHasNothingCustomerWants: "Rikk Has Nothing Customer Wants: Dialogue",
+                customerScaredOff: "Customer Gets Scared Off: Dialogue",
+                generalBanter: "General Banter / Idle Chatter",
+                negotiationSuccess: "Negotiation: Success",
+                negotiationFail: "Negotiation: Failure",
+                offerCommunityHelp: "Pastor Jones: Offers Community Help Quest",
+                rikkAgreesToHelpPastor: "Pastor Jones: Rikk Agrees to Help",
+                pastorThanksForHelp: "Pastor Jones: Thanks for Help",
+                pastorDeclinesHelp: "Pastor Jones: Declines Rikk's Offer of Help (if Rikk offers)",
+                rikkDeclinesPastor: "Pastor Jones: Rikk Declines to Help Quest",
+                // Add more mappings as needed for other keys in ANALYSIS_CONFIG
+            };
+
             this.wittyMessages = [
                 "Brewing some digital coffee...",
                 "Untangling dialogue spaghetti...",
@@ -818,12 +843,31 @@
                 const pathP = document.createElement('p');
                 pathP.className = 'context-path';
 
-                let displayPath = contextData.path;
-                const expectedPrefix = `<b>${archetypeKey}</b>.`;
-                if (displayPath.startsWith(expectedPrefix)) {
-                    displayPath = displayPath.substring(expectedPrefix.length);
+                let rawPath = contextData.path; // e.g., "<b>ARCHETYPE</b>.context.sub"
+                let displayPath = rawPath;
+                const archetypePrefixPattern = /^<b>.*?<\/b>\./; // Matches "<b>ARCHETYPE</b>."
+
+                let baseContextKey = rawPath.replace(archetypePrefixPattern, ''); // "context.sub"
+                if (baseContextKey.includes('.')) { // For nested paths like greeting.new_customer.seeking_to_buy
+                    const rootContextKey = baseContextKey.substring(0, baseContextKey.indexOf('.')); // e.g. "greeting"
+                    const subPath = baseContextKey.substring(baseContextKey.indexOf('.')); // e.g. ".new_customer.seeking_to_buy"
+                    if (this.CONTEXT_TITLE_MAP[rootContextKey]) {
+                        displayPath = `${this.CONTEXT_TITLE_MAP[rootContextKey]}${subPath}`;
+                    } else { // Fallback if root key not in map, just strip archetype prefix
+                         if (rawPath.startsWith(`<b>${archetypeKey}</b>.`)) {
+                            displayPath = rawPath.substring(`<b>${archetypeKey}</b>.`.length);
+                        }
+                    }
+                } else { // For simple paths like "lowCashRikk"
+                    if (this.CONTEXT_TITLE_MAP[baseContextKey]) {
+                        displayPath = this.CONTEXT_TITLE_MAP[baseContextKey];
+                    } else { // Fallback for simple paths not in map
+                        if (rawPath.startsWith(`<b>${archetypeKey}</b>.`)) {
+                            displayPath = rawPath.substring(`<b>${archetypeKey}</b>.`.length);
+                        }
+                    }
                 }
-                pathP.innerHTML = displayPath; // Use innerHTML to render any further <b> tags in nested paths
+                pathP.innerHTML = displayPath; // Use innerHTML as displayPath might still contain <b> from original if not fully mapped/stripped
                 contextCard.appendChild(pathP);
 
                 // Richness Info
@@ -837,7 +881,8 @@
                     richnessList.className = 'issue-list'; // Re-use style
                     contextData.richnessChecks.forEach(check => {
                         const li = document.createElement('li');
-                        li.innerHTML = `${check.blockIdentifier}: ${check.lines}/${check.minLines} lines - <span class="${check.isRich ? 'richness-ok' : 'richness-warn'}">${check.isRich ? 'Rich' : 'Low Richness'}</span>`;
+                        // Use check.label (the new descriptive label)
+                        li.innerHTML = `${check.label}: ${check.lines}/${check.minLines} lines - <span class="${check.isRich ? 'richness-ok' : 'richness-warn'}">${check.isRich ? 'Rich' : 'Low Richness'}</span>`;
                         richnessList.appendChild(li);
                     });
                     contextCard.appendChild(richnessList);
@@ -854,7 +899,14 @@
                     contextData.errors.forEach(err => {
                         const li = document.createElement('li');
                         li.className = 'error';
-                        li.innerHTML = err.message; // err.message already contains formatting like <b>
+                        let displayMsg = err.message;
+                        if (err.type === 'coverage' && displayMsg.startsWith(`Missing context: ${contextData.path}`)) {
+                            displayMsg = "Context data is missing.";
+                        } else if (err.type === 'consistency' && displayMsg.startsWith(`Invalid data structure: ${contextData.path}`)) {
+                            displayMsg = "Data structure is not an Array as expected.";
+                        }
+                        // For other error types, displayMsg remains err.message
+                        li.innerHTML = displayMsg;
                         errorList.appendChild(li);
                     });
                     contextCard.appendChild(errorList);
@@ -871,7 +923,18 @@
                     contextData.warnings.forEach(warn => {
                         const li = document.createElement('li');
                         li.className = 'warning';
-                        li.innerHTML = warn.message; // warn.message already contains formatting
+                        let displayMsg = warn.message;
+                        // Example: "Low richness: <b>ARCHETYPE</b>.contextKey (Block Label) has X/Y lines."
+                        // We want: "Low richness: (Block Label) has X/Y lines."
+                        if (warn.type === 'richness') {
+                            const richnessPrefixPattern = /^Low richness:.*?<b>.*?<\/b>.*?(\(.*?\s+has\s+<b>.*?<\/b>\s+lines\.)/;
+                            const match = displayMsg.match(richnessPrefixPattern);
+                            if (match && match[1]) { // match[1] captures the "(Block Label) has X/Y lines." part
+                                displayMsg = `Low richness: ${match[1]}`;
+                            }
+                            // If pattern doesn't match (e.g. different formatting), it will display original message.
+                        }
+                        li.innerHTML = displayMsg;
                         warningList.appendChild(li);
                     });
                     contextCard.appendChild(warningList);
@@ -1321,7 +1384,28 @@
             const currentArchetypeOverallStats = this.archetypeStats[archetypeKey];
             const currentContextDetail = currentArchetypeOverallStats.contexts[contextPath];
 
-            let richnessDetail = { lines: 0, minLines: minLines, isRich: true, blockIdentifier: `Block ${blockIndex + 1}` };
+            let descriptiveLabel = `Variant ${blockIndex + 1}`; // Default label
+            if (block && block.moods && block.moods.length > 0) {
+                descriptiveLabel = `${block.moods.join('/')} Variant`;
+            } else if (block && block.conditions && block.conditions.length > 0) {
+                // Attempt to find a mood condition for a label
+                const moodCondition = block.conditions.find(c => c.stat === 'mood' && c.op === 'is');
+                if (moodCondition) {
+                    descriptiveLabel = `${moodCondition.value.charAt(0).toUpperCase() + moodCondition.value.slice(1)} Condition Variant`;
+                } else {
+                    // Could try to summarize other conditions, but might get too complex.
+                    // For now, "Conditional Variant N" if specific mood not found.
+                    descriptiveLabel = `Conditional Variant ${blockIndex + 1}`;
+                }
+            }
+
+
+            let richnessDetail = {
+                lines: 0,
+                minLines: minLines,
+                isRich: true,
+                label: descriptiveLabel // Use the new descriptive label
+            };
 
             this.stats.richness.total++;
             if (!block || !Array.isArray(block.lines) || block.lines.length < minLines) {
@@ -1330,11 +1414,10 @@
                  const lineCount = (block && block.lines) ? block.lines.length : 0;
                  richnessDetail.lines = lineCount;
                  richnessDetail.isRich = false;
-                 const issueMsg = `Low richness: ${contextPath} (${richnessDetail.blockIdentifier}) has <b>${lineCount}/${minLines}</b> lines.`;
-                 const tooltip = `This dialogue block in ${contextPath} (${richnessDetail.blockIdentifier}) has ${lineCount} line(s), but the minimum recommended is ${minLines}. Consider adding more variations.`;
+                 const issueMsg = `Low richness: ${contextPath} (${richnessDetail.label}) has <b>${lineCount}/${minLines}</b> lines.`;
+                 const tooltip = `This dialogue block in ${contextPath} (${richnessDetail.label}) has ${lineCount} line(s), but the minimum recommended is ${minLines}. Consider adding more variations.`;
                  this.ui.logIssue('warn', issueMsg, 'richness', tooltip);
-                 // Store detailed warning for this specific block/context
-                 currentContextDetail.warnings.push({ message: issueMsg, level: 'warn', type: 'richness', blockIndex: blockIndex, lineCount: lineCount, minLines: minLines });
+                 currentContextDetail.warnings.push({ message: issueMsg, level: 'warn', type: 'richness', blockIdentifier: richnessDetail.label, lineCount: lineCount, minLines: minLines });
             } else {
                 this.stats.richness.passed++;
                 richnessDetail.lines = block.lines.length;
