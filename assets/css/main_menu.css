@@ -1,16 +1,24 @@
 /* assets/css/main_menu.css (159 lines) */
 /* === REVISED MAIN MENU STYLES === */
-#main-menu-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+#main-menu-nav {
     width: 100%;
     height: 100%;
-    padding: var(--spacing-xl);
-    text-align: center;
-    position: relative; /* For z-indexing content above lights */
+    /* display: flex; Allow children to stack normally or be absolutely positioned */
+    /* flex-direction: column; */
+}
+
+#main-menu-content {
+    display: block; /* Changed from flex */
+    /* flex-direction: column; */ /* No longer needed */
+    /* align-items: center; */ /* No longer needed, child is absolute */
+    /* justify-content: center; */ /* No longer needed, child is absolute */
+    width: 100%;
+    height: 100%;
+    padding: var(--spacing-xl); /* This padding defines the boundary for absolute positioning */
+    /* text-align: center; */ /* Not relevant for a container of an absolute element */
+    position: relative; /* For z-indexing content above lights and for positioning children */
     z-index: 10;
+    box-sizing: border-box; /* Ensure padding is included in width/height calculations */
 }
 
 /* Settings Cog Button (within #main-menu-nav) */
