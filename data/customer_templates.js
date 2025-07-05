@@ -190,6 +190,141 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "rikkDeclinesToBuy": [ // Carol reacts to Rikk declining to buy something SHE is offering (hypothetically)
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Oh, you're not interested in this... *item*? Perhaps it's for the best. Some things are better left... undocumented. For now.",
+                        "No? Well, I'm sure Officer Friendly would have found it... noteworthy. I'll just keep it in mind for my report... I mean, my records.",
+                        "Passing on this opportunity, Rikk? That's... a choice. I'll just make a note of your... lack of interest. For community awareness, of course."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkBuysSuccess": [ // Carol reacts to Rikk buying something SHE offered (hypothetically)
+                {
+                    "conditions": [],
+                    "lines": [
+                        "A wise purchase, Rikk. This will be... properly accounted for. I'm sure this transaction is perfectly... routine.",
+                        "Excellent. I'll ensure this exchange is... noted. For the benefit of the neighborhood, naturally. Officer Friendly appreciates thoroughness.",
+                        "Very good. This... *item* has found a new home. And I have new information for my... community ledger. Such an active marketplace!"
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [{"type": "triggerEvent", "eventName": "snitchReport", "chance": 0.35, "heatValueMin": 5, "heatValueMax": 15, "credValue": -1, "message": "🚨 RAT ALERT! 🚨 **[CUSTOMER_NAME]** seemed overly interested in your transaction details... (+[HEAT_VALUE] Heat, -1 Cred)"}] }
+                }
+            ],
+            "customerHasNothingToSell": [ // Carol has nothing to offer Rikk
+                {
+                    "conditions": [],
+                    "lines": [
+                        "It seems my inventory of... *community contributions*... is empty today, Rikk. A quiet day for commerce, perhaps?",
+                        "Unfortunately, I have nothing to offer you at this moment. But I'm always observing... new opportunities.",
+                        "My sources are dry today, Rikk. No items of... particular interest... to share. But my eyes are always open."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [ // Rikk doesn't want what Carol is (hypothetically) offering
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Oh, none of my... *offerings*... appeal to you today, Rikk? How... selective. I'll make a note of your preferences.",
+                        "Not what you're looking for? That's quite alright. It's always good to know what the local market... *isn't* demanding.",
+                        "My current selection doesn't meet your needs? I'll be sure to remember that, Rikk. Information is always valuable."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkDeclinesToSell": [ // This implies Rikk is declining to sell something TO the Informant. Unusual for sellsOnly.
+                                   // Interpreted as Rikk declining to BUY information FROM the Informant.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Not interested, huh? Your loss, Rikk. This whisper had teeth.",
+                        "Alright, keep your cash. But when the rats start singing opera, don't say I didn't offer you a libretto.",
+                        "No sale? Shame. This little piece of information was going to be a collector's item."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkSellsSuccess": [ // This implies Rikk successfully sells something TO the Informant.
+                                // Interpreted as Rikk successfully BUYING information FROM the Informant. (This is covered by rikkBuysSuccess already)
+                                // To avoid redundancy, let's make this Informant acknowledging a successful sale OF INFO TO RIKK.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Pleasure doing business, Rikk. You know where to find me when you need more... clarity.",
+                        "Another mutually beneficial exchange. May this information serve you well... or at least, keep you out of the obituaries.",
+                        "Good. My sources will be pleased. And so will my tailor. Until next time, Rikk."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "itemNotGoodEnough": [ // Rikk deems the INFORMANT'S INFO not good enough.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "My information isn't up to your standards? Bold statement, Rikk. Very bold.",
+                        "Not good enough, you say? Perhaps your appetite for truth is... lacking today.",
+                        "This 'ain't it'? Interesting assessment. My sources are usually impeccable. Perhaps the problem lies elsewhere."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkPriceTooHigh": [ // INFORMANT'S price for info is too high for Rikk.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "My price is too high? Quality information isn't cheap, Rikk. You get what you pay for... or don't.",
+                        "You think I'm asking too much? Perhaps you underestimate the value of what I'm offering. Or overestimate your budget.",
+                        "Too steep, eh? The market rate for this kind of intel is what it is. Some secrets cost more than others."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "acknowledge_empty_stash": [ // Informant acknowledges Rikk isn't buying any info today / has no need.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "So, the well is dry on your end? No need for my particular brand of... insight today? Understood.",
+                        "Not in the market for information at the moment, Rikk? Fair enough. The city always has more secrets when you're ready.",
+                        "Your... appetite for information is sated for now, I take it? Keep my number. The whispers never stop."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "rikkHasNothingCustomerWants": [ // Rikk indicates Informant has no information Rikk wants.
+                {
+                    "conditions": [],
+                    "lines": [
+                        "So, none of my current whispers pique your interest? A discerning palate, Rikk. Or perhaps just a quiet day for you.",
+                        "Nothing I'm offering is what you need? The information game is all about timing, I suppose. Another day, another secret.",
+                        "My current portfolio of intel doesn't match your needs? Unfortunate, but it happens. The streets are always churning out new material."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Alright, Rikk, we have a deal. You drive a hard bargain, but the information is worth it.",
+                        "Done. For that price, this secret is yours. Use it wisely.",
+                        "We've reached an accord. It's a fair price for what you're getting. Pleasure doing business."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Can't meet my price, Rikk? Then the information stays with me. Some secrets aren't meant for everyone.",
+                        "No deal then. My sources don't offer discounts, and neither do I. Good day.",
+                        "We're too far apart on this one, Rikk. This knowledge remains mine. Perhaps you'll reconsider its value later."
+                    ],
+                    "payload": { "type": "EFFECT", "effects": [] }
+                }
+            ],
             "rikkDeclinesToBuy": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
@@ -1242,7 +1377,9 @@ export const customerTemplates = {
                     "conditions": [],
                     "lines": [
                         "Ah, that's a little rich for my blood, Rikk. **Gotta watch the budget, you know? Adulting and all that jazz.**",
-                        "Nah, that's a bit much for me today, bro. **Maybe another time.**"
+                        "Nah, that's a bit much for me today, bro. **Maybe another time.**",
+                        "Oof, that price is a bit out of my league, my friend. Gotta keep the finances chill, you know?",
+                        "Can't swing that today, Rikk. My wallet's feeling a bit light for that kind of number."
                     ],
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
@@ -2263,12 +2400,32 @@ export const customerTemplates = {
         "baseName": "Pastor Jones",
         "baseStats": { "mood": "calm", "loyalty": 50 },
         "dialogue": {
-            "greeting": [{ "lines": ["Blessings upon you, my child.", "The Spirit led me to your door today."] }],
-            "offerCommunityHelp": [{ "lines": ["The community center needs some supplies for the youth program. Could you help us acquire some... discreetly?"] }],
-            "rikkAgreesToHelpPastor": [{ "lines": ["Consider it done, Pastor. For the kids, of course."] }],
-            "pastorThanksForHelp": [{ "lines": ["The Lord works in mysterious ways. Thank you, my son. This will make a difference."] }],
-            "pastorDeclinesHelp": [{ "lines": ["I understand. Perhaps another time. May peace be with you."] }],
-            "rikkDeclinesPastor": [{ "lines": ["Sorry, Pastor. Can't get involved right now."] }]
+            "greeting": [{ "lines": ["Blessings upon you, my child.", "The Spirit led me to your door today.", "Peace be with you, Rikk. I was hoping we might speak."] }],
+            "offerCommunityHelp": [{ "lines": [
+                "The community center needs some supplies for the youth program. Could you help us acquire some... discreetly?",
+                "Our young flock requires certain items for their activities, Rikk. Perhaps your... unique skills... could assist in procuring them quietly?",
+                "I'm seeking assistance for our youth outreach. Some necessary supplies are difficult to come by through normal channels. Would you be willing to help?"
+            ] }],
+            "rikkAgreesToHelpPastor": [{ "lines": [
+                "Consider it done, Pastor. For the kids, of course.",
+                "I'm happy to help the community, Pastor. I'll see what I can do.",
+                "For the youth program? Say no more. I'll handle it."
+            ] }],
+            "pastorThanksForHelp": [{ "lines": [
+                "The Lord works in mysterious ways. Thank you, my son. This will make a difference.",
+                "May your kindness be returned to you tenfold, Rikk. The children will benefit greatly from this.",
+                "You have a generous spirit, my child. Thank you for this blessing to our community."
+            ] }],
+            "pastorDeclinesHelp": [{ "lines": [
+                "I understand. Perhaps another time. May peace be with you.",
+                "The path is not always clear, my son. We will find another way. Blessings to you.",
+                "That is unfortunate, but I respect your decision. The Lord will provide."
+            ] }],
+            "rikkDeclinesPastor": [{ "lines": [
+                "Sorry, Pastor. Can't get involved right now.",
+                "I wish I could help, Pastor, but my hands are tied at the moment.",
+                "Regrettably, I'll have to pass this time, Pastor. My apologies."
+            ] }]
         },
         "itemPool": [],
         "sellsOnly": false,
