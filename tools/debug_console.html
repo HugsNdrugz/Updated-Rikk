@@ -817,7 +817,13 @@
 
                 const pathP = document.createElement('p');
                 pathP.className = 'context-path';
-                pathP.innerHTML = contextData.path; // Path already contains <b> formatting for archetype key
+
+                let displayPath = contextData.path;
+                const expectedPrefix = `<b>${archetypeKey}</b>.`;
+                if (displayPath.startsWith(expectedPrefix)) {
+                    displayPath = displayPath.substring(expectedPrefix.length);
+                }
+                pathP.innerHTML = displayPath; // Use innerHTML to render any further <b> tags in nested paths
                 contextCard.appendChild(pathP);
 
                 // Richness Info
