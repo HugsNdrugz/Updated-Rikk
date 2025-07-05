@@ -635,7 +635,8 @@ function handleStartNewGameClick(event) { // Added "event" parameter
     startGameFlow();
 }
 
-function handleContinueGameClick() {
+function handleContinueGameClick(event) { // Added "event" parameter
+    if (event) event.preventDefault(); // Add this line to prevent the link from navigating
     if (loadGameState()) {
         startGameFlow();
     } else {
