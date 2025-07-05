@@ -56,6 +56,13 @@ export const customerTemplates = {
                                 "Someone said you're the man. Don't piss me off, just tell me if you're holding.",
                                 "Spit it out, are you Rikk or not? My patience is thinner than my last dime."
                             ]
+                        },
+                        { // Mood-agnostic fallback for new_customer, seeking_to_buy
+                            "lines": [
+                                "Yo, you Rikk? Heard you're the one to see. I need something, man.",
+                                "They said ask for Rikk. That you? Got any... party favors?",
+                                "Is this the spot? Looking for Rikk. Got cash, need goods."
+                            ]
                         }
                     ],
                     "seeking_to_sell": [
@@ -73,6 +80,13 @@ export const customerTemplates = {
                                 "(Whispering) Rikk, you buy stuff? Got something... hot. Need to move it. Fast. No questions.",
                                 "(Eyes darting) You Rikk? Someone said you deal in... acquisitions. This is hush-hush, for cash only.",
                                 "Psst, Rikk... word is you're discreet. I got this item, need it gone, no traces, you get me?"
+                            ]
+                        },
+                        { // Mood-agnostic fallback for new_customer, seeking_to_sell
+                            "lines": [
+                                "Heard you buy things, Rikk. Got something I need to move.",
+                                "You Rikk? Got some merchandise here, wondering if you're interested.",
+                                "Got a tip you might be in the market for... this. What do you say, Rikk?"
                             ]
                         }
                     ]
@@ -94,6 +108,13 @@ export const customerTemplates = {
                                 "Hey Rikk! Good to see ya! Hook a brother up with the good stuff, the one that makes the colors brighter!",
                                 "It's your favorite customer, Rikk! Ready for another dose of awesome? You know what I like!"
                             ]
+                        },
+                        { // Mood-agnostic fallback for returning_customer, seeking_to_buy_usual
+                            "lines": [
+                                "Rikk, it's me. You got the usual?",
+                                "Back for my regular, Rikk. Hope you're holding.",
+                                "Hey Rikk, need that same stuff as last time. You got it?"
+                            ]
                         }
                     ],
                     "seeking_to_buy_general": [ // Customer is returning, but either their usual is out, or they are open to other things
@@ -113,11 +134,11 @@ export const customerTemplates = {
                                 "My main man Rikk! Ready to explore some new vibes. What do you recommend?"
                             ]
                         },
-                        {
+                        { // This block was already mood-agnostic, ensuring 3 lines.
                             "lines": [
                                 "Yo Rikk, what's good? Looking to pick something up.",
-                                "Back again, Rikk. Whatcha holding today?",
-                                "Hey Rikk, it's me. Need to re-up. What's available?"
+                                "Back again, Rikk. Whatcha holding today? Anything interesting?",
+                                "Hey Rikk, it's me. Need to re-up. What's available this time around?"
                             ]
                         }
                     ],
@@ -130,11 +151,11 @@ export const customerTemplates = {
                                 "Look, Rikk, I wouldn't be here if I wasn't desperate. This is all I got. What'll you give me?"
                             ]
                         },
-                        {
+                        { // This block was already mood-agnostic, ensuring 3 lines.
                             "lines": [
                                 "Hey Rikk, got something else for you today, if you're interested.",
-                                "Yo Rikk, found another... *treasure*. Wanna take a look?",
-                                "Me again. Got a little something I think you might like. Interested in a deal?"
+                                "Yo Rikk, found another... *treasure*. Wanna take a look this time?",
+                                "Me again. Got a little something I think you might like. Interested in a deal today?"
                             ]
                         }
                     ]
@@ -1829,19 +1850,97 @@ export const customerTemplates = {
             "preferredDrugSubTypes": ["PSYCHEDELIC", "PSYCHEDELIC_MILD", "DISSOCIATIVE"]
         },
         "dialogue": {
-            "greeting": [
-                {
-                    "conditions": [],
-                    "lines": [
-                        "Greetings, fellow traveler! Rikk, is it? Or are you just, like, a *reflection* of Rikk? Whoa. Heavy. I was just pondering the interconnectedness of all things, you know? Like, what if this sidewalk is actually, like, the *eyebrow* of a giant? Anyway, you got any of that **good vibration stuff**? My soul is trying to dial into the cosmic modem.",
-                        "Rikk, my dude! I had this *epiphany*! What if, like, colors are just, like, opinions, man? And we all see them differently? *Mind blown, right?* So, about that **transcendental paint**... I'm trying to paint a sound, and I think that's the missing ingredient. You feel me? The universe is singing, Rikk, but I think it's off-key.",
-                        "Connie! No, wait, that's me. You're Rikk! Or are we all Rikk? *Lost in the cosmic sauce again, man.* Got any of that **reality-bender**? The patterns in my ceiling are telling me it's time for a spiritual tune-up. They speak in, like, *very insistent paisley*, you know?",
-                        "Hey... are you Rikk? The name vibes with my aura. I'm [CUSTOMER_NAME], or maybe I'm just a collection of stardust experiencing itself. *Pretty wild, huh?* I'm on a quest for some **mind-expanders**. My spirit guide, a talking badger named Bartholomew, said you'd have the good stuff. He's usually right about these things. *Especially after three cups of herbal tea.*",
-                        "Whoa, Rikk... your aura is, like, super... *purple* today. That's a good sign. It means you're open to cosmic transactions. I'm seeking some **enlightenment enhancers** to help me have a conversation with a particularly wise-looking houseplant. It has answers, I can feel it."
+            "greeting": {
+                "new_customer": {
+                    "seeking_to_buy": [
+                        {
+                            "moods": ["dreamy"],
+                            "lines": [
+                                "Greetings, fellow traveler! Rikk, is it? Or are you just, like, a *reflection* of Rikk? Whoa. Heavy. I was just pondering the interconnectedness of all things... You got any of that **good vibration stuff**? My soul is trying to dial into the cosmic modem.",
+                                "Rikk, my dude! I had this *epiphany*! What if, like, colors are just, like, opinions, man? So, about that **transcendental paint**... I'm trying to paint a sound. You feel me?",
+                                "Hey... are you Rikk? The name vibes with my aura. I'm [CUSTOMER_NAME]. I'm on a quest for some **mind-expanders**. My spirit guide, a talking badger, said you'd have the good stuff."
+                            ]
+                        },
+                        { // Mood-agnostic fallback for new_customer, seeking_to_buy
+                            "lines": [
+                                "Salutations, purveyor of perceptions! Does your inventory hold keys to other realms today?",
+                                "The universe has guided me to your door, Rikk. I seek wares to broaden the mind.",
+                                "Are you the Rikk who deals in... cosmic catalysts? I'm new in town and seeking enlightenment."
+                            ]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [
+                        {
+                            "moods": ["dreamy"],
+                            "lines": [
+                                "Whoa, Rikk... your aura is, like, super... *purple* today. That's a good sign. It means you're open to cosmic transactions. I have this... *artifact*... I think it wants to be with you.",
+                                "The patterns in my ceiling told me you might be interested in a trinket I found on my last astral journey, Rikk.",
+                                "My spirit guide, Bartholomew the badger, he said you'd appreciate this... *thing*. It's got good vibes, man."
+                            ]
+                        },
+                        { // Mood-agnostic fallback for new_customer, seeking_to_sell
+                            "lines": [
+                                "Greetings, Rikk. I have an item of... unusual origin. Perhaps it would interest your discerning clientele?",
+                                "A fellow traveler suggested you might be interested in purchasing unique curiosities. I have one such item.",
+                                "I've come into possession of something... otherworldly. Wondering if you'd make an offer, Rikk."
+                            ]
+                        }
+                    ]
+                },
+                "returning_customer": {
+                    "seeking_to_buy_usual": [
+                        {
+                            "moods": ["dreamy"],
+                            "lines": [
+                                "Rikk, my cosmic compadre! Back for another dose of the usual enlightenment. You got the good stuff, right?",
+                                "The vibes are right for a journey, Rikk. My usual [USUAL_ITEM_NAME], if the universe wills it.",
+                                "Bartholomew sent me. He said you'd have my preferred method of... *consciousness expansion*."
+                            ]
+                        },
+                        { // Mood-agnostic fallback
+                            "lines": [
+                                "Hey Rikk, back for my usual. Hope you're stocked.",
+                                "It's me again, Rikk. You know what I need. Is the [USUAL_ITEM_NAME] in?",
+                                "Ready for another trip, Rikk. The usual, please."
+                            ]
+                        }
+                    ],
+                    "seeking_to_buy_general": [
+                        {
+                            "moods": ["dreamy"],
+                            "lines": [
+                                "Connie! No, wait, that's me. You're Rikk! *Lost in the cosmic sauce again, man.* Got any of that **reality-bender**? The patterns in my ceiling are telling me it's time for a spiritual tune-up.",
+                                "The usual path is obscured today, Rikk. What other enlightenments do you offer?",
+                                "My aura is seeking a new frequency today, Rikk. What mind-altering melodies do you have in stock?"
+                            ]
+                        },
+                        { // Mood-agnostic fallback
+                            "lines": [
+                                "Hey Rikk, what's new on the menu of perception?",
+                                "Looking for something different today, my friend. Whatcha got?",
+                                "My usual isn't calling to me. What other cosmic goodies have you procured, Rikk?"
+                            ]
+                        }
+                    ],
+                    "seeking_to_sell": [
+                        {
+                            "moods": ["dreamy"],
+                            "lines": [
+                                "Rikk, my friend! I've returned from another dimension with a souvenir. Interested?",
+                                "The universe has gifted me another curio to pass along. Does your establishment have room for more wonder, Rikk?",
+                                "Bartholomew says this belongs with you now, Rikk. It's... *potent*."
+                            ]
+                        },
+                        { // Mood-agnostic fallback
+                            "lines": [
+                                "Back with another find, Rikk. This one's special.",
+                                "Got something else for your collection, Rikk. Wanna see?",
+                                "Hey Rikk, got another artifact for you, if the price is right."
+                            ]
+                        }
+                    ]
                 }
-            ],
+            },
             "lowCashRikk": [
                 {
                     "conditions": [],
