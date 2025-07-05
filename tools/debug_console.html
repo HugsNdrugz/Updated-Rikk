@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Street Hustle | Dialogue Care</title>
+    <style>
+        /* ------------------------- */
+        /* --- THEME & VARIABLES --- */
+        /* ------------------------- */
+        :root {
+            --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            
+            /* Colors from Screenshot */
+            --color-bg: #000000;
+            --color-surface: #1C1C1E;
+            --color-text-header: #FFFFFF;
+            --color-text-base: #F2F2F7;
+            --color-text-muted: #8E8E93;
+            --color-primary: #588DFF; /* A slightly more saturated blue for the button */
+            --color-progress-blue: #58B1FF;
+            --color-status-green-start: #29CF7F;
+            --color-status-green-end: #22A39F;
+            --color-status-yellow: #FFD60A;
+            --color-status-red: #FF453A;
+
+            /* Sizing & Spacing */
+            --spacing-unit: 8px;
+            --radius-card: 24px;
+            --radius-btn: 28px;
+        }
+
+        /* -------------------- */
+        /* --- BASE & LAYOUT -- */
+        /* -------------------- */
+        * { box-sizing: border-box; }
+
+        html { font-size: 16px; }
+
+        body {
+            font-family: var(--font-ui);
+            margin: 0;
+            background-color: #333; /* Gutter color */
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .device-screen {
+            width: 100%;
+            max-width: 480px;
+            height: 95vh;
+            max-height: 926px;
+            background-color: var(--color-bg);
+            border-radius: 36px;
+            box-shadow: 0 0 0 10px #111, 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            color: var(--color-text-header);
+            flex-shrink: 0;
+        }
+        
+        .app-header .left, .app-header .right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .app-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .app-header svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .app-main {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0.5rem 1rem 2rem 1rem;
+        }
+        /* Custom scrollbar for a more native feel */
+        .app-main::-webkit-scrollbar { width: 4px; }
+        .app-main::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+        .section-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            padding: 1.5rem 0.5rem 0.5rem 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .card {
+            background-color: var(--color-surface);
+            border-radius: var(--radius-card);
+            padding: 1rem 1.5rem;
+        }
+        
+        /* ---------------------- */
+        /* --- STATUS SECTION --- */
+        /* ---------------------- */
+        .status-section {
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+        
+        .status-icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: linear-gradient(135deg, var(--color-status-green-start), var(--color-status-green-end));
+            transition: background-image 0.3s ease;
+        }
+        .status-icon.warn {
+             background-image: linear-gradient(135deg, var(--color-status-yellow), #FFB700);
+        }
+        .status-icon.error {
+             background-image: linear-gradient(135deg, var(--color-status-red), #D62828);
+        }
+        .status-icon svg {
+            width: 50px;
+            height: 50px;
+            color: white;
+        }
+        
+        .status-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            color: var(--color-text-header);
+        }
+        
+        .status-subtext {
+            font-size: 1rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+        
+        .action-section {
+            padding: 1rem 0;
+        }
+
+        #analyze-btn {
+            width: 100%;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            background-color: var(--color-primary);
+            color: var(--color-text-header);
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+        #analyze-btn:active { transform: scale(0.98); }
+        #analyze-btn[disabled] {
+            background-color: #333;
+            color: var(--color-text-muted);
+            cursor: not-allowed;
+        }
+        
+        /* ------------------------- */
+        /* --- STATS & ISSUES LIST --- */
+        /* ------------------------- */
+        
+        ul.list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .list-item {
+            display: grid;
+            grid-template-areas: "icon content" "icon progress";
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 0 1rem;
+            padding: 1rem 0;
+        }
+        
+        .list-item:not(:last-child) {
+            border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+        }
+
+        .item-icon {
+            grid-area: icon;
+            color: var(--color-text-muted);
+        }
+        .item-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .item-content {
+            grid-area: content;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        
+        .item-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text-base);
+        }
+        
+        .item-value {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: var(--color-text-header);
+        }
+        .item-value-unit {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--color-text-muted);
+            margin-left: 0.25rem;
+        }
+        
+        .item-progress {
+            grid-area: progress;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            background-color: var(--color-progress-blue);
+            border-radius: 3px;
+            transition: width 0.4s ease-out;
+        }
+        .progress-fill.green { background-color: var(--color-status-green-start); }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            white-space: nowrap;
+        }
+        
+        /* Issue Log Specifics */
+        .issue-log { max-height: 250px; overflow-y: auto; }
+        .issue-item {
+             display: flex;
+             align-items: flex-start;
+             gap: 0.75rem;
+             padding: 0.75rem 0.25rem;
+        }
+        .issue-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .issue-icon.warn { color: var(--color-status-yellow); }
+        .issue-icon.error { color: var(--color-status-red); }
+        .issue-icon svg { width: 18px; height: 18px; }
+        
+        .issue-message {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            line-height: 1.4;
+        }
+        .issue-message b { color: var(--color-text-base); }
+
+    </style>
+</head>
+
+<body>
+    <div class="device-screen">
+        <header class="app-header">
+            <div class="left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z" clip-rule="evenodd" /></svg>
+                <h1>Dialogue care</h1>
+            </div>
+            <div class="right">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h1.5v15H3m16.5 0h-1.5v-15H21M12 21V3" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM10 8.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM11.5 15.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" /></svg>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <section class="status-section">
+                <div id="status-icon" class="status-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9 9.75h.008v.008H9v-.008Zm6 0h.008v.008H15v-.008Z" /></svg>
+                </div>
+                <h2 id="status-text" class="status-text">Good</h2>
+                <p id="status-subtext" class="status-subtext">Run analysis to check dialogue health.</p>
+            </section>
+
+            <section class="action-section">
+                <button id="analyze-btn">Analyze now</button>
+            </section>
+            
+            <div class="card">
+                <ul id="stats-list" class="list">
+                    <!-- Stats will be populated by JS -->
+                </ul>
+            </div>
+            
+            <h3 id="issue-header" class="section-header" style="display: none;">Issues found</h3>
+            <div id="issue-card" class="card" style="display: none;">
+                 <div id="issue-log" class="issue-log">
+                     <!-- Issues will be populated by JS -->
+                 </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+    import { customerTemplates } from '../data/customer_templates.js';
+
+    // --- CONFIGURATION ---
+    const MIN_LINES_PER_BLOCK = 3;
+    const SCAN_DELAY_MS = 75;
+
+    const ANALYSIS_CONFIG = {
+        greeting: { parser: 'greeting' },
+        lowCashRikk: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK },
+        rikkDeclinesToBuy: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'sellsOnly' },
+        rikkDeclinesToSell: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'buysOnly' },
+        rikkBuysSuccess: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'sellsOnly' },
+        rikkSellsSuccess: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'buysOnly' },
+        itemNotGoodEnough: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'buysOnly' },
+        rikkPriceTooHigh: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'buysOnly' },
+        acknowledge_empty_stash: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK },
+        customerHasNothingToSell: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'sellsOnly' },
+        rikkHasNothingCustomerWants: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK, skipIf: 'buysOnly' },
+        customerScaredOff: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK },
+        generalBanter: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK },
+        negotiationSuccess: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, onlyIf: 'canNegotiate' },
+        negotiationFail: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, onlyIf: 'canNegotiate' },
+        offerCommunityHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
+        rikkAgreesToHelpPastor: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
+        pastorThanksForHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
+        pastorDeclinesHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
+        rikkDeclinesPastor: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
+    };
+
+    /**
+     * Manages all UI interactions and DOM updates for the Dialogue Care interface.
+     */
+    class DialogueCareUI {
+        constructor() {
+            this.dom = {
+                statusIcon: document.getElementById('status-icon'),
+                statusText: document.getElementById('status-text'),
+                statusSubtext: document.getElementById('status-subtext'),
+                analyzeBtn: document.getElementById('analyze-btn'),
+                statsList: document.getElementById('stats-list'),
+                issueHeader: document.getElementById('issue-header'),
+                issueCard: document.getElementById('issue-card'),
+                issueLog: document.getElementById('issue-log'),
+            };
+
+            this.icons = {
+                warn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-9.25-3.75a.75.75 0 0 0-1.5 0v4.5c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-4.5Zm.002 6.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" clip-rule="evenodd" /></svg>`,
+                error: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8.28-2.22a.75.75 0 0 0-1.06 0L6.22 10.22a.75.75 0 0 0 1.06 1.06L10 8.84l2.72 2.72a.75.75 0 1 0 1.06-1.06L11.06 7.78Z" clip-rule="evenodd" /></svg>`,
+                coverage: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>`,
+                richness: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" /></svg>`,
+                consistency: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`
+            };
+            this.reset();
+        }
+
+        reset() {
+            this.dom.statusIcon.className = 'status-icon';
+            this.dom.statusText.textContent = 'Good';
+            this.dom.statusSubtext.textContent = 'Run analysis to check dialogue health.';
+            this.dom.analyzeBtn.disabled = false;
+            this.dom.analyzeBtn.textContent = 'Analyze now';
+            this.dom.statsList.innerHTML = '';
+            this.dom.issueCard.style.display = 'none';
+            this.dom.issueHeader.style.display = 'none';
+            this.dom.issueLog.innerHTML = '';
+            this._populateInitialStats();
+        }
+
+        _populateInitialStats() {
+            const stats = [
+                { id: 'coverage', label: 'Coverage', icon: this.icons.coverage },
+                { id: 'richness', label: 'Richness', icon: this.icons.richness },
+                { id: 'consistency', label: 'Consistency', icon: this.icons.consistency },
+            ];
+            stats.forEach(stat => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.id = `stat-${stat.id}`;
+                li.innerHTML = `
+                    <div class="item-icon">${stat.icon}</div>
+                    <div class="item-content">
+                        <span class="item-label">${stat.label}</span>
+                        <div class="value-container">
+                            <span class="item-value">--</span>
+                        </div>
+                    </div>
+                    <div class="item-progress">
+                        <div class="progress-bar"><div class="progress-fill"></div></div>
+                        <span class="progress-text">Not scanned</span>
+                    </div>
+                `;
+                this.dom.statsList.appendChild(li);
+            });
+        }
+        
+        updateStat(id, valueText, total, passed, unit) {
+            const statEl = document.getElementById(`stat-${id}`);
+            if (!statEl) return;
+            statEl.querySelector('.item-value').textContent = valueText;
+            const progress = total > 0 ? (passed / total) * 100 : 100;
+            const fillEl = statEl.querySelector('.progress-fill');
+            fillEl.style.width = `${progress}%`;
+            fillEl.className = 'progress-fill'; // reset
+            if(progress === 100) fillEl.classList.add('green');
+            
+            statEl.querySelector('.progress-text').textContent = `${passed} / ${total} ${unit}`;
+        }
+
+        logIssue(level, message) {
+            this.dom.issueCard.style.display = 'block';
+            this.dom.issueHeader.style.display = 'block';
+            const li = document.createElement('li');
+            li.className = 'issue-item';
+            li.innerHTML = `
+                <div class="issue-icon ${level}">${this.icons[level]}</div>
+                <div class="issue-message">${message}</div>
+            `;
+            this.dom.issueLog.appendChild(li);
+        }
+
+        setScanningState(isScanning) {
+            this.dom.analyzeBtn.disabled = isScanning;
+            this.dom.analyzeBtn.textContent = isScanning ? 'Analyzing...' : 'Analyze again';
+            if (isScanning) {
+                this.dom.statusText.textContent = 'Scanning...';
+                this.dom.statusSubtext.textContent = 'Checking all dialogue files.';
+            }
+        }
+        
+        setFinalStatus(state, text, subtext) {
+            this.dom.statusIcon.className = `status-icon ${state}`;
+            this.dom.statusText.textContent = text;
+            this.dom.statusSubtext.textContent = subtext;
+        }
+    }
+
+    class DialogueAnalyzer {
+        constructor(templates, config, ui) {
+            this.templates = templates;
+            this.config = config;
+            this.ui = ui;
+            this.ui.dom.analyzeBtn.addEventListener('click', () => this.run());
+        }
+
+        async run() {
+            this.ui.reset();
+            this.ui.setScanningState(true);
+            this.stats = {
+                coverage: { total: 0, passed: 0 },
+                richness: { total: 0, passed: 0, warnings: 0 },
+                consistency: { total: 0, passed: 0, errors: 0 },
+            };
+
+            const archetypeKeys = Object.keys(this.templates);
+
+            for (const key of archetypeKeys) {
+                await new Promise(resolve => setTimeout(resolve, SCAN_DELAY_MS));
+                this._analyzeArchetype(key);
+                this.ui.dom.statusSubtext.textContent = `Scanning ${this.templates[key].baseName}...`;
+            }
+
+            this._finalizeAnalysis();
+        }
+
+        _finalizeAnalysis() {
+            this.ui.setScanningState(false);
+            const { coverage, richness, consistency } = this.stats;
+
+            let finalState, statusText, statusSubtext;
+            if (consistency.errors > 0 || coverage.passed < coverage.total) {
+                finalState = 'error';
+                statusText = 'Errors found';
+                statusSubtext = `Critical issues need attention.`;
+            } else if (richness.warnings > 0) {
+                finalState = 'warn';
+                statusText = 'Good';
+                statusSubtext = `${richness.warnings} item(s) can be improved.`;
+            } else {
+                finalState = 'excellent';
+                statusText = 'Excellent';
+                statusSubtext = 'All dialogue contexts look great.';
+            }
+            this.ui.setFinalStatus(finalState, statusText, statusSubtext);
+        }
+
+        _analyzeArchetype(key) {
+            const archetype = this.templates[key];
+            const dialogue = archetype.dialogue || {};
+            const gameplayConfig = archetype.gameplayConfig || {};
+
+            for (const contextKey in this.config) {
+                 const contextConfig = this.config[contextKey];
+                
+                // Skip logic
+                if (contextConfig.onlyForArchetypes && !contextConfig.onlyForArchetypes.includes(key)) continue;
+                if (!contextConfig.onlyForArchetypes && key === "PASTOR_JONES") continue;
+                if (contextConfig.skipIf === 'sellsOnly' && gameplayConfig.sellsOnly) continue;
+                if (contextConfig.skipIf === 'buysOnly' && gameplayConfig.buysOnly) continue;
+                if (contextConfig.onlyIf === 'canNegotiate' && gameplayConfig.negotiationResists) continue;
+
+                const path = `<b>${key}</b>.${contextKey}`;
+                
+                this.stats.coverage.total++;
+                if (!dialogue[contextKey]) {
+                    this.stats.consistency.errors++;
+                    this.ui.logIssue('error', `Missing context: ${path}`);
+                } else {
+                    this.stats.coverage.passed++;
+                    if (contextConfig.parser === 'greeting') {
+                        this._analyzeGreeting(dialogue.greeting, path);
+                    } else {
+                        this._analyzeContext(dialogue[contextKey], contextConfig, path);
+                    }
+                }
+            }
+            this._updateUIStats();
+        }
+        
+        _analyzeContext(blocks, config, path) {
+            this.stats.consistency.total++;
+            if (!Array.isArray(blocks)) {
+                this.stats.consistency.errors++;
+                this.ui.logIssue('error', `Invalid data structure: ${path} is not an Array.`);
+                return;
+            }
+            this.stats.consistency.passed++;
+
+            blocks.forEach(block => {
+                this._analyzeBlock(block, config.minLines, path);
+            });
+        }
+
+        _analyzeGreeting(obj, path) {
+            if (typeof obj !== 'object' || obj === null) return;
+            for (const key in obj) {
+                const value = obj[key];
+                const newPath = `${path}.${key}`;
+                if (Array.isArray(value)) {
+                    this._analyzeContext(value, { minLines: MIN_LINES_PER_BLOCK }, newPath);
+                } else {
+                    this._analyzeGreeting(value, newPath);
+                }
+            }
+        }
+        
+        _analyzeBlock(block, minLines, path) {
+            this.stats.richness.total++;
+            if (!block || !Array.isArray(block.lines) || block.lines.length < minLines) {
+                 this.stats.richness.warnings++;
+                 const lineCount = (block && block.lines) ? block.lines.length : 0;
+                 this.ui.logIssue('warn', `Low richness: ${path} has <b>${lineCount}/${minLines}</b> lines.`);
+            } else {
+                this.stats.richness.passed++;
+            }
+        }
+        
+        _updateUIStats() {
+            this.ui.updateStat('coverage', `${this.stats.coverage.passed}`, this.stats.coverage.total, this.stats.coverage.passed, 'contexts');
+            this.ui.updateStat('richness', `${this.stats.richness.warnings > 0 ? this.stats.richness.warnings : 'No'}`, this.stats.richness.total, this.stats.richness.passed, 'blocks');
+            this.ui.updateStat('consistency', `${this.stats.consistency.errors > 0 ? this.stats.consistency.errors : 'No'}`, this.stats.consistency.total, this.stats.consistency.passed, 'checks');
+        }
+    }
+
+    new DialogueAnalyzer(customerTemplates, ANALYSIS_CONFIG, new DialogueCareUI());
+    </script>
+</body>
+</html>
