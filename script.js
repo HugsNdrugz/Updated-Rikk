@@ -629,7 +629,8 @@ function saveStyleSettings() {
     uiManager.saveStyleSettingsToStorage();
 }
 
-function handleStartNewGameClick() {
+function handleStartNewGameClick(event) { // Added "event" parameter
+    if (event) event.preventDefault(); // Add this line to prevent the link from navigating
     initializeNewGameState();
     startGameFlow();
 }
