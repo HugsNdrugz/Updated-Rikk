@@ -206,7 +206,8 @@ export class CustomerManager {
         }
 
         let choices = [];
-        let itemContext = null; // This will hold the item being discussed/transacted
+        // itemContext is already declared in the outer scope.
+        // This was the source of the "Identifier 'itemContext' has already been declared" error.
 
         // --- "The Usual" Unavailable Flow ---
         let soldAlternativeAfterUsualFail = false;
