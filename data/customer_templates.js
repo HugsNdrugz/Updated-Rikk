@@ -723,45 +723,111 @@ export const customerTemplates = {
             "preferredDrugSubTypes": ["PSYCHEDELIC", "NOOTROPIC", "METHAMPHETAMINE"]
         },
         "dialogue": {
-            "greeting": [
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
-                    "lines": [
-                        "(Voice low, impeccably dressed but eyes scanning) Rikk. A word. **Is this establishment... secure? One hears whispers.** I require absolute discretion for my acquisition of [ITEM_NAME]. **A blemish on my reputation is more costly than any bauble you might possess. And my tailor is very judgemental.**",
-                        "(Adjusts cufflinks, gaze sharp) Rikk. The usual precautions, I trust? My associates value... silence. As do I. The [ITEM_NAME] in question must be... untainted. **My patience for complications is famously thin.**",
-                        "Rikk. The walls in this city have ears, and some have rather expensive microphones. Ensure this transaction is... beneath their notice. For the [ITEM_NAME], of course."
+            "greeting": {
+                "new_customer": {
+                    "seeking_to_buy": [
+                        {
+                            "moods": ["arrogant", "neutral"], // Defaulting to arrogant
+                            "lines": [
+                                "Rikk. I trust my expectations will be met today. Promptly.",
+                                "I am given to understand you are the Rikk of renown? One hopes the rumors of quality are not... exaggerated. I am in the market for the most... *efficacious* wares available. **Time is a luxury I do not squander on subpar experiences.**",
+                                "Rikk. Let's not dally. My interest lies in your premium stock.",
+                                "You are Rikk, I presume? My sources indicate you may have access to the caliber of product I require. **Impress me.**"
+                            ]
+                        },
+                        {
+                            "moods": ["paranoid"],
+                            "lines": [
+                                "(Voice low, impeccably dressed but eyes scanning) Rikk. A word. **Is this establishment... secure? One hears whispers.** I require absolute discretion for my acquisition of [ITEM_NAME]. **A blemish on my reputation is more costly than any bauble you might possess. And my tailor is very judgemental.**",
+                                "(Adjusts cufflinks, gaze sharp) Rikk. The usual precautions, I trust? My associates value... silence. As do I. The [ITEM_NAME] in question must be... untainted. **My patience for complications is famously thin.**",
+                                "Rikk. The walls in this city have ears, and some have rather expensive microphones. Ensure this transaction is... beneath their notice. For the [ITEM_NAME], of course."
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": [
+                                "(A charming, yet slightly condescending smile) Ah, Rikk, my purveyor of peccadilloes! I trust your offerings today are as refined as my taste in... well, everything. **Life's too short for cheap thrills, or cheap people, for that matter.**",
+                                "(Chuckles lightly) Rikk. I expect nothing less than your finest. **Mediocrity is a contagion I actively avoid.** What delicacy do you have for my discerning palate today?",
+                                "Rikk, my good fellow! The city air agrees with me today. Let us hope your inventory does as well. I'm in the mood for something... exceptional."
+                            ]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [ // High Roller mainly buys, but good to have a placeholder if logic ever allows.
+                        {
+                            "moods": ["arrogant"],
+                            "lines": [
+                                "Rikk, I find myself in possession of an item that might... align with your particular interests. It's of impeccable quality, naturally.",
+                                "One of my... ventures... has yielded a surplus item. Perhaps you can find a home for it, Rikk. For a suitable price, of course.",
+                                "Rikk, I have a proposition. An item of unique character has come into my possession. It's not for the common rabble."
+                            ]
+                        }
+                    ]
                 },
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
-                    "lines": [
-                        "(A charming, yet slightly condescending smile) Ah, Rikk, my purveyor of peccadilloes! I trust your offerings today are as refined as my taste in... well, everything. **Life's too short for cheap thrills, or cheap people, for that matter.** What delicacy do you have for my discerning palate today? **I hope it pairs well with my vintage Bordeaux and impending world domination.**",
-                        "(Chuckles lightly) Rikk. Always a pleasure. Or, at least, a necessary transaction. I expect nothing less than your finest. **Mediocrity is a contagion I actively avoid.**",
-                        "Rikk, my good fellow! The city air agrees with me today. Let us hope your inventory does as well. I'm in the mood for something... exceptional."
+                "returning_customer": {
+                    "seeking_to_buy_usual": [
+                        {
+                            "moods": ["arrogant", "neutral"],
+                            "lines": [
+                                "Rikk. We meet again. I trust your standards haven't slipped since our last transaction. The usual, if it meets my criteria.",
+                                "Ah, Rikk. Let's dispense with the pleasantries. You know my expectations. My preferred [USUAL_ITEM_NAME], if you please.",
+                                "Back for another round, Rikk. My usual [USUAL_ITEM_NAME]. Ensure it's of the highest quality."
+                            ]
+                        },
+                        {
+                            "moods": ["paranoid"],
+                            "lines": [
+                                "Rikk. The usual, and ensure the previous levels of discretion are maintained. Eyes are everywhere.",
+                                "It's me again. My preferred [USUAL_ITEM_NAME]. No complications this time, I trust.",
+                                "One hopes you've kept my preferences secure, Rikk. The [USUAL_ITEM_NAME]. And quickly."
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": [
+                                "Rikk, a pleasure as always when quality is involved. My usual [USUAL_ITEM_NAME] to brighten the day further.",
+                                "Good to see your establishment still stands, Rikk. The [USUAL_ITEM_NAME], if you have it.",
+                                "Ah, Rikk. Back for my customary indulgence. The [USUAL_ITEM_NAME], and make it snappy."
+                            ]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
-                    "lines": [
-                        "Rikk. We meet again. I trust your standards haven't slipped since our last transaction.",
-                        "Ah, Rikk. Let's dispense with the pleasantries. You know my expectations.",
-                        "Back for another round, Rikk. Impress me as you occasionally do."
+                    "seeking_to_buy_general": [
+                         {
+                            "moods": ["arrogant", "neutral"],
+                            "lines": [
+                                "Rikk. My usual is unavailable or uninspiring today. What else of quality do you possess?",
+                                "Let's see what else is on your... menu, Rikk. My patience for mediocrity is limited.",
+                                "Surprise me, Rikk. But do ensure it's a pleasant surprise. What alternatives can you offer?"
+                            ]
+                        },
+                        {
+                            "moods": ["paranoid"],
+                            "lines": [
+                                "The usual channels are... compromised, Rikk. What secure alternatives do you have?",
+                                "My sources for the preferred are dry. What else can you provide with utmost discretion?",
+                                "A change of plans is required. What other high-quality items do you have that won't attract... attention?"
+                            ]
+                        },
+                         {
+                            "moods": ["happy"],
+                            "lines": [
+                                "Feeling adventurous today, Rikk. What other exquisite items might tempt me?",
+                                "Let's broaden the horizons, shall we? What other treasures have you procured?",
+                                "My usual seems dull today. Present your finest alternatives, Rikk."
+                            ]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [],
-                    "lines": [
-                        "Rikk. I trust my expectations will be met today. Promptly.",
-                        "I am given to understand you are the Rikk of renown? One hopes the rumors of quality are not... exaggerated. I am in the market for the most... *efficacious* wares available. **Time is a luxury I do not squander on subpar experiences.**",
-                        "Rikk. Let's not dally. My interest lies in your premium stock.",
-                        "You are Rikk, I presume? My sources indicate you may have access to the caliber of product I require. **Impress me.**"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [ // Placeholder if logic allows
+                        {
+                            "moods": ["arrogant"],
+                            "lines": [
+                                "Rikk, another item from my collection seeks a new portfolio. Are you prepared to make a worthy offer?",
+                                "I've decided to part with a minor treasure, Rikk. Naturally, I expect top dollar.",
+                                "This piece no longer serves my purposes. Perhaps it will serve yours... for the right price."
+                            ]
+                        }
+                    ]
                 }
-            ],
+            },
             "itemNotGoodEnough": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
@@ -1315,37 +1381,86 @@ export const customerTemplates = {
             "credImpactBuy": 4
         },
         "dialogue": {
-            "greeting": [
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
-                    "lines": [
-                        "(Hushed, jumpy, clutching a worn notepad) Rikk, keep your voice down! **They're listening, man, the walls have ears, and the rats are wearing wires!** I got intel, grade-A, but this drop needs to be ghost. **My contact lens just transmitted a warning.**",
+            "greeting": {
+                "new_customer": {
+                    "seeking_to_buy": [ // Should ideally not be hit due to sellsOnly, but good to have structure
+                        {
+                            "moods": ["cautious"],
+                            "lines": [
+                                "Rikk... I usually sell information, not buy it. But today... the winds of fate are strange. What do you have?",
+                                "This is unusual for me, Rikk, but I might be in the market to acquire something. What's on offer?",
+                                "Let's just say my usual sources are dry, Rikk. Perhaps you have something that could... fill a void?"
+                            ]
+                        }
+                    ],
+                    "seeking_to_sell": [
+                        {
+                            "moods": ["cautious", "neutral"], // Defaulting to cautious
+                            "lines": [
+                                "Rikk. Got a fresh whisper for ya. **Hot off the griddle.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
+                                "You Rikk? Name's [CUSTOMER_NAME]. Heard you trade in... *information*. **I got some prime cuts.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
+                                "Rikk. Word on the street is you're looking for an edge. I might have just the thing. **Information broker, at your service... for a fee.**",
+                                "They call you Rikk? Good. I hear things. **Things people pay to know.** Interested?",
+                                "Rikk. I've got a whisper that's worth its weight in gold. You buying?"
+                            ]
+                        },
+                        {
+                            "moods": ["paranoid"],
+                            "lines": [
+                                "(Hushed, jumpy, clutching a worn notepad) Rikk, keep your voice down! **They're listening, man, the walls have ears, and the rats are wearing wires!** I got intel, grade-A, but this drop needs to be ghost. **My contact lens just transmitted a warning.**",
                                 "(Looks over both shoulders, pulls hat lower) Rikk. We need to talk. Quietly. **I've got something that could fry bigger fish than you... or me.** Info's hot. Price is hotter. You in?",
                                 "Rikk, you didn't see me, I wasn't here. **But I got a whisper that could change the weather.** You interested before the wind changes?"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
-                    "lines": [
-                        "(A sly, self-satisfied grin) Rikk, my friend! You've caught me on a banner day. **The streets are singing to me, and their song is pure profit.** I've got a symphony of secrets that'll make your ears tingle and your wallet bulge. **This ain't just intel, it's a golden ticket.**",
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": [
+                                "(A sly, self-satisfied grin) Rikk, my friend! You've caught me on a banner day. **The streets are singing to me, and their song is pure profit.** I've got a symphony of secrets that'll make your ears tingle and your wallet bulge. **This ain't just intel, it's a golden ticket.**",
                                 "(Leans in conspiratorially) Rikk! Good timing. **I just heard something that'll make your jaw drop and your pockets jingle.** This is exclusive. Very exclusive. And very, very lucrative for the right buyer.",
                                 "Ah, Rikk! Just the man. **The city's been generous with her secrets today, and I'm feeling generous in turn... for a price.** What say you?"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                            ]
+                        }
+                    ]
                 },
-                {
-                    "conditions": [],
-                    "lines": [
-                        "Rikk. Got a fresh whisper for ya. **Hot off the griddle.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
-                        "You Rikk? Name's [CUSTOMER_NAME]. Heard you trade in... *information*. **I got some prime cuts.** This stuff ain't free, you know. **Knowledge is power, and power's got a price tag.**",
-                        "Rikk. Word on the street is you're looking for an edge. I might have just the thing. **Information broker, at your service... for a fee.**",
-                        "They call you Rikk? Good. I hear things. **Things people pay to know.** Interested?",
-                        "Rikk. I've got a whisper that's worth its weight in gold. You buying?"
+                "returning_customer": {
+                     "seeking_to_buy": [ // Should ideally not be hit
+                        {
+                            "moods": ["cautious"],
+                            "lines": [
+                                "Back again, Rikk. And this time, the tables have turned. I'm looking to buy. What secrets do *you* have?",
+                                "Unusual circumstances, Rikk. I need to acquire something. Show me what you've got.",
+                                "My information network is... temporarily offline. Perhaps your inventory can assist me today."
+                            ]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [
+                         {
+                            "moods": ["cautious", "neutral"],
+                            "lines": [
+                                "Rikk. Back with another tidbit. This one's fresh.",
+                                "Got some more information for your consideration, Rikk. Standard rates apply.",
+                                "Heard you might be in the market for what I'm selling. The usual quality, Rikk."
+                            ]
+                        },
+                        {
+                            "moods": ["paranoid"],
+                            "lines": [
+                                "Me again, Rikk. **The shadows have been chatty. And they're not happy.** This info needs to move fast.",
+                                "They're still watching, Rikk. But this new whisper... it's too good to keep. You understand.",
+                                "The usual precautions, Rikk. This new intel... it's got a few more eyes on it than last time."
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": [
+                                "Rikk! My favorite client! Got another golden goose for ya!",
+                                "The streets keep providing, Rikk, and so do I. This new info is top-shelf.",
+                                "Back with more Grade-A intel, Rikk. You won't be disappointed."
+                            ]
+                        }
+                    ]
                 }
-            ],
+            },
             "lowCashRikk": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
