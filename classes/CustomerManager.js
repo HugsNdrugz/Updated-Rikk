@@ -381,6 +381,7 @@ export class CustomerManager {
                     }
                 }
             }
+            // Corrected: itemContext is already declared in the function scope.
             itemContext = chosenItem;
 
             if (!itemContext) {
