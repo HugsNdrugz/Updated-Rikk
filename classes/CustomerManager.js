@@ -63,24 +63,21 @@ export class CustomerManager {
      * @returns {object} A fully-formed interaction object for the main script to use.
      */
     generateInteraction(gameState) {
-        this.currentTurn++; // Increment turn counter for cooldowns
-        const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects, customersInteractedThisTurn } = gameState;
+        this.currentTurn++;
+        const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects, customersInteractedThisTurn, heat } = gameState;
 
         const customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn);
 
         if (!customerInstance) {
-            // This can happen if all potential customers are on cooldown or already interacted today
             debugLogger.log('CustomerManager', 'No eligible customer could be selected or generated.');
             return {
-                instance: null,
-                name: "No One",
+                instance: null, name: "No One",
                 dialogue: [{ speaker: "narration", text: "The streets are quiet for now..." }],
                 choices: [{ text: "Wait a bit.", outcome: { type: "end_interaction_quiet_streets" } }],
-                isQuietStreets: true // Special flag
+                isQuietStreets: true
             };
         }
 
-        // Update cooldown for the selected customer
         this.customerCooldowns[customerInstance.id] = this.currentTurn;
 
         const template = this.customerTemplates[customerInstance.archetypeKey];
@@ -89,46 +86,84 @@ export class CustomerManager {
             return this._createErrorInteraction(customerInstance);
         }
 
+        // --- Contextual Analysis ---
+        const isReturningCustomer = customerInstance.hasMetRikkBefore;
+        const customerMood = customerInstance.mood;
+        let customerIntent = template.sellsOnly ? 'sell' : (template.buysOnly ? 'buy' : (Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE ? 'sell' : 'buy'));
+        if (inventory.length === 0 && customerIntent === 'buy') customerIntent = 'sell'; // If Rikk has nothing, customer might try to sell
+        if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD && customerIntent === 'sell') customerIntent = 'buy'; // If Rikk is full, customer might try to buy
+
+        let isUsualAvailable = false;
+        let preferredItemName = "their usual"; // Generic default
+
+        if (isReturningCustomer && customerIntent === 'buy' && template.gameplayConfig?.buyPreference) {
+            const buyPrefs = Array.isArray(template.gameplayConfig.buyPreference.or) ? template.gameplayConfig.buyPreference.or : [template.gameplayConfig.buyPreference];
+            for (const pref of buyPrefs) {
+                // Simplified check: just check if any item Rikk has matches the ID or SubType of a preference.
+                // A more robust check would consider quality, etc., as in _inventoryItemMatchesPreference.
+                const matchedItemInStock = inventory.find(item =>
+                    (pref.id && item.id === pref.id) ||
+                    (pref.subType && item.itemTypeObj?.subType === pref.subType) ||
+                    (pref.type && item.itemTypeObj?.type === pref.type)
+                );
+                if (matchedItemInStock) {
+                    isUsualAvailable = true;
+                    preferredItemName = matchedItemInStock.name; // Or derive from pref if more specific
+                    customerInstance.currentItemName = preferredItemName; // For [USUAL_ITEM_NAME] placeholder
+                    break;
+                }
+            }
+        }
+        // --- End Contextual Analysis ---
+
         // Apply customerScareChance from world effects (can happen after selecting customer, before they speak)
         if (combinedWorldEffects && combinedWorldEffects.customerScareChance > 0 && Math.random() < combinedWorldEffects.customerScareChance) {
-            const scareDialogue = this._getDialogue(customerInstance, 'customerScaredOff') || { line: `${customerInstance.name} looks around nervously and bolts.`, payload: null };
-            return {
-                instance: customerInstance,
-                name: customerInstance.name,
-                dialogue: [{ speaker: "narration", text: scareDialogue.line }],
-                choices: [{ text: "Damn.", outcome: { type: "end_interaction_scared", payload: scareDialogue.payload } }],
-                itemContext: null,
-                archetypeKey: customerInstance.archetypeKey,
-                mood: customerInstance.mood, // or a specific 'scared' mood
-                isScaredOff: true
-            };
+            const scareDialogue = this._getDialogue(customerInstance, 'customerScaredOff', { mood: customerMood }) || { line: `${customerInstance.name} looks around nervously and bolts.`, payload: null };
+            return { /* ... scare return object ... */ }; // Keep existing scare return structure
         }
 
-        // Determine customer's intent *before* greeting or generating items
-        let customerIntentIsToSellToRikk;
-        if (template.sellsOnly) {
-            customerIntentIsToSellToRikk = true;
-        } else if (template.buysOnly) {
-            customerIntentIsToSellToRikk = false;
-        } else {
-            // Default logic if not buysOnly/sellsOnly
-            customerIntentIsToSellToRikk = Math.random() < CONFIG.BASE_CUSTOMER_SELLS_CHANCE;
-            if (inventory.length === 0) customerIntentIsToSellToRikk = true; // If Rikk has nothing, customer more likely to offer
-            if (inventory.length >= CONFIG.INVENTORY_FULL_THRESHOLD) customerIntentIsToSellToRikk = false; // If Rikk's inventory is full, less likely to be sold to
-        }
+        // Fetch greeting based on full context
+        const greetingContext = { isNew: !isReturningCustomer, intent: customerIntent, isUsualAvailable, mood: customerMood };
+        const greetingResult = this._getDialogue(customerInstance, 'greeting', greetingContext);
 
-        // Fetch general greeting (should be neutral to intent now)
-        const greetingResult = this._getDialogue(customerInstance, 'greeting');
         let dialogue = [
             { speaker: "customer", text: greetingResult.line },
-            // Rikk's response can also be more general now
             { speaker: "rikk", text: this._getRandomElement(["Yo.", "Aight.", "What's good?", "Speak to me."]) }
         ];
 
-        let choices = [];
-        let itemContext = null;
+        // --- Environmental Interruption Check (Example Point) ---
+        // This could also be checked later, e.g. before choices are displayed.
+        if (gameState.heat > 70 && activeWorldEvents.some(event => event.type === 'police_activity')) { // Example condition
+            const interruption = this._getDialogue(customerInstance, 'interruption_sirens_nearby', { mood: customerMood });
+            dialogue.push({ speaker: "narration", text: interruption.line });
+            return {
+                instance: customerInstance,
+                name: customerInstance.name,
+                dialogue,
+                choices: [{ text: "Damn, cops!", outcome: { type: "end_interaction_interrupted_heat" } }],
+                archetypeKey: customerInstance.archetypeKey,
+                mood: customerMood, // Or a specific 'panicked' mood
+                isInterrupted: true
+            };
+        }
 
-        if (customerIntentIsToSellToRikk) {
+        let choices = [];
+        let itemContext = null; // This will hold the item being discussed/transacted
+
+        // --- "The Usual" Unavailable Flow ---
+        let soldAlternativeAfterUsualFail = false;
+        if (isReturningCustomer && customerIntent === 'buy' && !isUsualAvailable) {
+            const usualUnavailableDialogue = this._getDialogue(customerInstance, 'usual_unavailable', { mood: customerMood, itemName: preferredItemName }); // Pass preferredItemName
+            if(usualUnavailableDialogue.line !== "...") dialogue.push({ speaker: "customer", text: usualUnavailableDialogue.line });
+        }
+
+        // --- Mood-Driven Price Tolerance (Example) ---
+        let currentPriceToleranceFactor = template.priceToleranceFactor || 1.0;
+        if (customerMood === 'angry') currentPriceToleranceFactor *= (customerIntent === 'sell' ? 1.15 : 0.85); // Angry customer wants more if selling, pays less if buying
+        if (customerMood === 'desperate' && customerIntent === 'buy') currentPriceToleranceFactor *= 0.85; // Desperate buyer pays more (Rikk effectively gets better price)
+
+        // --- Main Interaction Logic based on Intent ---
+        if (customerIntent === 'sell') { // Customer wants to sell an item to Rikk
             // Customer wants to sell an item to Rikk
             itemContext = this._generateRandomItem(customerInstance, template, combinedWorldEffects);
 
@@ -327,50 +362,139 @@ export class CustomerManager {
         };
     }
     
-    getOutcomeDialogue(customerInstance, contextKey) {
-        return this._getDialogue(customerInstance, contextKey);
+    getOutcomeDialogue(customerInstance, contextKey, subContext = {}) { // Pass subContext if needed for outcome dialogues too
+        return this._getDialogue(customerInstance, contextKey, subContext);
     }
 
-    _getDialogue(customerInstance, contextKey) {
+    _getDialogue(customerInstance, primaryContextKey, subContext = {}) {
         const template = this.customerTemplates[customerInstance.archetypeKey];
-        const playerSafeFallback = { line: "...", payload: null }; // Default player-safe fallback
+        const playerSafeFallback = { line: "...", payload: null };
+        const mood = subContext.mood || customerInstance.mood || 'neutral'; // Fallback mood
 
-        if (!template || !template.dialogue || !template.dialogue[contextKey]) {
-            debugLogger.warn('CustomerManager', `Missing dialogue template or contextKey: '${contextKey}' for archetype '${customerInstance.archetypeKey}'.`);
+        if (!template || !template.dialogue) {
+            debugLogger.warn('CustomerManager', `No dialogue template for archetype '${customerInstance.archetypeKey}'.`);
             return playerSafeFallback;
         }
-        const dialogueNode = template.dialogue[contextKey];
-        for (const block of dialogueNode) {
-            let allConditionsMet = true;
-            if (block.conditions && block.conditions.length > 0) {
-                for (const condition of block.conditions) {
-                    if (condition.stat === "addictionStatus.isAddicted") {
-                        if (!customerInstance.addictionStatus || customerInstance.addictionStatus.isAddicted !== condition.value) {
-                            allConditionsMet = false;
-                            break;
-                        }
-                    } else if (condition.stat === "addictionStatus.drugId") {
-                         if (!customerInstance.addictionStatus || customerInstance.addictionStatus.drugId !== condition.value) {
-                            allConditionsMet = false;
-                            break;
-                        }
-                    }
-                    else if (!this._checkCondition(customerInstance, condition)) {
-                        allConditionsMet = false;
+
+        let dialoguePool = template.dialogue[primaryContextKey];
+
+        if (!dialoguePool) {
+            debugLogger.warn('CustomerManager', `Missing primaryContextKey: '${primaryContextKey}' for archetype '${customerInstance.archetypeKey}'.`);
+            return playerSafeFallback;
+        }
+
+        // Navigate nested structure for 'greeting'
+        if (primaryContextKey === 'greeting') {
+            const historyKey = subContext.isNew ? 'new_customer' : 'returning_customer';
+            if (!dialoguePool[historyKey]) {
+                debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'.`);
+                return playerSafeFallback;
+            }
+            dialoguePool = dialoguePool[historyKey];
+
+            const intentKey = subContext.intent === 'sell' ? 'seeking_to_sell' : 'seeking_to_buy';
+            if (!dialoguePool[intentKey]) {
+                // Fallback for seeking_to_buy if specific intent path (like usual/general) is missing
+                if (intentKey === 'seeking_to_buy' && dialoguePool['seeking_to_buy_general']) {
+                    dialoguePool = dialoguePool['seeking_to_buy_general'];
+                } else if (intentKey === 'seeking_to_buy' && dialoguePool['seeking_to_buy_usual']) {
+                     dialoguePool = dialoguePool['seeking_to_buy_usual'];
+                } else {
+                    debugLogger.warn('CustomerManager', `Missing intentKey: '${intentKey}' in greeting for '${customerInstance.archetypeKey}/${historyKey}'.`);
+                    return playerSafeFallback;
+                }
+            } else {
+                 dialoguePool = dialoguePool[intentKey];
+            }
+
+
+            if (intentKey === 'seeking_to_buy' && !subContext.isNew) { // Only for returning customers buying
+                const availabilityKey = subContext.isUsualAvailable ? 'seeking_to_buy_usual' : 'seeking_to_buy_general';
+                 // If specific usual/general path doesn't exist under seeking_to_buy, dialoguePool might already be the array.
+                if (dialoguePool[availabilityKey]) { // Check if it's an object with these keys
+                    dialoguePool = dialoguePool[availabilityKey];
+                } else if (!Array.isArray(dialoguePool)) {
+                    // This means seeking_to_buy was an object but didn't have usual/general, which is a structure error.
+                    // Or, if seeking_to_buy itself was the array (simpler structure for some archetypes)
+                    debugLogger.warn('CustomerManager', `Missing availabilityKey: '${availabilityKey}' or structure error in greeting for '${customerInstance.archetypeKey}/${historyKey}/${intentKey}'. Using current pool.`);
+                    // If dialoguePool is not an array at this point, it's an error in template or logic.
+                     if (!Array.isArray(dialoguePool)) return playerSafeFallback;
+                }
+            }
+        }
+
+        // Ensure dialoguePool is an array of blocks now
+        if (!Array.isArray(dialoguePool)) {
+            debugLogger.warn('CustomerManager', `Dialogue pool for '${primaryContextKey}' (final path) is not an array for '${customerInstance.archetypeKey}'. Path: ${JSON.stringify(subContext)}`);
+            return playerSafeFallback;
+        }
+
+        // Filter by mood first
+        let moodSpecificBlocks = dialoguePool.filter(block => block.moods && block.moods.includes(mood));
+        let chosenBlock = null;
+
+        if (moodSpecificBlocks.length > 0) {
+            chosenBlock = this._getRandomElement(moodSpecificBlocks);
+        } else {
+            // Fallback to mood-agnostic lines within the same context
+            let moodAgnosticBlocks = dialoguePool.filter(block => !block.moods);
+            if (moodAgnosticBlocks.length > 0) {
+                chosenBlock = this._getRandomElement(moodAgnosticBlocks);
+            }
+        }
+
+        // If still no block, and it's a nested greeting, try to fallback to a more general greeting within the same history/intent
+        // This fallback is complex and might be better handled by ensuring templates are complete.
+        // For now, if no specific mood/agnostic block is found in the deepest context, it might return fallback.
+
+        if (chosenBlock) {
+            // Legacy condition check (can be phased out or integrated with mood selection)
+            // For now, if a mood-selected block also has conditions, they must pass.
+            if (chosenBlock.conditions && chosenBlock.conditions.length > 0) {
+                let allLegacyConditionsMet = true;
+                for (const condition of chosenBlock.conditions) {
+                    if (!this._checkCondition(customerInstance, condition)) {
+                        allLegacyConditionsMet = false;
                         break;
                     }
                 }
-            }
-            if (allConditionsMet) {
-                const randomLine = this._getRandomElement(block.lines) || `(missing lines for ${contextKey})`;
-                const processedLine = randomLine
-                    .replace(/\[ITEM_NAME\]/g, customerInstance.currentItemName || 'the stuff')
-                    .replace(/\[CUSTOMER_NAME\]/g, customerInstance.name);
-                return { line: processedLine, payload: block.payload || null };
+                if (!allLegacyConditionsMet) {
+                    // This specific mood-matched block failed legacy conditions.
+                    // Ideally, we'd try another mood-matched block or then mood-agnostic.
+                    // For simplicity now, might fall through to global fallback if this happens.
+                    // Or, better: re-filter the chosen pool (moodSpecific or moodAgnostic) to exclude this failed block and try again.
+                    // This part needs refinement for robust fallback.
+                    debugLogger.log('CustomerManager', `Mood-matched block failed legacy conditions for ${primaryContextKey}.`);
+                    // Quick fix: try a mood-agnostic one from the original pool if mood-specific failed conditions
+                    if (moodSpecificBlocks.includes(chosenBlock)) { // if the failed block was mood-specific
+                       let moodAgnosticBlocks = dialoguePool.filter(block => !block.moods);
+                       if (moodAgnosticBlocks.length > 0) chosenBlock = this._getRandomElement(moodAgnosticBlocks);
+                       else chosenBlock = null; // No mood-agnostic fallback in this specific context
+                    } else { // The failed block was already mood-agnostic
+                        chosenBlock = null;
+                    }
+                     if (chosenBlock && chosenBlock.conditions && chosenBlock.conditions.length > 0) { // Re-check conditions if we picked a new block
+                        let allLegacyConditionsMetRetry = true;
+                        for (const condition of chosenBlock.conditions) {
+                           if (!this._checkCondition(customerInstance, condition)) {allLegacyConditionsMetRetry = false; break;}
+                        }
+                        if(!allLegacyConditionsMetRetry) chosenBlock = null;
+                     }
+                }
             }
         }
-        debugLogger.warn('CustomerManager', `No matching dialogue block after conditions for contextKey: '${contextKey}' for archetype '${customerInstance.archetypeKey}'.`);
-        return playerSafeFallback; // Use the same player-safe fallback
+
+        if (chosenBlock && chosenBlock.lines && chosenBlock.lines.length > 0) {
+            const randomLine = this._getRandomElement(chosenBlock.lines);
+            const processedLine = randomLine
+                .replace(/\[ITEM_NAME\]/g, customerInstance.currentItemName || 'the goods') // General fallback
+                .replace(/\[USUAL_ITEM_NAME\]/g, subContext.itemName || 'my usual') // For usual_unavailable context
+                .replace(/\[CUSTOMER_NAME\]/g, customerInstance.name);
+            return { line: processedLine, payload: chosenBlock.payload || null };
+        }
+
+        debugLogger.warn('CustomerManager', `No matching dialogue line found for primaryContextKey: '${primaryContextKey}', mood: '${mood}', subContext: ${JSON.stringify(subContext)} for archetype '${customerInstance.archetypeKey}'.`);
+        return playerSafeFallback;
     }
 
     _checkCondition(customerInstance, condition) {

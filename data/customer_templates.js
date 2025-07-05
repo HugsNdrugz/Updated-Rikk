@@ -38,64 +38,76 @@ export const customerTemplates = {
             "preferredDrugSubTypes": ["OPIATE", "STIMULANT", "SYNTHETIC_CANNABINOID"]
         },
         "dialogue": {
-            "greeting": [
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
-                    "lines": [
-                        "(Eyes wide, whispering, twitching) Rikk? Rikk, man, you gotta help me! **The shadows are whispering my PIN number!** I need somethin', anything, **before the squirrels start judging my life choices!** You got something? And tell me that pigeon isn't a cop! **It's wearing a tiny earpiece, I swear!**",
-                        "(Voice trembling) Rikk? You alone? **I heard a click on my phone... pretty sure it was the Feds, or maybe just my teeth chattering too loud.** Need somethin' strong, man, **my brain's trying to do sudoku with my anxieties.** What's the toll, and make it snappy, **the streetlights are blinking in Morse code!**"
+            "greeting": {
+                "new_customer": {
+                    "seeking_to_buy": [
+                        {
+                            "moods": ["desperate", "paranoid"],
+                            "lines": [
+                                "Yo, uh, you Rikk? They said you were the shaman of the streets. I'm hurtin' bad, need somethin'...",
+                                "You Rikk? Heard you're the guy. Got that... *medicine*? My wallet's already crying."
+                            ]
+                        },
+                        {
+                            "moods": ["angry"],
+                            "lines": ["You Rikk?! Heard you got what I need. Better not be wasting my time!"]
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [
+                        {
+                            "moods": ["desperate"],
+                            "lines": ["Rikk... you gotta help me. I got this... thing. Need cash, man, bad."]
+                        },
+                         {
+                            "moods": ["paranoid"],
+                            "lines": ["(Whispering) Rikk, you buy stuff? Got something... hot. Need to move it. Fast. No questions."]
+                        }
+                    ]
                 },
-                {
-                    "conditions": [
-                        {"stat": "addictionStatus.isAddicted", "op": "is", "value": true},
-                        {"stat": "mood", "op": "isNot", "value": "happy"}
+                "returning_customer": {
+                    "seeking_to_buy_usual": [ // Customer wants their preferred item, and Rikk has it
+                        {
+                            "moods": ["desperate", "addicted"], // 'addicted' can be a mood or derived from addictionStatus
+                            "lines": [
+                                "Rikk! Thank god it's you again! You know what I need! Quick!",
+                                "Me again, Rikk. The usual... please tell me you have it. The walls are talkin' again."
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": ["Rikk my man! Back for my favorite! You got it, right?"]
+                        }
                     ],
-                    "lines": [
-                        "Rikk! You GOTTA have something for me, man! The shakes are comin' back!",
-                        "Don't care the price, Rikk, just tell me you got somethin'... I *need* it. Bad.",
-                        "(Twitching) The craving... it's a beast, Rikk. Got my fix? Anything?"
+                    "seeking_to_buy_general": [ // Customer is returning, but either their usual is out, or they are open to other things
+                        {
+                            "moods": ["desperate", "paranoid"],
+                            "lines": [
+                                "Rikk, it's me! My usual connect is dry... or arrested. You holding anything that'll get me right?",
+                                "Alright Rikk, what's on the menu today? My nerves are shot."
+                            ]
+                        },
+                        {
+                            "moods": ["happy"],
+                            "lines": ["Hey Rikk! Back for more good times! Whatcha got for me today?"]
+                        },
+                        {
+                            "lines": ["Yo Rikk, what's good? Looking to pick something up."] // Generic returning buyer
+                        }
                     ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "happy"}],
-                    "lines": [
-                        "(Grinning ear-to-ear, slightly too loud) RIKK! My savior! You're like a guardian angel, but with better connections! **Last batch had me convinced I could talk to cats! Turns out, they're terrible conversationalists.** Got more of that magic stuff? Price is just a number when you're floating! **My rent can wait, my sanity can't!**",
-                        "(Beaming) Woo! Rikk! Feeling like a king today! Or at least a moderately successful duke! That last score? *Chef's kiss*. Got more of that good stuff? **I'm ready to solve all the world's problems, starting with my own lack of... this.**"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [{"stat": "mood", "op": "is", "value": "angry"}],
-                    "lines": [
-                        "Alright Rikk, enough games! It's me, [CUSTOMER_NAME], and I'm **about two seconds from screaming into a traffic cone!** I need my relief, and I need it YESTERDAY! How much, and don't you dare jerk me around!",
-                        "Rikk! You see me? Good. Because I'm seeing RED. Need something. NOW. Price better be right, or **I'm gonna start reviewing your \"establishment\" on Yelp, and it won't be pretty.**"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [{"stat": "hasMetRikkBefore", "op": "is", "value": true}],
-                    "lines": [
-                        "Rikk! Thank god it's you again! You know what I need! Quick!",
-                        "Me again, Rikk. The usual... please tell me you have something. The walls are talkin' again."
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
-                },
-                {
-                    "conditions": [],
-                    "lines": [
-                        "Rikk! Thank god! It's me, [CUSTOMER_NAME]! **My soul is trying to escape through my eyeballs.** I'm hurtin' bad, need somethin'... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
-                        "Yo, uh, you Rikk? **They said you were the shaman of the streets.** I'm hurtin' bad, need somethin'... How much you asking? Don't **play hard to get, Rikk, my nerves are doing the Macarena.**",
-                        "Rikk, my man! [CUSTOMER_NAME] here! **My insides feel like a washing machine full of angry badgers.** What's the damage for some peace? And please, tell me it's the good stuff, **my disappointment tolerance is at an all-time low.**",
-                        "You Rikk? Heard you're the guy. **Got that... *medicine*?** Price? And be gentle, **my wallet's already crying.**",
-                        "Rikk, man, you're a sight for sore eyes! The walls are starting to melt again. Got anything for that?",
-                        "Is that you, Rikk? The static in my head is getting loud. Need something to turn down the volume. What's the cost for some quiet?"
-                    ],
-                    "payload": { "type": "EFFECT", "effects": [] }
+                    "seeking_to_sell": [
+                        {
+                            "moods": ["desperate", "angry"],
+                            "lines": [
+                                "Me again, Rikk. Times are tough. Had to find something else to pawn...",
+                                "Rikk, you gotta take this off my hands. No questions, just cash."
+                            ]
+                        },
+                        {
+                            "lines": ["Hey Rikk, got something else for you today, if you're interested."] // Generic returning seller
+                        }
+                    ]
                 }
-            ],
+            },
             "lowCashRikk": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
@@ -325,6 +337,260 @@ export const customerTemplates = {
             ],
             "customerReactsToPoliteDismissal": [
                 { "lines": ["Aight, respect. Let me know if you change your mind."] }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["desperate", "angry"],
+                    "lines": [
+                        "What?! No [USUAL_ITEM_NAME]? Rikk, you're killin' me! What else you got then, anything?!",
+                        "OUT?! How can you be out?! Fine, fine... what *do* you have? Make it quick!"
+                    ]
+                },
+                {
+                    "moods": ["paranoid"],
+                    "lines": ["They took it, didn't they? The [USUAL_ITEM_NAME]... it's a conspiracy! Okay, okay, what's plan B?"]
+                },
+                {
+                    "lines": ["Damn, Rikk, no [USUAL_ITEM_NAME]? What else is on the menu then?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["desperate", "paranoid", "angry"],
+                    "lines": [
+                        "(Eyes wide) Sirens! Oh crap, oh crap! Forget it, I'm out!",
+                        "Five-O! Scatter! I ain't gettin' pinched today, Rikk!"
+                    ]
+                },
+                {
+                    "lines": ["Hear that? Sounds like trouble. I'm gone."]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["desperate", "happy"],
+                    "lines": [
+                        "Alright, Rikk, this ain't my usual, but it'll have to do. Good lookin' out.",
+                        "Not what I came for, but... yeah, okay. Preciate it."
+                    ]
+                },
+                {
+                    "moods": ["angry"],
+                    "lines": ["Fine, whatever. Just ain't the same though. Next time, have my stuff."]
+                },
+                {
+                    "lines": ["This'll work for now. Hit me up when you re-up on the [USUAL_ITEM_NAME]."]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["arrogant"],
+                    "lines": [
+                        "Out of my preferred [USUAL_ITEM_NAME]? How... pedestrian. What alternatives do you propose, Rikk? They had better be up to par.",
+                        "Disappointing, Rikk. Very well, present your other... wares."
+                    ]
+                },
+                {
+                    "lines": ["No [USUAL_ITEM_NAME]? Hmm. What else of quality do you possess?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["arrogant", "paranoid"],
+                    "lines": [
+                        "(Scoffs) This area is becoming untenable. I shall take my leave.",
+                        "Unforeseen complications. Rikk, this is amateurish. I'm departing."
+                    ]
+                },
+                {
+                    "lines": ["Sirens? Unpleasant. I shall be going."]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["arrogant", "happy"],
+                    "lines": [
+                        "While not my first choice, this will suffice. See that your usual stock is replenished promptly, Rikk.",
+                        "Acceptable, for now. Do not make a habit of such substitutions."
+                    ]
+                },
+                {
+                    "lines": ["This will do. Ensure you have the [USUAL_ITEM_NAME] next time."]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["chill", "happy"],
+                    "lines": [
+                        "No [USUAL_ITEM_NAME] today, Rikk? Bummer. Whatcha got instead, my dude?",
+                        "Ah, all out? No worries. What else is on the menu?"
+                    ]
+                },
+                {
+                    "moods": ["paranoid"],
+                    "lines": ["Whoa, no [USUAL_ITEM_NAME]? Is there a shortage? Okay, okay, what's plan B?"]
+                },
+                {
+                    "lines": ["Damn, no [USUAL_ITEM_NAME]? What else you got cookin'?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["chill", "paranoid"],
+                    "lines": [
+                        "Yo, hear that? Sounds like trouble. I'm gonna bounce, Rikk.",
+                        "Sirens? Not good, man. Gotta skate."
+                    ]
+                },
+                {
+                    "lines": ["That's my cue to leave. Later, Rikk."]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["chill", "happy"],
+                    "lines": [
+                        "Aight, this works too. Good lookin' out, Rikk.",
+                        "Not what I usually go for, but hey, variety is the spice of life, right? Cheers!"
+                    ]
+                },
+                {
+                    "lines": ["This'll do the trick. Let me know when you get more [USUAL_ITEM_NAME] though."]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "lines": [ // Informant doesn't typically buy "usual items" in the same way. This context might be less relevant.
+                        "Hmm, the usual channels are dry for that particular whisper? Interesting. What else is floating on the breeze?",
+                        "So, the standard intel isn't available? What other secrets are for sale today, Rikk?"
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["cautious", "paranoid"],
+                    "lines": [
+                        "That sounds like official business. Our transaction is concluded. Vanish.",
+                        "Unwanted attention. I suggest we both make ourselves scarce, Rikk."
+                    ]
+                },
+                {
+                    "lines": ["Time to disappear. You didn't see me."]
+                }
+            ],
+            "sell_success_alternative": [
+                 // Less relevant for Informant who primarily sells info, not buys alternatives.
+                {
+                    "lines": ["An interesting development. This alternative piece of information will suffice."]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["nosy"],
+                    "lines": [
+                        "Oh, you're out of the [USUAL_ITEM_NAME]? How peculiar! What *are* people buying then, Rikk? Do tell!",
+                        "No [USUAL_ITEM_NAME]? That's a shame. I was hoping to... observe its effects. What else is popular?"
+                    ]
+                },
+                {
+                    "lines": ["No [USUAL_ITEM_NAME]? That's... noteworthy. What else do you have in stock?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["nosy", "paranoid"],
+                    "lines": [
+                        "Goodness, sirens! I hope everyone is alright! I should probably go make sure... and take notes.",
+                        "Oh my, that sounds like the authorities! Rikk, is everything... above board here?"
+                    ]
+                },
+                {
+                    "lines": ["Sirens! How exciting! I must document this!"]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["nosy", "happy"],
+                    "lines": [
+                        "Oh, an alternative! How fascinating. This will be an interesting data point for my... records.",
+                        "So this is what they get when the [USUAL_ITEM_NAME] isn't available! Good to know, Rikk, good to know."
+                    ]
+                },
+                {
+                    "lines": ["This will do for my... observations. Thank you, Rikk."]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["manic"],
+                    "lines": [
+                        "NO [USUAL_ITEM_NAME]?! But my genius plan requires EXACTLY THAT! Okay, okay, what's the next best thing?! GOTTA BE FAST!",
+                        "OUT?! My brain was expecting that specific fuel! What else can make my neurons do the Macarena, Rikk?!"
+                    ]
+                },
+                {
+                    "lines": ["No [USUAL_ITEM_NAME]? My inspiration! It's fading! What else can you offer the muse, Rikk?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["manic", "paranoid"],
+                    "lines": [
+                        "SIRENS?! Abort! Abort! My ideas are too valuable to be confiscated! Gotta ZOOM!",
+                        "WHOA! That's the sound of creativity being STIFLED! Gotta jet, Rikk, before they patent my thoughts!"
+                    ]
+                },
+                {
+                    "lines": ["Bad vibes! My genius is outta here!"]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["manic", "happy"],
+                    "lines": [
+                        "ALRIGHT! Not the rocket fuel I ordered, but this'll get me to... a slightly lower orbit! THANKS, RIKK!",
+                        "This isn't Plan A, but Plan B still has POTENTIAL! My brain is already adapting! INNOVATION!"
+                    ]
+                },
+                {
+                    "lines": ["This'll work! My next big idea is still on schedule! Mostly!"]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "moods": ["dreamy"],
+                    "lines": [
+                        "The universe isn't providing the [USUAL_ITEM_NAME] today, huh? That's cool, man. What other cosmic pathways are open?",
+                        "No [USUAL_ITEM_NAME]? The vibes must be off for that particular journey. What else resonates with the now, Rikk?"
+                    ]
+                },
+                {
+                    "lines": ["The [USUAL_ITEM_NAME] isn't flowing? What other truths are you serving today, my friend?"]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "moods": ["dreamy", "paranoid"],
+                    "lines": [
+                        "Whoa, man, those are some heavy frequencies. My aura is telling me to, like, float away.",
+                        "The collective unconscious is screaming 'run,' Rikk. Or maybe that's just, like, regular sirens. Either way, peace out!"
+                    ]
+                },
+                {
+                    "lines": ["The energy shifted. Time to be elsewhere."]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "moods": ["dreamy", "happy"],
+                    "lines": [
+                        "This path is different, but the destination is still enlightenment, right? Far out, Rikk.",
+                        "Not the usual portal, but this one looks interesting too. Thanks for the alternative route to the cosmos!"
+                    ]
+                },
+                {
+                    "lines": ["A new experience! The universe provides in mysterious ways. Thanks!"]
+                }
             ]
         }
     },

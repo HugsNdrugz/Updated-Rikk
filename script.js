@@ -586,7 +586,8 @@ function generateAndStartCustomerInteraction() {
         playerSkills: game.getPlayerSkills(),
         activeWorldEvents: game.getActiveWorldEvents(),
         combinedWorldEffects: combinedWorldEffects,
-        customersInteractedThisTurn: game.getCustomersInteractedThisTurn() // Pass the list
+        customersInteractedThisTurn: game.getCustomersInteractedThisTurn(),
+        heat: game.getHeat() // Add current heat
     };
     const interaction = game.customerManager.generateInteraction(gameStateForCustomerManager);
 
@@ -841,11 +842,13 @@ function handleChoice(outcome) {
     try {
         uiManager.clearChoices();
         const combinedWorldEffects = getCombinedActiveEventEffects();
-        const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_scared", "end_interaction_no_item"];
+        const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_scared", "end_interaction_no_item", "end_interaction_interrupted_heat", "customer_declines_price"];
+
+        // Check for environmental deal failure
         if (!nonDealOutcomes.includes(outcome.type) && combinedWorldEffects.dealFailChance > 0 && Math.random() < combinedWorldEffects.dealFailChance) {
-            const failMsg = game.getCurrentCustomerInstance() ? `${game.getCurrentCustomerInstance().name} suddenly gets spooked and calls it off!` : "The deal just fell through... damn.";
+            const failMsg = currentCustomer ? `${currentCustomer.name} suddenly gets spooked and calls it off!` : "The deal just fell through... damn.";
             uiManager.displayPhoneMessage(failMsg, "narration");
-            game.decrementFiendsLeft();
+            game.decrementFiendsLeft(); // Still counts as an interaction
             uiManager.updateHUD();
             setTimeout(endCustomerInteraction, CUSTOMER_WAIT_TIME * 1.5);
             return;
@@ -853,14 +856,17 @@ function handleChoice(outcome) {
 
         let narrationText = "";
         let dealSuccess = false;
-        let dialogueContextKey = '';
-        let loyaltyChange = 0; // Initialize loyalty change
+        let dialogueContextKey = ''; // This will determine the customer's reaction dialogue
+        let loyaltyChange = 0;
 
-        // Handle player-triggered end of interaction first
-        if (outcome.type === "end_interaction_player_triggered") {
+        if (outcome.type === "end_interaction_player_triggered" || outcome.type === "end_interaction_interrupted_heat") {
             endCustomerInteraction();
-            return; // Exit early, no further processing needed for this type
+            return;
         }
+
+        // Check if the interaction object has the soldAlternativeFlag (it might not if it's an older outcome type)
+        const soldAlternative = currentCustomer?.interactionContext?.soldAlternative || outcome.soldAlternativeFlag || false;
+
 
         switch (outcome.type) {
             case "buy_from_customer":
@@ -907,7 +913,13 @@ function handleChoice(outcome) {
                     loyaltyChange = 2; // Successful sell
                     narrationText = `Flipped "${soldItem.name}" for $${price}.`;
                     uiManager.playSound(uiManager.cashSound);
-                    dialogueContextKey = 'rikkSellsSuccess';
+                    // Determine if this was an alternative sale
+                    if (soldAlternative) {
+                        dialogueContextKey = 'sell_success_alternative';
+                         customerInstance.currentItemName = soldItem.name; // Ensure currentItemName is set for placeholder in dialogue
+                    } else {
+                        dialogueContextKey = 'rikkSellsSuccess';
+                    }
                     if (currentCustomer && currentCustomer.id) game.addCustomerInteractedThisTurn(currentCustomer.id);
 
                     if (game.customerManager && typeof game.customerManager.processPotentialAddiction === 'function') {
