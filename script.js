@@ -403,13 +403,28 @@ function initGame() {
     }
 }
 
-function initializeNewGameState() {
-    if (DEBUG_MODE) console.log('SCRIPT: initializeNewGameState() started.');
-    clearSavedGameState();
-    game.resetToDefault(gameStateConfig);
+function initializeNewGameState(preservedState = null) {
+    if (DEBUG_MODE) console.log('SCRIPT: initializeNewGameState() started. Preserved state:', preservedState);
+    clearSavedGameState(); // Still clear any old full save file
+
+    // Pass relevant preserved data to resetToDefault
+    // gameStateConfig will provide defaults if preservedState or its properties are null/undefined
+    const newGameConfig = { ...gameStateConfig };
+    if (preservedState) {
+        if (preservedState.cash !== undefined) {
+            newGameConfig.STARTING_CASH = preservedState.cash;
+        }
+        // Add other properties from preservedState to newGameConfig as needed
+        if (preservedState.inventory !== undefined) {
+            newGameConfig.STARTING_INVENTORY = preservedState.inventory; // Carry over inventory
+        }
+        // Ensure GameState.resetToDefault can handle these potentially new config fields
+    }
+
+    game.resetToDefault(newGameConfig); // Pass potentially modified config
     if (DEBUG_MODE) console.log('SCRIPT: game.resetToDefault() completed.');
     if (game.customerManager) {
-        game.customerManager.reset();
+        game.customerManager.reset(); // Customer manager should likely always reset fully for a new run
         if (DEBUG_MODE) console.log('SCRIPT: game.customerManager.reset() completed.');
     }
     // Managers like ContactsManager and MapManager initialize their GameState parts in their constructor
@@ -647,7 +662,12 @@ function handleContinueGameClick(event) { // Added "event" parameter
 }
 
 function handleRestartGameClick() {
-    initializeNewGameState();
+    const preservedState = {
+        cash: game.getCash(),
+        inventory: game.getInventory()
+        // Add other properties here if they should also be preserved for "Run it Back"
+    };
+    initializeNewGameState(preservedState);
     startGameFlow();
 }
 

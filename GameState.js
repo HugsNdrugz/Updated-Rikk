@@ -217,15 +217,15 @@ class GameState {
         this.heat = 0;
         // this.streetCred = config.STARTING_STREET_CRED ?? 0; // Old
         this.streetCred = { // Reset to new structure
-            global: config.STARTING_STREET_CRED ?? 0,
+            global: config.STARTING_STREET_CRED ?? 0, // Standard reset for street cred
             factions: { police: 0, zetas_cartel: 0 },
             districts: { downtown: 0, warrens: 0 },
-            communityFigures: { mama_carter: 0, pastor_jones: 0 } // Ensure Pastor Jones is reset
+            communityFigures: { mama_carter: 0, pastor_jones: 0 }
         };
-        this.playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 };
-        this.inventory = [];
+        this.playerSkills = { negotiator: 0, appraiser: 0, lowProfile: 0 }; // Standard reset for skills
+        this.inventory = config.STARTING_INVENTORY ?? []; // Use preserved inventory if available, else empty
         // this.activeWorldEvents = []; // Old simple array, now handled by specific reset below
-        this.loyalty = {}; // Reset loyalty
+        this.loyalty = {}; // Standard reset for loyalty
         this.choices = {}; // Reset choices
         this.systemic = { cityDespairLevel: 0, totalHardDrugsSold: 0 }; // Reset systemic variables
 
