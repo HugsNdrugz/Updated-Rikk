@@ -458,14 +458,14 @@ export class CustomerManager {
         }
 
         // Navigate nested structure for 'greeting'
-        if (primaryContextKey === 'greeting') {
+        if (primaryContextKey === 'greeting' && !Array.isArray(dialoguePool)) {
             debugLogger.log('_getDialogue', 'Processing "greeting" context.');
             const historyKey = subContext.isNew ? 'new_customer' : 'returning_customer';
             if (!dialoguePool[historyKey]) {
-                debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'.`);
-                return playerSafeFallback;
+                debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'. Using top-level dialogue pool.`);
+            } else {
+                dialoguePool = dialoguePool[historyKey];
             }
-            dialoguePool = dialoguePool[historyKey];
 
             const intentKey = subContext.intent === 'sell' ? 'seeking_to_sell' : 'seeking_to_buy';
             if (!dialoguePool[intentKey]) {

@@ -161,6 +161,26 @@ export const customerTemplates = {
                     ]
                 }
             },
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, Rikk, no need to be like that! I'm just tryin' to survive out here!",
+                        "Damn, alright! You ain't gotta kick a man while he's down!",
+                        "Shit, okay, okay! Keep your shirt on, man... my skin's already crawling enough as it is!"
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "I hear ya, Rikk... thanks anyway. Let me know if you change your mind, man...",
+                        "Appreciate you being straight with me, Rikk. Back to the pavement I go...",
+                        "Fair enough, brother. Stay safe out there."
+                    ]
+                }
+            ],
             "lowCashRikk": [
                 {
                     "conditions": [{"stat": "mood", "op": "is", "value": "paranoid"}],
@@ -1247,6 +1267,76 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Junk? My dear Rikk, your ignorance of refined luxury is staggering.",
+                        "Dismissive, aren't we? Keep slinging chump change while real money walks away.",
+                        "Rude. I suppose one shouldn't expect etiquette from someone operating in an alleyway."
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Very well. Your loss, Rikk. Someone with actual taste will appreciate it.",
+                        "Understandable. Not everyone has the liquidity for high-tier investments.",
+                        "Perhaps another time when your capital matches your ambitions."
+                    ]
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "A shrewd counter, Rikk. Very well, you've earned a slight concession from me.",
+                        "Fair enough. I respect someone who knows how to hold out for top dollar.",
+                        "Fine, fine. A minor adjustment to keep business flowing smoothly."
+                    ]
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Don't push your luck, Rikk. My generosity has strict limits.",
+                        "Amusing attempt, but my offer is final. Take it or stick to retail.",
+                        "Haggling with me? You're playing out of your league, my friend."
+                    ]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "No [USUAL_ITEM_NAME]? Disappointing, Rikk. I expect my suppliers to maintain impeccable stock.",
+                        "Out of [USUAL_ITEM_NAME]? I don't usually settle, but what else do you have that isn't complete garbage?",
+                        "Unfortunate. I came for the premium selection. What else on your menu is worth my time?"
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Sirens? How terribly unrefined. My legal team isn't paid to handle street busts. I'm leaving.",
+                        "Sounds like local law enforcement is getting restless. I don't do police stations, Rikk. Farewell.",
+                        "This ambiance has degenerated. I'll be in my limousine."
+                    ]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Not my usual choice, but it will suffice for the evening. Keep your standards up, Rikk.",
+                        "An acceptable substitute. Make sure you've restocked the proper luxury by my next visit.",
+                        "This will do for now. Pleasure doing business, despite the shortage."
+                    ]
+                }
+            ]
         }
     },
     "REGULAR_JOE": {
@@ -1553,6 +1643,56 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Alright, alright, easy bro! No need to snap.",
+                        "Dang, man, just making conversation. Catch you later.",
+                        "Whoa, bad day? I'll let you be."
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "All good, Rikk. Appreciate you anyways, man.",
+                        "No worries at all, dude. Have a good one!",
+                        "Fair enough, bro. See you around the block."
+                    ]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Bummer, no [USUAL_ITEM_NAME] today? What else you got that's pretty chill, Rikk?",
+                        "Ah man, no [USUAL_ITEM_NAME]? All good, what else is in the stash?",
+                        "No [USUAL_ITEM_NAME] in stock? No sweat, man. What's good to kick back with?"
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, sirens... not tryna get wrapped up in any drama today. Catch ya later, Rikk!",
+                        "Sounds like the cops are nearby. Time for me to bounce, bro.",
+                        "Yeah... I don't do police encounters. Peace out, man!"
+                    ]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Sweet, this'll do just fine for the evening. Thanks, Rikk!",
+                        "Not my usual, but looks pretty solid, bro. Appreciate it!",
+                        "Nice! Glad we made it work. Catch you later, man!"
+                    ]
+                }
+            ]
         }
     },
     "INFORMANT": {
@@ -1770,6 +1910,76 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Keep talking like that, Rikk, and the next intel might be about you.",
+                        "Rude. You'll regret dismissing a good tip when the heat comes down.",
+                        "Fine. Walk in the dark then. Don't blame me when you trip."
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Fair enough. Stay vigilant out there, Rikk.",
+                        "Understood. The streets don't wait, but I respect your choice.",
+                        "All good. Keep your eyes open regardless."
+                    ]
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "You drive a hard bargain, Rikk. But I'll take the cut for a quick exchange.",
+                        "Fine, a discount for a reliable customer. Here's the intel.",
+                        "Deal. You know how to hustle, I'll give you that."
+                    ]
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Intel this valuable doesn't come cheap. Price is firm.",
+                        "Nice try, Rikk, but I risk my neck for this margin. Take it or leave it.",
+                        "No discounts on survival. Pay up or walk away in the dark."
+                    ]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "No [USUAL_ITEM_NAME]? I thought you always kept a stash. What else you got?",
+                        "Dry on [USUAL_ITEM_NAME]? That's surprising. Show me what else you're holding.",
+                        "No [USUAL_ITEM_NAME] today? Tell me what other goods you've got moving."
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Sirens! My instincts say vanish. Talk later, Rikk!",
+                        "Police movement nearby! I can't be caught near you right now. Out!",
+                        "Heat is too close! I'm melting into the shadows."
+                    ]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "This will work. Pleasure doing business, Rikk.",
+                        "Not my first pick, but it'll do. Keep your head down.",
+                        "Acceptable. Good working with you."
+                    ]
+                }
+            ]
         }
     },
     "SNITCH": {
@@ -1932,6 +2142,76 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Well! How uncalled for! I'll certainly be mentioning your hostility in my report... I mean, journal!",
+                        "Such language, Rikk! The Neighborhood Watch will hear about this attitude!",
+                        "Rude behavior is a red flag, Rikk. Very suspicious..."
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "I see. Well, at least you were civilized about it. Have a peaceful day, Rikk.",
+                        "Very well. I'll just be on my way then. Keep things quiet around here.",
+                        "Understood. Good day, Rikk."
+                    ]
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Oh, alright then. A small discount for a cooperative neighbor.",
+                        "Very well, Rikk. I suppose a minor adjustment is acceptable.",
+                        "Agreed. Let's keep things pleasant between us."
+                    ]
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Haggling? Oh no, my price is fixed. It wouldn't look right to deviate.",
+                        "I'm afraid not, Rikk. Standard procedure is standard procedure.",
+                        "No, no, that won't do at all. The price remains as stated."
+                    ]
+                }
+            ],
+            "usual_unavailable": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "No [USUAL_ITEM_NAME]? How concerning... what else do you have in stock, Rikk?",
+                        "Out of [USUAL_ITEM_NAME]? I must write that down. What alternatives are you offering?",
+                        "Unusual for you to be out of [USUAL_ITEM_NAME]. What else is on the premises?"
+                    ]
+                }
+            ],
+            "interruption_sirens_nearby": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Sirens! Oh dear, I must go render assistance... or observe! Good day, Rikk!",
+                        "Is that Officer Dave? I should go greet him! See you later, Rikk!",
+                        "Police! I must make sure everything is being handled lawfully!"
+                    ]
+                }
+            ],
+            "sell_success_alternative": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "This substitute will suffice for my... observations. Thank you, Rikk.",
+                        "An acceptable alternative. I'll make a note of this transaction.",
+                        "Thank you, Rikk. I appreciate your compliance."
+                    ]
+                }
+            ]
         }
     },
     "STIMULANT_USER": {
@@ -2120,6 +2400,46 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "WHOA! Rude! My thoughts were zooming at 100mph and you just put up a brick wall!",
+                        "Hey! No need for the hostility! My genius is too fast for your negativity!",
+                        "FINE! I'll take my million-dollar ideas and rocket fuel elsewhere!"
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Fair enough, fair enough! Time is money and thoughts are moving! Catch ya later, Rikk!",
+                        "Got it! No problem, no problem! On to the next brain-storm!",
+                        "All good, Rikk! Keep hustling, gotta zoom!"
+                    ]
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "YES! Deal! Fast talk, fast cash, fast results! Let's GOOO!",
+                        "Boom! Agreement reached! My brain is already calculating the savings!",
+                        "Aight, aight, I like your speed! Deal's done!"
+                    ]
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "No deal?! BUT MY BRAIN NEEDS THIS! Fine, sticking to the original numbers!",
+                        "Argh! No wiggle room?! My thought-train is stalling! Fine, whatever!",
+                        "Haggle failed?! NO TIME TO ARGUE! Let's just wrap this up!"
+                    ]
+                }
+            ]
         }
     },
     "PSYCHEDELIC_EXPLORER": {
@@ -2390,6 +2710,46 @@ export const customerTemplates = {
                     "payload": { "type": "EFFECT", "effects": [] }
                 }
             ],
+            "customerReactsToRudeDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Whoa, man... your aura just went totally jagged. No need for bad vibes.",
+                        "Far out... so much hostility in one sentence. Peace be with you, brother.",
+                        "That harsh energy is heavy, Rikk. Bartholomew the badger says we should float away."
+                    ]
+                }
+            ],
+            "customerReactsToPoliteDismissal": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "I hear you, man. The cosmic flow moves us in different directions today. Peace.",
+                        "All good, Rikk. The universe will align us another time.",
+                        "Grounded and honest. I respect that, my friend. May your vibes stay chill."
+                    ]
+                }
+            ],
+            "negotiationSuccess": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "Righteous! The cosmic harmony of this price feels totally balanced.",
+                        "Far out, Rikk! A meeting of minds and vibes. Deal!",
+                        "The universe approves of this exchange. Thanks, my friend!"
+                    ]
+                }
+            ],
+            "negotiationFail": [
+                {
+                    "conditions": [],
+                    "lines": [
+                        "The energy around that counter-offer feels a bit off, man. I'll stick to the original.",
+                        "Can't float to that frequency, Rikk. Original price stands.",
+                        "My spirit guide says don't compromise the vibe. Price remains as it was."
+                    ]
+                }
+            ]
         }
     },
     "PASTOR_JONES": {
@@ -2422,6 +2782,16 @@ export const customerTemplates = {
                 "Sorry, Pastor. That's a path I can't walk right now, even for a good cause.",
                 "I wish I could help the youth program, Pastor, but my hands are tied with other... commitments. My apologies.",
                 "Regrettably, Pastor, I must decline. Some waters are too murky for me at the moment. I hope you understand."
+            ] }],
+            "customerScaredOff": [{ "lines": [
+                "I sense trouble on the horizon, Rikk. I must depart before harm comes to our work.",
+                "The atmosphere has grown turbulent. I shall take my leave now.",
+                "Let us reconvene when the air is clearer, my son."
+            ] }],
+            "interruption_sirens_nearby": [{ "lines": [
+                "The sirens grow near... I must not bring unwanted scrutiny upon our flock. Blessings, Rikk.",
+                "Authorities are approaching. It is wise that we part ways for now.",
+                "I hear the flashing lights of the law. Until next time, Rikk."
             ] }]
         },
         "itemPool": [],
