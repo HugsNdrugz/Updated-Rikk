@@ -84,7 +84,7 @@ Detailed tasks for enhancing fundamental gameplay systems.
 *   **Task 2.1.5:** Create/modify data files for StreetCred thresholds, rewards, consequences, etiquette rules, community figure metrics.
 *   **Task 2.1.6:** Design and implement UI for displaying StreetCred changes and standings.
 *   **Task 2.1.7:** Design and implement subtle UI/UX feedback for etiquette breaches (facial expressions, sounds, dialogue lines).
-*   **Task 2.1.8:** Integrate StreetCred impacts with key community figures ("Mama Carter," "Pastor Jones").
+*   **Task 2.1.8:** Integrate StreetCred impacts with key community figures ("Mama Carter").
 
 ### 2.2 Loyalty System Implementation
 *   **Task 2.2.1:** Modify `GameState.js` to track loyalty with specific NPCs/Contacts.
@@ -190,7 +190,7 @@ Detailed tasks for enriching the game's story and themes.
 *   **Task 4.2.1:** Implement Law Enforcement presence beyond `Heat` score (wary dialogue, patrol reports, specific `World Events` like "Corrupt Officer Purge").
 *   **Task 4.2.2:** Implement Rival Dealers/Crews presence (market fluctuations, customer comments, Contact warnings, missions to undermine rivals).
 *   **Task 4.2.3:** Implement Supplier impact via Contacts App (reliability, price changes, stock shortages).
-*   **Task 4.2.4:** Implement Community Figures ("Mama Carter," "Pastor Jones") impact (approval/disapproval tracked, localized `World Events`, unique non-transactional missions).
+*   **Task 4.2.4:** Implement Community Figures ("Mama Carter") impact (approval/disapproval tracked, localized `World Events`, unique non-transactional missions).
 *   **Task 4.2.5:** Develop/Update `WorldEventManager.js` / `FactionManager.js` (conceptual) to simulate background influence and track standings.
 *   **Task 4.2.6:** Create/modify data files (`factions.json`) for unseen forces, motivations, actions, reactions to Rikk.
 

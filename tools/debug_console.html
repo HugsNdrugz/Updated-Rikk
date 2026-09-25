@@ -608,11 +608,6 @@
         generalBanter: { moods: ["default"], minLines: MIN_LINES_PER_BLOCK },
         negotiationSuccess: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, onlyIf: 'canNegotiate' },
         negotiationFail: { moods: ["paranoid", "happy", "default"], minLines: MIN_LINES_PER_BLOCK, onlyIf: 'canNegotiate' },
-        offerCommunityHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
-        rikkAgreesToHelpPastor: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
-        pastorThanksForHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
-        pastorDeclinesHelp: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
-        rikkDeclinesPastor: { minLines: MIN_LINES_PER_BLOCK, onlyForArchetypes: ["PASTOR_JONES"] },
     };
 
     /**
@@ -660,11 +655,6 @@
                 generalBanter: "General Banter / Idle Chatter",
                 negotiationSuccess: "Negotiation: Success",
                 negotiationFail: "Negotiation: Failure",
-                offerCommunityHelp: "Pastor Jones: Offers Community Help Quest",
-                rikkAgreesToHelpPastor: "Pastor Jones: Rikk Agrees to Help",
-                pastorThanksForHelp: "Pastor Jones: Thanks for Help",
-                pastorDeclinesHelp: "Pastor Jones: Declines Rikk's Offer of Help (if Rikk offers)",
-                rikkDeclinesPastor: "Pastor Jones: Rikk Declines to Help Quest",
                 // Add more mappings as needed for other keys in ANALYSIS_CONFIG
             };
 
@@ -828,7 +818,6 @@
             if (Object.keys(stats.contexts).length === 0) {
                 this.dom.detailContextsList.innerHTML = '<p>No specific contexts were analyzed or found for this archetype according to the current ANALYSIS_CONFIG.</p>';
                 // This can happen if an archetype is skipped entirely by config or has no matching contexts.
-                // Or if it's Pastor Jones and only his specific contexts are in ANALYSIS_CONFIG.
                 if (stats.overallErrors > 0 || stats.overallWarnings > 0) {
                      this.dom.detailContextsList.innerHTML += `<p>However, there are ${stats.overallErrors} general error(s) and ${stats.overallWarnings} general warning(s) associated with this archetype that might not be tied to a specific configured context path (e.g. overall missing dialogue object).</p>`;
                 }
@@ -1285,7 +1274,6 @@
                  const contextConfig = this.config[contextKey];
                 
                 if (contextConfig.onlyForArchetypes && !contextConfig.onlyForArchetypes.includes(key)) continue;
-                if (!contextConfig.onlyForArchetypes && key === "PASTOR_JONES") continue;
                 if (contextConfig.skipIf === 'sellsOnly' && gameplayConfig.sellsOnly) continue;
                 if (contextConfig.skipIf === 'buysOnly' && gameplayConfig.buysOnly) continue;
                 if (contextConfig.onlyIf === 'canNegotiate' && gameplayConfig.negotiationResists) continue;

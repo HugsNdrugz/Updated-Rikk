@@ -997,19 +997,6 @@ function handleChoice(outcome) {
                 loyaltyChange = 0; // System error, no loyalty change
                 narrationText = "System error acknowledged.";
                 break;
-            case "pastor_jones_interaction_resolved":
-                dealSuccess = true;
-                if (outcome.followUpDialogueKey) {
-                    const rikkLineResult = game.customerManager.getOutcomeDialogue(currentCustomer, outcome.followUpDialogueKey);
-                    if (rikkLineResult.line) {
-                        uiManager.displayPhoneMessage(rikkLineResult.line, 'rikk');
-                    }
-                }
-                if (outcome.customerFollowUpKey) {
-                    dialogueContextKey = outcome.customerFollowUpKey;
-                }
-                if (currentCustomer && currentCustomer.id) game.addCustomerInteractedThisTurn(currentCustomer.id);
-                break;
         }
 
         if (outcome.type !== "negotiate_sell") {

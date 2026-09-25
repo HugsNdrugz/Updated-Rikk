@@ -36,7 +36,6 @@ This document outlines the current implementation status of the Phase 2 StreetCr
 **Implemented Features:**
 
 *   **`GameState.js` Update:**
-    *   The `streetCred.communityFigures` object in `GameState.js` has been updated to include `pastor_jones: 0`. This change is reflected in the constructor, `resetToDefault()`, and `fromJSON()` for save game compatibility.
     *   The structures for `factions` (e.g., `zetas_cartel`, `police`) and other `communityFigures` (e.g., `mama_carter`) were already present from Phase 1.
 *   **`StreetCredManager.js` Capability:**
     *   The manager already possessed methods (`addStreetCred`, `setStreetCred`) capable of targeting specific factions or community figures using `targetType` and `targetId` parameters.
@@ -44,8 +43,7 @@ This document outlines the current implementation status of the Phase 2 StreetCr
 **Remaining / Not Implemented:**
 
 *   **Game Logic for Specific Reputation Changes:**
-    *   No game logic has been implemented yet in `script.js` or `CustomerManager.js` to actually *trigger* changes to `mama_carter`, `pastor_jones`, or any faction-specific reputations (e.g., `zetas_cartel`). The system can store and modify these values, but no events currently do so.
-*   **Content for Pastor Jones:** No specific customer interactions, events, or dialogue involving "Pastor Jones" that would lead to StreetCred changes have been implemented.
+    *   No game logic has been implemented yet in `script.js` or `CustomerManager.js` to actually *trigger* changes to `mama_carter` or any faction-specific reputations (e.g., `zetas_cartel`). The system can store and modify these values, but no events currently do so.
 
 ## III. Testing and Refinement
 
