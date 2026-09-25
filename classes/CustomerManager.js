@@ -154,8 +154,8 @@ export class CustomerManager {
         let isUsualAvailable = false;
         let preferredItemName = "their usual"; // Generic default
 
-        if (isReturningCustomer && customerIntent === 'buy' && template.gameplayConfig?.buyPreference) {
-            const buyPrefs = Array.isArray(template.gameplayConfig.buyPreference.or) ? template.gameplayConfig.buyPreference.or : [template.gameplayConfig.buyPreference];
+        if (isReturningCustomer && customerIntent === 'buy' && customerTemplate.gameplayConfig?.buyPreference) {
+            const buyPrefs = Array.isArray(customerTemplate.gameplayConfig.buyPreference.or) ? customerTemplate.gameplayConfig.buyPreference.or : [customerTemplate.gameplayConfig.buyPreference];
             for (const pref of buyPrefs) {
                 // Simplified check: just check if any item Rikk has matches the ID or SubType of a preference.
                 // A more robust check would consider quality, etc., as in _inventoryItemMatchesPreference.
@@ -319,8 +319,8 @@ export class CustomerManager {
                 }
 
                 if (!chosenItem) {
-                    if (template.gameplayConfig && template.gameplayConfig.buyPreference) {
-                        const buyPref = template.gameplayConfig.buyPreference;
+                    if (customerTemplate.gameplayConfig && customerTemplate.gameplayConfig.buyPreference) {
+                        const buyPref = customerTemplate.gameplayConfig.buyPreference;
                         let preferencesToConsider = [];
                         if (buyPref.or && Array.isArray(buyPref.or)) {
                             preferencesToConsider = buyPref.or;
@@ -382,7 +382,6 @@ export class CustomerManager {
                     }
                 }
             }
-            // Corrected: itemContext is already declared in the function scope.
             itemContext = chosenItem;
 
             if (!itemContext) {
