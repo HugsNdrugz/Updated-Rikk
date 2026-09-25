@@ -154,8 +154,8 @@ export class CustomerManager {
         let isUsualAvailable = false;
         let preferredItemName = "their usual"; // Generic default
 
-        if (isReturningCustomer && customerIntent === 'buy' && template.gameplayConfig?.buyPreference) {
-            const buyPrefs = Array.isArray(template.gameplayConfig.buyPreference.or) ? template.gameplayConfig.buyPreference.or : [template.gameplayConfig.buyPreference];
+        if (isReturningCustomer && customerIntent === 'buy' && customerTemplate.gameplayConfig?.buyPreference) {
+            const buyPrefs = Array.isArray(customerTemplate.gameplayConfig.buyPreference.or) ? customerTemplate.gameplayConfig.buyPreference.or : [customerTemplate.gameplayConfig.buyPreference];
             for (const pref of buyPrefs) {
                 // Simplified check: just check if any item Rikk has matches the ID or SubType of a preference.
                 // A more robust check would consider quality, etc., as in _inventoryItemMatchesPreference.
@@ -319,8 +319,8 @@ export class CustomerManager {
                 }
 
                 if (!chosenItem) {
-                    if (template.gameplayConfig && template.gameplayConfig.buyPreference) {
-                        const buyPref = template.gameplayConfig.buyPreference;
+                    if (customerTemplate.gameplayConfig && customerTemplate.gameplayConfig.buyPreference) {
+                        const buyPref = customerTemplate.gameplayConfig.buyPreference;
                         let preferencesToConsider = [];
                         if (buyPref.or && Array.isArray(buyPref.or)) {
                             preferencesToConsider = buyPref.or;
@@ -382,7 +382,6 @@ export class CustomerManager {
                     }
                 }
             }
-            // Corrected: itemContext is already declared in the function scope.
             itemContext = chosenItem;
 
             if (!itemContext) {
@@ -459,14 +458,14 @@ export class CustomerManager {
         }
 
         // Navigate nested structure for 'greeting'
-        if (primaryContextKey === 'greeting') {
+        if (primaryContextKey === 'greeting' && !Array.isArray(dialoguePool)) {
             debugLogger.log('_getDialogue', 'Processing "greeting" context.');
             const historyKey = subContext.isNew ? 'new_customer' : 'returning_customer';
             if (!dialoguePool[historyKey]) {
-                debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'.`);
-                return playerSafeFallback;
+                debugLogger.warn('CustomerManager', `Missing historyKey: '${historyKey}' in greeting for '${customerInstance.archetypeKey}'. Using top-level dialogue pool.`);
+            } else {
+                dialoguePool = dialoguePool[historyKey];
             }
-            dialoguePool = dialoguePool[historyKey];
 
             const intentKey = subContext.intent === 'sell' ? 'seeking_to_sell' : 'seeking_to_buy';
             if (!dialoguePool[intentKey]) {

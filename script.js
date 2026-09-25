@@ -21,7 +21,6 @@ import { MapManager } from './managers/MapManager.js';
 import { NewsManager } from './managers/NewsManager.js'; // Added
 import { CustomerManager } from './classes/CustomerManager.js';
 import { ContactsAppManager } from './classes/ContactsAppManager.js';
-// import { ContactsAppManager } from './classes/ContactsAppManager.js'; // Old one, replaced by new manager
 import { SlotGameManager } from './classes/SlotGameManager.js';
 import { customerTemplates as defaultCustomerTemplates } from './data/customer_templates.js';
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from './data/data_items.js';
@@ -916,7 +915,7 @@ function handleChoice(outcome) {
                     // Determine if this was an alternative sale
                     if (soldAlternative) {
                         dialogueContextKey = 'sell_success_alternative';
-                         customerInstance.currentItemName = soldItem.name; // Ensure currentItemName is set for placeholder in dialogue
+                         currentCustomer.currentItemName = soldItem.name; // Ensure currentItemName is set for placeholder in dialogue
                     } else {
                         dialogueContextKey = 'rikkSellsSuccess';
                     }
@@ -997,6 +996,19 @@ function handleChoice(outcome) {
             case "acknowledge_error":
                 loyaltyChange = 0; // System error, no loyalty change
                 narrationText = "System error acknowledged.";
+                break;
+            case "pastor_jones_interaction_resolved":
+                dealSuccess = true;
+                if (outcome.followUpDialogueKey) {
+                    const rikkLineResult = game.customerManager.getOutcomeDialogue(currentCustomer, outcome.followUpDialogueKey);
+                    if (rikkLineResult.line) {
+                        uiManager.displayPhoneMessage(rikkLineResult.line, 'rikk');
+                    }
+                }
+                if (outcome.customerFollowUpKey) {
+                    dialogueContextKey = outcome.customerFollowUpKey;
+                }
+                if (currentCustomer && currentCustomer.id) game.addCustomerInteractedThisTurn(currentCustomer.id);
                 break;
         }
 
