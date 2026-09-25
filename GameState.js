@@ -34,7 +34,7 @@ class GameState {
         };
 
         // Inventory & Items
-        this.inventory = [];
+        this.inventory = config.PRESERVED_INVENTORY ?? (config.DEFAULT_STARTING_INVENTORY ? JSON.parse(JSON.stringify(config.DEFAULT_STARTING_INVENTORY)) : []);
         this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? 10;
 
         // World & Events
@@ -234,7 +234,7 @@ class GameState {
         // Preserved or Defaulted values based on NG+
         // config.STARTING_CASH is used here because initializeNewGameState sets it to the preserved cash.
         this.cash = config.STARTING_CASH ?? 0;
-        this.inventory = config.PRESERVED_INVENTORY ?? [];
+        this.inventory = config.PRESERVED_INVENTORY ?? (config.DEFAULT_STARTING_INVENTORY ? JSON.parse(JSON.stringify(config.DEFAULT_STARTING_INVENTORY)) : []);
         this.heat = config.PRESERVED_HEAT ?? 0;
 
         this.streetCred = config.PRESERVED_STREET_CRED ?? {

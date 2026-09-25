@@ -2233,9 +2233,10 @@ export const customerTemplates = {
                 ]
             },
             "sellPreference": { "or": [
-                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.6 },
-                { "id": "half_baked_invention_idea", "chance": 0.2 },
-                { "id": "blueprint_for_squirrel_armor", "chance": 0.2 }
+                { "type": "DRUG", "subType": "STIMULANT", "chance": 0.6 },
+                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 },
+                { "id": "half_baked_invention_idea", "chance": 0.05 },
+                { "id": "blueprint_for_squirrel_armor", "chance": 0.05 }
             ]},
             "priceToleranceFactor": 0.7,
             "negotiationResists": true,
@@ -2462,11 +2463,11 @@ export const customerTemplates = {
             },
             "sellPreference": {
                 "or": [
-                    { "id": "perfectly_normal_rock_portal_key" },
-                    { "id": "sentient_dust_bunny_wisdom" },
-                    { "subType": "PSYCHEDELIC_MILD", "chance": 0.4, "maxQuality": 1 },
-                    { "subType": "PSYCHEDELIC", "quality": 0, "chance": 0.2 },
-                    { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 }
+                    { "type": "DRUG", "subType": "PSYCHEDELIC_MILD", "chance": 0.5, "maxQuality": 1 },
+                    { "type": "DRUG", "subType": "PSYCHEDELIC", "quality": 0, "chance": 0.3 },
+                    { "id": "perfectly_normal_rock_portal_key", "chance": 0.05 },
+                    { "id": "sentient_dust_bunny_wisdom", "chance": 0.05 },
+                    { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.1 }
                 ]
             },
             "priceToleranceFactor": 1.1,

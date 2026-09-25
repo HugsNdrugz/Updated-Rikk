@@ -52,10 +52,11 @@ export class CustomerManager {
         this.REGULAR_COOLDOWN_DURATION = 3; // e.g., 3 turns
         this.SNITCH_COOLDOWN_DURATION = 10; // e.g., 10 turns (Concerned Carol is SNITCH_ARCHETYPE_KEY)
         this.SNITCH_ARCHETYPE_KEY = "SNITCH"; // Make sure this matches the key in customer_templates.js
+        this.lastArchetypeKey = null; // Track last selected archetype to prevent back-to-back repeats
 
         // For Oddity generation
         this.CRAVING_THRESHOLD_FOR_ODDITIES = 4; // Defined in CONFIG before, now class member for clarity
-        this.ODDITY_SELL_CHANCE_HIGH_CRAVING = 0.10; // 10% chance if craving is high
+        this.ODDITY_SELL_CHANCE_HIGH_CRAVING = 0.02; // 2% chance if craving is high
     }
 
     /**
@@ -67,6 +68,8 @@ export class CustomerManager {
         this.currentTurn++;
         const { inventory, cash, playerSkills, activeWorldEvents, combinedWorldEffects, customersInteractedThisTurn, heat } = gameState;
 
+        const streetCredGlobal = (typeof gameState.streetCred === 'object' ? gameState.streetCred?.global : gameState.streetCred) || 0;
+
         let customerInstance = null;
         let itemContext = null; // This will hold the item being discussed/transacted if customer is selling
         let customerTemplate = null;
@@ -76,7 +79,7 @@ export class CustomerManager {
         let excludedArchetypesForThisTurnAttempt = []; // Archetypes that failed item gen in this specific generateInteraction call
 
         do {
-            customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn, excludedArchetypesForThisTurnAttempt);
+            customerInstance = this._selectOrGenerateCustomerFromPool(this.currentTurn, customersInteractedThisTurn, excludedArchetypesForThisTurnAttempt, streetCredGlobal);
 
             if (!customerInstance) {
                 debugLogger.log('CustomerManager', `No eligible customer could be selected or generated after ${selectionRetries} retries or initially.`);
@@ -96,7 +99,7 @@ export class CustomerManager {
 
             if (customerTemplate.sellsOnly) {
                 // For sellsOnly characters, try to generate their item immediately.
-                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects);
+                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects, streetCredGlobal);
                 if (itemContext) {
                     successfullySelectedCustomer = true; // Valid sellsOnly customer with an item.
                 } else {
@@ -129,6 +132,7 @@ export class CustomerManager {
         // If it's not sellsOnly, customerTemplate is its template, and itemContext is still null (to be determined by intent).
 
         this.customerCooldowns[customerInstance.id] = this.currentTurn;
+        this.lastArchetypeKey = customerInstance.archetypeKey;
         // customerTemplate is already defined from the loop above.
 
         // --- Contextual Analysis ---
@@ -227,7 +231,7 @@ export class CustomerManager {
             // If customer is 'sellsOnly', itemContext was already populated and validated in the selection loop.
             // If customer is not 'sellsOnly' but intent is 'sell', generate item now.
             if (!customerTemplate.sellsOnly) {
-                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects);
+                itemContext = this._generateRandomItem(customerInstance, customerTemplate, combinedWorldEffects, streetCredGlobal);
             }
             // Now itemContext is either populated (for sellsOnly or successful non-sellsOnly generation) or null
 
@@ -586,9 +590,9 @@ export class CustomerManager {
         }
     }
     
-    _selectOrGenerateCustomerFromPool(currentTurn, customersInteractedThisTurn = [], excludedArchetypes = []) {
+    _selectOrGenerateCustomerFromPool(currentTurn, customersInteractedThisTurn = [], excludedArchetypes = [], streetCredGlobal = 0) {
         // Filter existing pool: not on cooldown AND not interacted with today AND not an excluded archetype
-        const eligibleReturningCustomers = this.customersPool.filter(customer => {
+        let eligibleReturningCustomers = this.customersPool.filter(customer => {
             const isOnCooldown = this.customerCooldowns[customer.id] &&
                 (currentTurn - this.customerCooldowns[customer.id] <
                     (customer.archetypeKey === this.SNITCH_ARCHETYPE_KEY ? this.SNITCH_COOLDOWN_DURATION : this.REGULAR_COOLDOWN_DURATION)
@@ -598,36 +602,43 @@ export class CustomerManager {
             return !isOnCooldown && !interactedToday && !isExcluded;
         });
 
+        // Avoid repeating the exact same archetype consecutively if alternatives are available
+        if (eligibleReturningCustomers.length > 1 && this.lastArchetypeKey) {
+            const nonRepeatReturning = eligibleReturningCustomers.filter(c => c.archetypeKey !== this.lastArchetypeKey);
+            if (nonRepeatReturning.length > 0) {
+                eligibleReturningCustomers = nonRepeatReturning;
+            }
+        }
+
         if (eligibleReturningCustomers.length > 0 && Math.random() < CONFIG.RETURNING_CUSTOMER_CHANCE) {
             const returningCustomer = this._getRandomElement(eligibleReturningCustomers);
-            // Refresh returning customer's state slightly (e.g., mood, cashOnHand)
-            const returnCustomerTemplate = this.customerTemplates[returningCustomer.archetypeKey]; // Use a different variable name
-            returningCustomer.hasMetRikkBefore = true; // Should already be true
-            if (returnCustomerTemplate) { // Check if template is found
+            const returnCustomerTemplate = this.customerTemplates[returningCustomer.archetypeKey];
+            returningCustomer.hasMetRikkBefore = true;
+            if (returnCustomerTemplate) {
                 returningCustomer.metadata = returningCustomer.metadata || {};
-                 if (returningCustomer.metadata.pendingMoodEffect) {
+                if (returningCustomer.metadata.pendingMoodEffect) {
                     returningCustomer.mood = returningCustomer.metadata.pendingMoodEffect;
                     delete returningCustomer.metadata.pendingMoodEffect;
                 } else {
-                    returningCustomer.mood = returnCustomerTemplate.baseStats.mood || 'chill'; // Reset mood or use a dynamic system
+                    returningCustomer.mood = returnCustomerTemplate.baseStats.mood || 'chill';
                 }
                 returningCustomer.cashOnHand = Math.floor(Math.random() * ((returnCustomerTemplate.priceToleranceFactor || 1) * CONFIG.RETURNING_CUSTOMER_CASH_RANGE)) + CONFIG.RETURNING_CUSTOMER_CASH_BASE;
                 if (!returningCustomer.addictionStatus) returningCustomer.addictionStatus = { isAddicted: false, drugId: null, cravingLevel: 0 };
                 if (!returningCustomer.recentlySoldItems) returningCustomer.recentlySoldItems = [];
-                 // recentlySoldItems are managed per transaction, not reset here
             }
             debugLogger.log('CustomerManager', `Selected returning customer: ${returningCustomer.name} (ID: ${returningCustomer.id}), excludedArchetypes: ${JSON.stringify(excludedArchetypes)}`);
             return returningCustomer;
         }
 
         const allArchetypeKeys = Object.keys(this.customerTemplates);
-        // Filter out excluded archetypes for new customer generation as well
-        const availableArchetypes = allArchetypeKeys.filter(key => {
+        // Filter out archetypes based on exclusions, unique checks, streetCred gating, and back-to-back anti-clustering
+        let availableArchetypes = allArchetypeKeys.filter(key => {
             if (excludedArchetypes.includes(key)) return false;
+
+            // Street cred progression requirements for archetypes
+            if (key === "HIGH_ROLLER" && streetCredGlobal < 15) return false;
+
             const temp = this.customerTemplates[key];
-            // Ensure we don't select unique customers if they already exist and are on cooldown or interacted today.
-            // This check is more about preventing a *new* instance of a unique if an *existing* one is problematic.
-            // However, the primary exclusion of unique archetypes if already in pool happens if they are in `excludedArchetypes`.
             if (temp.gameplayConfig && temp.gameplayConfig.isUnique) {
                 const existingUnique = this.customersPool.find(c => c.archetypeKey === key);
                 if (existingUnique) {
@@ -636,16 +647,23 @@ export class CustomerManager {
                             (existingUnique.archetypeKey === this.SNITCH_ARCHETYPE_KEY ? this.SNITCH_COOLDOWN_DURATION : this.REGULAR_COOLDOWN_DURATION)
                         );
                     const interactedToday = customersInteractedThisTurn.includes(existingUnique.id);
-                    if(isOnCooldown || interactedToday) return false; // Don't generate a new one if the existing unique is on cooldown/interacted
+                    if(isOnCooldown || interactedToday) return false;
                 }
             }
             return true;
         });
 
+        // Avoid generating the exact same archetype consecutively if other options exist
+        if (availableArchetypes.length > 1 && this.lastArchetypeKey) {
+            const nonRepeatArchetypes = availableArchetypes.filter(k => k !== this.lastArchetypeKey);
+            if (nonRepeatArchetypes.length > 0) {
+                availableArchetypes = nonRepeatArchetypes;
+            }
+        }
 
         if (availableArchetypes.length === 0) {
             debugLogger.warn('CustomerManager', `No available archetypes to generate a new customer after exclusions: ${JSON.stringify(excludedArchetypes)}.`);
-            return null; // Should not happen if templates exist
+            return null;
         }
 
         const selectedArchetypeKey = this._getRandomElement(availableArchetypes);
@@ -712,16 +730,26 @@ export class CustomerManager {
         return match;
     }
 
-    _itemTypeMatchesPreference(itemType, preference) {
+    _itemTypeMatchesPreference(itemType, preference, streetCredGlobal = 0) {
         if (!itemType || !preference) return false;
         if (preference.id && itemType.id !== preference.id) return false;
         if (preference.type && itemType.type !== preference.type) return false;
         if (preference.subType && itemType.subType !== preference.subType) return false;
         if (typeof preference.maxBaseValue === 'number' && itemType.baseValue > preference.maxBaseValue) return false;
+
+        // Oddities should only be generated if explicitly requested by subType "ODDITY" or specific item id
+        if (itemType.subType === "ODDITY" && preference.subType !== "ODDITY" && !preference.id) {
+            return false;
+        }
+
+        // Progression gating: high-tier items require street cred progression
+        if (streetCredGlobal < 5 && itemType.baseValue > 120) return false;
+        if (streetCredGlobal < 15 && itemType.baseValue > 200) return false;
+
         return true;
     }
 
-    _generateRandomItem(customerInstance, template = null, combinedWorldEffects = {}) { // Added customerInstance
+    _generateRandomItem(customerInstance, template = null, combinedWorldEffects = {}, streetCredGlobal = 0) {
         if (combinedWorldEffects && combinedWorldEffects.itemScarcity && Math.random() < 0.5) {
             debugLogger.log('CustomerManager', `Item generation stopped by itemScarcity world effect.`);
             return null;
@@ -783,7 +811,11 @@ export class CustomerManager {
             }
 
             if (chosenPreference) {
-                const candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference));
+                let candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference, streetCredGlobal));
+                if (candidateItemTypes.length === 0) {
+                    // Fallback ignoring street cred restriction if no items match
+                    candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference, 999));
+                }
                 if (candidateItemTypes.length > 0) {
                     const selectedType = this._getRandomElement(candidateItemTypes);
                     const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];

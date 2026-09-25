@@ -85,6 +85,18 @@ const customerAvatars = {
 const rikkAvatarUrl = "https://randomuser.me/api/portraits/men/9.jpg";
 const systemAvatarUrl = "assets/icons/info-icon.svg";
 
+// Starting Inventory setup
+const DEFAULT_STARTING_INVENTORY = [
+    {
+        id: "green_crack",
+        name: "Bag of 'Green Crack'",
+        quality: "Decent Batch",
+        qualityIndex: 1,
+        description: "Budget-friendly, gets the job done.",
+        itemTypeObj: itemTypes.find(it => it.id === "green_crack")
+    }
+];
+
 // --- Prepare Configuration Objects ---
 const gameStateConfig = {
     STARTING_CASH,
@@ -93,6 +105,7 @@ const gameStateConfig = {
     STARTING_STREET_CRED,
     MAX_INVENTORY_SLOTS,
     MAX_HEAT,
+    DEFAULT_STARTING_INVENTORY,
     defaultCustomerTemplates,
     DEBUG_MODE
 };
@@ -586,7 +599,8 @@ function generateAndStartCustomerInteraction() {
         activeWorldEvents: game.getActiveWorldEvents(),
         combinedWorldEffects: combinedWorldEffects,
         customersInteractedThisTurn: game.getCustomersInteractedThisTurn(),
-        heat: game.getHeat() // Add current heat
+        heat: game.getHeat(),
+        streetCred: game.getAllStreetCred()
     };
     const interaction = game.customerManager.generateInteraction(gameStateForCustomerManager);
 
