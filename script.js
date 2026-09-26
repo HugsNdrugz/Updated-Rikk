@@ -855,7 +855,7 @@ function handleChoice(outcome) {
     try {
         uiManager.clearChoices();
         const combinedWorldEffects = getCombinedActiveEventEffects();
-        const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_scared", "end_interaction_no_item", "end_interaction_interrupted_heat", "customer_declines_price"];
+        const nonDealOutcomes = ["decline_offer_to_buy", "decline_offer_to_sell", "acknowledge_empty_stash", "acknowledge_error", "end_interaction", "end_interaction_no_desired_item", "end_interaction_quiet_streets", "end_interaction_scared", "end_interaction_no_item", "end_interaction_interrupted_heat", "customer_declines_price", "end_interaction_player_triggered"];
 
         // Check for environmental deal failure
         if (!nonDealOutcomes.includes(outcome.type) && combinedWorldEffects.dealFailChance > 0 && Math.random() < combinedWorldEffects.dealFailChance) {
@@ -872,7 +872,7 @@ function handleChoice(outcome) {
         let dialogueContextKey = ''; // This will determine the customer's reaction dialogue
         let loyaltyChange = 0;
 
-        if (outcome.type === "end_interaction_player_triggered" || outcome.type === "end_interaction_interrupted_heat") {
+        if (outcome.type === "end_interaction_player_triggered" || outcome.type === "end_interaction_interrupted_heat" || outcome.type === "end_interaction_quiet_streets") {
             endCustomerInteraction();
             return;
         }
@@ -1006,6 +1006,18 @@ function handleChoice(outcome) {
                 narrationText = "Rikk's stash is dry. Customer ain't happy.";
                 uiManager.playSound(uiManager.deniedSound);
                 dialogueContextKey = 'acknowledge_empty_stash';
+                break;
+            case "end_interaction_no_desired_item":
+                dealSuccess = false;
+                loyaltyChange = 0;
+                narrationText = "Rikk didn't have what they were looking for.";
+                uiManager.playSound(uiManager.deniedSound);
+                break;
+            case "end_interaction_no_item":
+            case "end_interaction":
+                dealSuccess = false;
+                loyaltyChange = 0;
+                narrationText = "";
                 break;
             case "acknowledge_error":
                 loyaltyChange = 0; // System error, no loyalty change

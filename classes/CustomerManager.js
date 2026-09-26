@@ -12,7 +12,7 @@ import { genericDialogueTemplates } from '../data/customer_templates.js';
 // Configuration object to manage "magic numbers" for easy tweaking.
 const CONFIG = {
     MAX_CUSTOMERS_IN_POOL: 20,
-    BASE_CUSTOMER_SELLS_CHANCE: 0.5,
+    BASE_CUSTOMER_SELLS_CHANCE: 0.65, // Increased sell chance so customers offer product/drugs more often
     INVENTORY_FULL_THRESHOLD: 10,
     RETURNING_CUSTOMER_CHANCE: 0.35,
     HAGGLE_PRICE_DIFFERENCE_THRESHOLD: 5,
@@ -24,7 +24,7 @@ const CONFIG = {
     RETURNING_CUSTOMER_CASH_RANGE: 90,
     RETURNING_CUSTOMER_CASH_BASE: 25,
     MAX_RECENT_SOLD_ITEMS_PER_CUSTOMER: 5,
-    CHANCE_SELL_WEIRD_ITEM: 0.05, // This will be primarily superseded by new logic but kept for addicted state
+    CHANCE_SELL_WEIRD_ITEM: 0.05,
     CHANCE_CUSTOMER_BUYS_RANDOM_ITEM: 0.10
 };
 
@@ -802,13 +802,21 @@ export class CustomerManager {
         // 2. If no oddity, try to generate item based on customer's sellPreference (template.gameplayConfig.sellPreference)
         if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
-            let chosenPreference = null;
+            let preferencesList = [];
             if (sellPref.or && Array.isArray(sellPref.or)) {
-                const eligiblePreferences = sellPref.or.filter(p => (typeof p.chance === 'number' ? Math.random() < p.chance : true));
-                if (eligiblePreferences.length > 0) chosenPreference = this._getRandomElement(eligiblePreferences);
-            } else if (typeof sellPref.chance === 'number' ? Math.random() < sellPref.chance : true) {
-                 chosenPreference = sellPref;
+                preferencesList = sellPref.or;
+            } else {
+                preferencesList = [sellPref];
             }
+
+            // Shuffle or filter eligible preferences
+            const eligiblePreferences = preferencesList.filter(p => (typeof p.chance === 'number' ? Math.random() < p.chance : true));
+            const prefsToTry = eligiblePreferences.length > 0 ? eligiblePreferences : preferencesList;
+
+            // Give priority to DRUG type preferences if available to make substances more prevalent
+            const drugPrefs = prefsToTry.filter(p => p.type === 'DRUG' || p.subType);
+            const selectedPrefList = (drugPrefs.length > 0 && Math.random() < 0.8) ? drugPrefs : prefsToTry;
+            const chosenPreference = this._getRandomElement(selectedPrefList);
 
             if (chosenPreference) {
                 let candidateItemTypes = this.itemTypes.filter(it => this._itemTypeMatchesPreference(it, chosenPreference, streetCredGlobal));
@@ -833,21 +841,20 @@ export class CustomerManager {
                         }
                     }
                     if (possibleQualityIndices.length === 0) {
-                        debugLogger.log('CustomerManager', `Item type ${selectedType.id} cannot meet quality criteria of preference for ${customerInstance.name}`);
-                    } else {
-                        const qualityIndex = this._getRandomElement(possibleQualityIndices);
-                        const quality = qualityLevelsForType[qualityIndex];
-                        itemToSell = {
-                            id: selectedType.id,
-                            name: selectedType.name,
-                            itemTypeObj: selectedType,
-                            quality,
-                            qualityIndex,
-                            description: selectedType.description,
-                        };
-                        debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${customerInstance.name}`);
-                        return itemToSell;
+                        possibleQualityIndices = [0]; // Default fallback if no quality indices matched
                     }
+                    const qualityIndex = this._getRandomElement(possibleQualityIndices);
+                    const quality = qualityLevelsForType[qualityIndex];
+                    itemToSell = {
+                        id: selectedType.id,
+                        name: selectedType.name,
+                        itemTypeObj: selectedType,
+                        quality,
+                        qualityIndex,
+                        description: selectedType.description,
+                    };
+                    debugLogger.log('CustomerManager', `Generated item from sellPreference: ${itemToSell.name} for ${customerInstance.name}`);
+                    return itemToSell;
                 }
             }
         }

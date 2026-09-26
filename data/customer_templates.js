@@ -26,9 +26,10 @@ export const customerTemplates = {
                 ]
             },
             "sellPreference": { "or": [
-                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.7 },
-                { "type": "DRUG", "subType": "SYNTHETIC_CANNABINOID", "quality": 0, "chance": 0.1 },
-                { "type": "DRUG", "subType": "STIMULANT", "quality": 0, "chance": 0.05 }
+                { "type": "DRUG", "subType": "SYNTHETIC_CANNABINOID", "quality": 0, "chance": 0.4 },
+                { "type": "DRUG", "subType": "STIMULANT", "quality": 0, "chance": 0.3 },
+                { "type": "DRUG", "subType": "OPIATE", "quality": 0, "chance": 0.3 },
+                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.4 }
             ]},
             "priceToleranceFactor": 0.5,
             "negotiationResists": true,
@@ -919,8 +920,9 @@ export const customerTemplates = {
                 ]
             },
             "sellPreference": { "or": [
-                { "type": "INFORMATION", "quality": 2 },
-                { "id": "questionable_jewelry", "quality": 2 }
+                { "type": "DRUG", "quality": 2, "chance": 0.5 },
+                { "type": "INFORMATION", "quality": 2, "chance": 0.4 },
+                { "id": "questionable_jewelry", "quality": 2, "chance": 0.3 }
             ]},
             "priceToleranceFactor": 1.8,
             "negotiationResists": true,
@@ -1359,9 +1361,10 @@ export const customerTemplates = {
                 "exclude": { "type": "METHAMPHETAMINE", "subType": "SYNTHETIC_CANNABINOID" }
             },
             "sellPreference": { "or": [
-                { "type": "STOLEN_GOOD", "maxQuality": 1, "maxBaseValue": 100, "chance": 0.8 },
-                { "id": "burner_phone", "chance": 0.1 },
-                { "type": "DRUG", "subType": "NOOTROPIC", "quality": 0, "chance": 0.05 }
+                { "type": "DRUG", "subType": "CANNABINOID", "maxQuality": 1, "chance": 0.5 },
+                { "type": "DRUG", "subType": "PARTY", "maxQuality": 1, "chance": 0.4 },
+                { "type": "STOLEN_GOOD", "maxQuality": 1, "maxBaseValue": 100, "chance": 0.4 },
+                { "id": "burner_phone", "chance": 0.1 }
             ]},
             "priceToleranceFactor": 0.9,
             "negotiationResists": false,
