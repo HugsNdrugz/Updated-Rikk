@@ -1,6 +1,6 @@
 // utils.js
 
-export const DEBUG_MODE = localStorage.getItem('rikkDebugMode') === 'true' || false;
+export const DEBUG_MODE = (typeof localStorage !== 'undefined' && localStorage.getItem('rikkDebugMode') === 'true') || false;
 
 export const debugLogger = {
     log: (component, message, data) => {
