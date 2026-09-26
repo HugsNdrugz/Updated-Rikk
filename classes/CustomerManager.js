@@ -54,9 +54,6 @@ export class CustomerManager {
         this.SNITCH_ARCHETYPE_KEY = "SNITCH"; // Make sure this matches the key in customer_templates.js
         this.lastArchetypeKey = null; // Track last selected archetype to prevent back-to-back repeats
 
-        // For Oddity generation
-        this.CRAVING_THRESHOLD_FOR_ODDITIES = 4; // Defined in CONFIG before, now class member for clarity
-        this.ODDITY_SELL_CHANCE_HIGH_CRAVING = 0.02; // 2% chance if craving is high
     }
 
     /**
@@ -737,11 +734,6 @@ export class CustomerManager {
         if (preference.subType && itemType.subType !== preference.subType) return false;
         if (typeof preference.maxBaseValue === 'number' && itemType.baseValue > preference.maxBaseValue) return false;
 
-        // Oddities should only be generated if explicitly requested by subType "ODDITY" or specific item id
-        if (itemType.subType === "ODDITY" && preference.subType !== "ODDITY" && !preference.id) {
-            return false;
-        }
-
         // Progression gating: high-tier items require street cred progression
         if (streetCredGlobal < 5 && itemType.baseValue > 120) return false;
         if (streetCredGlobal < 15 && itemType.baseValue > 200) return false;
@@ -760,46 +752,7 @@ export class CustomerManager {
         }
         let itemToSell = null;
 
-        // 1. Attempt to generate ODDITY based on high craving
-        if (customerInstance &&
-            customerInstance.addictionStatus &&
-            customerInstance.addictionStatus.isAddicted &&
-            customerInstance.addictionStatus.cravingLevel >= this.CRAVING_THRESHOLD_FOR_ODDITIES) {
-
-            if (Math.random() < this.ODDITY_SELL_CHANCE_HIGH_CRAVING) {
-                let weirdItemPool = [];
-                if (template && template.itemPoolWeird && template.itemPoolWeird.length > 0) {
-                    weirdItemPool = template.itemPoolWeird;
-                } else {
-                    weirdItemPool = this.itemTypes.filter(it => it.subType === "ODDITY").map(it => it.id);
-                }
-
-                if (weirdItemPool.length > 0) {
-                    const selectedWeirdItemId = this._getRandomElement(weirdItemPool);
-                    const selectedType = this.itemTypes.find(it => it.id === selectedWeirdItemId);
-                    if (selectedType) {
-                        const qualityLevelsForType = this.itemQualityLevels[selectedType.type] || ['Standard'];
-                        const qualityIndex = 0; // Oddities usually have one quality
-                        const quality = qualityLevelsForType[qualityIndex];
-                        itemToSell = {
-                            id: selectedType.id,
-                            name: selectedType.name,
-                            itemTypeObj: selectedType,
-                            quality,
-                            qualityIndex,
-                            description: selectedType.description,
-                            purchasePrice: Math.max(CONFIG.MIN_ITEM_PRICE, Math.round(selectedType.baseValue * (this.itemQualityModifiers[selectedType.type]?.[qualityIndex] || 1.0) * (0.2 + Math.random() * 0.2))),
-                        };
-                        debugLogger.log('CustomerManager', `Generated ODDITY item for addicted customer ${customerInstance.name}: ${itemToSell.name}`);
-                        return itemToSell; // Successfully generated an oddity
-                    }
-                }
-            } else {
-                 debugLogger.log('CustomerManager', `Customer ${customerInstance.name} is highly addicted (craving: ${customerInstance.addictionStatus.cravingLevel}) but did NOT roll to sell an ODDITY this time.`);
-            }
-        }
-
-        // 2. If no oddity, try to generate item based on customer's sellPreference (template.gameplayConfig.sellPreference)
+        // Generate item based on customer's sellPreference (template.gameplayConfig.sellPreference)
         if (!itemToSell && template && template.gameplayConfig && template.gameplayConfig.sellPreference) {
             const sellPref = template.gameplayConfig.sellPreference;
             let preferencesList = [];

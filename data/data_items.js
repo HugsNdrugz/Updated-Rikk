@@ -54,11 +54,6 @@ export const itemTypes = [
         { "type": "statChange", "target": "player", "stat": "heat", "amount": 3, "chance": 1.0, "message": "That laptop was definitely hot. Heat's up." }
       ]
     },
-    // --- New Oddities (STOLEN_GOOD subType ODDITY) ---
-    { id: "blueprint_for_squirrel_armor", name: "Blueprint for Squirrel Armor", baseValue: 15, range: 10, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "Detailed schematics for tiny, acorn-resistant battle gear. Seems legit."},
-    { id: "perfectly_normal_rock_portal_key", name: "Perfectly Normal Rock (Portal Key?)", baseValue: 20, range: 15, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "Just a rock. Or is it? Feels... tingly. Probably just a rock."},
-    { id: "sentient_dust_bunny_wisdom", name: "Sentient Dust Bunny (Contains Wisdom)", baseValue: 10, range: 5, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "A surprisingly philosophical dust bunny. Might whisper secrets if you listen hard enough."},
-    { id: "half_baked_invention_idea", name: "Half-Baked Invention Idea (Napkin)", baseValue: 5, range: 4, type: "STOLEN_GOOD", subType: "ODDITY", heat: 0, description: "A scrawled diagram on a greasy napkin. Involves rubber chickens and a small fusion reactor."},
     // --- Information & Tools ---
     { id: "info_cops", name: "Intel: Cop Patrol Routes", baseValue: 75, range: 25, type: "INFORMATION", heat: 0, effect: "reduce_heat_small", description: "Know where the 5-0 ain't."},
     { id: "info_rival", name: "Intel: Rival Stash Location", baseValue: 150, range: 50, type: "INFORMATION", heat: 1, effect: "rival_op_chance", description: "Knowledge is power... and profit."},

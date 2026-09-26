@@ -6,8 +6,6 @@ import { customerTemplates } from '../data/customer_templates.js';
 import { itemTypes, ITEM_QUALITY_LEVELS, ITEM_QUALITY_MODIFIERS } from '../data/data_items.js';
 import { StreetCredManager } from '../managers/StreetCredManager.js';
 import { LoyaltyManager } from '../managers/LoyaltyManager.js';
-import { WorldEventManager } from '../managers/WorldEventManager.js';
-import { ItemEffectManager } from '../managers/ItemEffectManager.js';
 
 console.log("==========================================");
 console.log("RUNNING RIGOROUS TEST SUITE");
@@ -35,10 +33,11 @@ runTest("Syntax Check Across Project JS Files", () => {
 });
 
 // 2. Data Integrity Checks
-runTest("Data Integrity: customer_templates.js", () => {
+runTest("Data Integrity: customer_templates.js Contexts & Archetypes", () => {
     if (!customerTemplates || typeof customerTemplates !== 'object') throw new Error("customerTemplates is missing or not an object");
 
     const requiredKeys = ['key', 'baseName', 'avatarUrl', 'baseStats', 'gameplayConfig', 'dialogue'];
+
     for (const [archetypeKey, template] of Object.entries(customerTemplates)) {
         for (const reqKey of requiredKeys) {
             if (!(reqKey in template)) {
@@ -51,8 +50,12 @@ runTest("Data Integrity: customer_templates.js", () => {
     }
 });
 
-runTest("Data Integrity: data_items.js", () => {
+runTest("Data Integrity: data_items.js No Oddities", () => {
     if (!Array.isArray(itemTypes) || itemTypes.length === 0) throw new Error("itemTypes must be a non-empty array");
+    const oddities = itemTypes.filter(item => item.subType === 'ODDITY');
+    if (oddities.length > 0) {
+        throw new Error(`Expected 0 oddity items, found ${oddities.length}`);
+    }
     const requiredItemKeys = ['id', 'name', 'baseValue', 'type'];
     itemTypes.forEach(item => {
         for (const reqKey of requiredItemKeys) {
