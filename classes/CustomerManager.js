@@ -396,7 +396,7 @@ export class CustomerManager {
             } else {
                 customerInstance.currentItemName = itemContext.name;
                 const rikkBaseSellPrice = this._calculateItemValue(itemContext, false, { playerSkills, activeWorldEvents, customerInstance, combinedWorldEffects });
-                let customerOfferPrice = Math.round(rikkBaseSellPrice * (template.priceToleranceFactor || 1.0));
+                let customerOfferPrice = Math.round(rikkBaseSellPrice * (customerTemplate.priceToleranceFactor || 1.0));
                 customerOfferPrice = Math.min(customerOfferPrice, customerInstance.cashOnHand);
                 const askText = `So, Rikk, that ${itemContext.quality} ${itemContext.name}... what's the word? I got $${customerOfferPrice} burnin' a hole.`;
                 dialogue.push({ speaker: "customer", text: askText });
@@ -406,7 +406,7 @@ export class CustomerManager {
                 } else {
                     choices.push({ text: `Serve 'em ($${customerOfferPrice}) (Short!)`, outcome: { type: "sell_to_customer" }, disabled: true });
                 }
-                if (!template.negotiationResists && rikkBaseSellPrice > customerOfferPrice + CONFIG.HAGGLE_PRICE_DIFFERENCE_THRESHOLD) {
+                if (!customerTemplate.negotiationResists && rikkBaseSellPrice > customerOfferPrice + CONFIG.HAGGLE_PRICE_DIFFERENCE_THRESHOLD) {
                     const hagglePrice = Math.min(customerInstance.cashOnHand, Math.round((rikkBaseSellPrice + customerOfferPrice) / 2));
                     choices.push({ text: `Haggle (Aim $${hagglePrice})`, outcome: { type: "negotiate_sell", item: itemContext, proposedPrice: hagglePrice, originalOffer: customerOfferPrice } });
                 }
