@@ -43,10 +43,8 @@ This document summarizes potential bugs, issues, and suggestions identified duri
    - **Potential Bugs & Issues:**
      - **`_getDialogue` Fallback Logic:** Complex fallback for missing dialogue, especially nested greetings. Templates should ideally be complete.
      - **`_calculateItemValue` Debugger Calls:** Ensure `debugLogger` calls are safe even if `utils.js` or `DEBUG_MODE` has issues.
-     - **`generatePastorJonesInteraction` Persistence:** Pastor Jones might not be persisted if the customer pool is full. This needs a design decision if he's critical.
    - **Suggestions:**
      - Enforce template completeness to simplify `_getDialogue`.
-     - Implement a clear strategy for persisting unique characters like Pastor Jones.
 
 ### 5. `classes/ContactsAppManager.js`
    - **Potential Bugs & Issues:**

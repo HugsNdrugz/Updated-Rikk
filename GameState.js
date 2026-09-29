@@ -24,8 +24,7 @@ class GameState {
                 warrens: 0
             },
             communityFigures: {
-                mama_carter: 0, // Reputation with Mama Carter
-                pastor_jones: 0  // Reputation with Pastor Jones
+                mama_carter: 0 // Reputation with Mama Carter
             }
         };
         this.playerSkills = {
@@ -35,7 +34,7 @@ class GameState {
         };
 
         // Inventory & Items
-        this.inventory = [];
+        this.inventory = config.PRESERVED_INVENTORY ?? (config.DEFAULT_STARTING_INVENTORY ? JSON.parse(JSON.stringify(config.DEFAULT_STARTING_INVENTORY)) : []);
         this.MAX_INVENTORY_SLOTS = config.MAX_INVENTORY_SLOTS ?? 10;
 
         // World & Events
@@ -235,14 +234,14 @@ class GameState {
         // Preserved or Defaulted values based on NG+
         // config.STARTING_CASH is used here because initializeNewGameState sets it to the preserved cash.
         this.cash = config.STARTING_CASH ?? 0;
-        this.inventory = config.PRESERVED_INVENTORY ?? [];
+        this.inventory = config.PRESERVED_INVENTORY ?? (config.DEFAULT_STARTING_INVENTORY ? JSON.parse(JSON.stringify(config.DEFAULT_STARTING_INVENTORY)) : []);
         this.heat = config.PRESERVED_HEAT ?? 0;
 
         this.streetCred = config.PRESERVED_STREET_CRED ?? {
             global: config.STARTING_STREET_CRED ?? 0, // Fallback to default starting_street_cred
             factions: { police: 0, zetas_cartel: 0 },
             districts: { downtown: 0, warrens: 0 },
-            communityFigures: { mama_carter: 0, pastor_jones: 0 }
+            communityFigures: { mama_carter: 0 }
         };
         this.playerSkills = config.PRESERVED_PLAYER_SKILLS ?? { negotiator: 0, appraiser: 0, lowProfile: 0 };
         this.loyalty = config.PRESERVED_LOYALTY ?? {};
@@ -306,8 +305,7 @@ class GameState {
                     warrens: savedState.streetCred.districts?.warrens ?? 0
                 },
                 communityFigures: {
-                    mama_carter: savedState.streetCred.communityFigures?.mama_carter ?? 0,
-                    pastor_jones: savedState.streetCred.communityFigures?.pastor_jones ?? 0 // Handles if pastor_jones is not in an older save
+                    mama_carter: savedState.streetCred.communityFigures?.mama_carter ?? 0
                 }
             };
         } else {
@@ -316,7 +314,7 @@ class GameState {
                 global: typeof savedState.streetCred === 'number' ? savedState.streetCred : (config.STARTING_STREET_CRED ?? 0),
                 factions: { police: 0, zetas_cartel: 0 },
                 districts: { downtown: 0, warrens: 0 },
-                communityFigures: { mama_carter: 0, pastor_jones: 0 }
+                communityFigures: { mama_carter: 0 }
             };
         }
         this.playerSkills = savedState.playerSkills ? { ...this.playerSkills, ...savedState.playerSkills } : this.playerSkills;

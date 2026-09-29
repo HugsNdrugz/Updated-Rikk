@@ -2233,9 +2233,10 @@ export const customerTemplates = {
                 ]
             },
             "sellPreference": { "or": [
-                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.6 },
-                { "id": "half_baked_invention_idea", "chance": 0.2 },
-                { "id": "blueprint_for_squirrel_armor", "chance": 0.2 }
+                { "type": "DRUG", "subType": "STIMULANT", "chance": 0.6 },
+                { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 },
+                { "id": "half_baked_invention_idea", "chance": 0.05 },
+                { "id": "blueprint_for_squirrel_armor", "chance": 0.05 }
             ]},
             "priceToleranceFactor": 0.7,
             "negotiationResists": true,
@@ -2462,11 +2463,11 @@ export const customerTemplates = {
             },
             "sellPreference": {
                 "or": [
-                    { "id": "perfectly_normal_rock_portal_key" },
-                    { "id": "sentient_dust_bunny_wisdom" },
-                    { "subType": "PSYCHEDELIC_MILD", "chance": 0.4, "maxQuality": 1 },
-                    { "subType": "PSYCHEDELIC", "quality": 0, "chance": 0.2 },
-                    { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.3 }
+                    { "type": "DRUG", "subType": "PSYCHEDELIC_MILD", "chance": 0.5, "maxQuality": 1 },
+                    { "type": "DRUG", "subType": "PSYCHEDELIC", "quality": 0, "chance": 0.3 },
+                    { "id": "perfectly_normal_rock_portal_key", "chance": 0.05 },
+                    { "id": "sentient_dust_bunny_wisdom", "chance": 0.05 },
+                    { "type": "STOLEN_GOOD", "quality": 0, "chance": 0.1 }
                 ]
             },
             "priceToleranceFactor": 1.1,
@@ -2752,53 +2753,6 @@ export const customerTemplates = {
             ]
         }
     },
-    "PASTOR_JONES": {
-        "key": "PASTOR_JONES",
-        "baseName": "Pastor Jones",
-        "baseStats": { "mood": "calm", "loyalty": 50 },
-        "dialogue": {
-            "greeting": [{ "lines": ["Blessings upon you, my child.", "The Spirit led me to your door today.", "Peace be with you, Rikk. I was hoping we might speak."] }],
-            "offerCommunityHelp": [{ "lines": [
-                "Rikk, the community center is in need of certain... supplies for our youth program. Items that are, shall we say, more readily found outside conventional avenues. Your discretion would be paramount.",
-                "Our young flock requires materials for their activities, my son. Some of these are not easily sourced through standard means. I believe your... particular talents... could be a blessing in acquiring them quietly.",
-                "I'm seeking your assistance, Rikk, for our youth outreach. There are necessities that the usual channels don't provide. Would you consider helping us navigate this... unconventional marketplace... for the children's sake?"
-            ] }],
-            "rikkAgreesToHelpPastor": [{ "lines": [
-                "Consider it done, Pastor. For the kids, of course. I understand the need for... quiet arrangements.",
-                "I'm happy to help the community, Pastor. I'll see what I can do to find what you need, no questions asked from my end.",
-                "For the youth program? Say no more. I'll handle the... logistics. You can count on me."
-            ] }],
-            "pastorThanksForHelp": [{ "lines": [
-                "The Lord truly works in mysterious ways, Rikk. Thank you. This will make a tangible difference in young lives. Your... discretion is also a gift.",
-                "May your kindness be returned to you tenfold, my son. The children will benefit greatly, and your understanding of the... delicate nature of this request... is appreciated.",
-                "You have a generous spirit, Rikk, and a practical wisdom. Thank you for this blessing to our community, and for handling it so... thoughtfully."
-            ] }],
-            "pastorDeclinesHelp": [{ "lines": [
-                "I understand, Rikk. The path is not always clear, and some burdens are not for everyone to carry. May peace be with you nonetheless.",
-                "The Lord will provide another way, my son. Thank you for your candor. We all have our own paths to walk in this complex world.",
-                "That is unfortunate, but I respect your decision. Not all tasks are suited to all hands. Blessings to you, Rikk."
-            ] }],
-            "rikkDeclinesPastor": [{ "lines": [
-                "Sorry, Pastor. That's a path I can't walk right now, even for a good cause.",
-                "I wish I could help the youth program, Pastor, but my hands are tied with other... commitments. My apologies.",
-                "Regrettably, Pastor, I must decline. Some waters are too murky for me at the moment. I hope you understand."
-            ] }],
-            "customerScaredOff": [{ "lines": [
-                "I sense trouble on the horizon, Rikk. I must depart before harm comes to our work.",
-                "The atmosphere has grown turbulent. I shall take my leave now.",
-                "Let us reconvene when the air is clearer, my son."
-            ] }],
-            "interruption_sirens_nearby": [{ "lines": [
-                "The sirens grow near... I must not bring unwanted scrutiny upon our flock. Blessings, Rikk.",
-                "Authorities are approaching. It is wise that we part ways for now.",
-                "I hear the flashing lights of the law. Until next time, Rikk."
-            ] }]
-        },
-        "itemPool": [],
-        "sellsOnly": false,
-        "priceToleranceFactor": 1.0,
-        "gameplayConfig": { "isUnique": true, "canSpawnNormally": false }
-    }
 };
 
 export const genericDialogueTemplates = {
