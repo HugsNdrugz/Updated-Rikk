@@ -1,20 +1,13 @@
-/* assets/css/main_menu.css */
+/* assets/css/main_menu.css (159 lines) */
 /* === REVISED MAIN MENU STYLES === */
 #main-menu-nav {
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 #main-menu-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
+    display: block;
     width: 100%;
-    max-width: 500px;
     height: 100%;
     padding: var(--spacing-xl);
     position: relative;
@@ -22,142 +15,68 @@
     box-sizing: border-box;
 }
 
-/* === MAIN MENU HEADER & TITLE === */
-.main-menu-header {
-    margin-top: calc(var(--spacing-xl) * 1.5);
-    text-align: center;
-    animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.main-menu-title {
-    font-family: var(--font-display);
-    font-size: 2.8rem;
-    color: var(--color-accent-gold, #f39c12);
-    text-shadow: 0 0 15px rgba(243, 156, 18, 0.7), 0 0 30px rgba(243, 156, 18, 0.4), 0 4px 8px rgba(0, 0, 0, 0.9);
-    letter-spacing: 3px;
-    margin-bottom: var(--spacing-xs);
-    line-height: 1.1;
-}
-
-.main-menu-subtitle {
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--color-text-base, #ffffff);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    opacity: 0.85;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* === SPLIT BUTTON MAIN MENU STYLES === */
 .split-button-container {
-    width: 100%;
-    max-width: 320px;
-    margin-bottom: var(--spacing-xl);
+    position: absolute;
+    bottom: var(--spacing-xl);
+    left: var(--spacing-xl);
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--spacing-md);
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.text-btn-main {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    color: var(--color-accent-gold, #f39c12);
+    text-decoration: none;
+    cursor: pointer;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    transition: all var(--transition-duration-short) ease-in-out;
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.6), 0 2px 4px rgba(0, 0, 0, 0.9);
+    letter-spacing: 1px;
+    display: inline-block;
 }
 
-.menu-action-btn {
-    width: 100%;
-    display: flex;
+.text-btn-main:hover {
+    color: #ffd700;
+    text-shadow: 0 0 18px rgba(255, 215, 0, 0.9), 0 0 30px rgba(243, 156, 18, 0.6);
+    transform: translateX(6px) scale(1.03);
+}
+
+.text-btn-main:active {
+    opacity: 0.7;
+    transform: translateX(3px) scale(0.98);
+}
+
+/* Style the settings cog and continue button in the new layout */
+.split-button-container #settings-menu-btn,
+.split-button-container .btn-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    text-decoration: none;
-    border-radius: var(--button-border-radius, 12px);
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-sizing: border-box;
-    outline: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.menu-action-btn.primary {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 0.95), rgba(211, 84, 0, 0.9));
-    color: #000000;
-    border: 1px solid rgba(255, 220, 150, 0.6);
-    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.35), 0 0 10px rgba(0, 0, 0, 0.5);
-    font-weight: bold;
-}
-
-.menu-action-btn.primary:hover {
-    background: linear-gradient(135deg, rgba(243, 156, 18, 1), rgba(230, 126, 34, 1));
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5), 0 0 15px rgba(243, 156, 18, 0.3);
-    color: #000000;
-}
-
-.menu-action-btn.primary:active {
-    transform: translateY(-1px) scale(0.99);
-}
-
-.menu-action-btn.secondary {
     background: rgba(30, 30, 30, 0.85);
     color: var(--color-text-base, #ffffff);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: all var(--transition-duration-short) ease-in-out;
 }
 
-.menu-action-btn.secondary:hover {
-    background: rgba(45, 45, 45, 0.95);
-    border-color: var(--color-accent-gold, #f39c12);
-    color: var(--color-accent-gold, #f39c12);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
-}
-
-.menu-action-btn.settings {
-    background: rgba(20, 20, 20, 0.75);
-    color: var(--color-text-muted, #aaaaaa);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 1.1rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.menu-action-btn.settings:hover {
-    background: rgba(35, 35, 35, 0.9);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-}
-
-.menu-action-btn.settings i {
-    transition: transform 0.4s ease;
-}
-
-.menu-action-btn.settings:hover i {
-    transform: rotate(90deg);
+.split-button-container #settings-menu-btn:hover,
+.split-button-container .btn-icon:hover {
+    background-color: var(--color-accent-gold, #f39c12);
+    color: #000000;
+    border-color: #ffd700;
+    transform: rotate(60deg) scale(1.08);
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.8);
 }
 
 
@@ -174,7 +93,7 @@
     width: 90%;
     max-width: 450px;
     z-index: 1010;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.8);
     color: var(--color-text-base, #e0e0e0);
     max-height: 85vh;
     overflow-y: auto;
@@ -210,8 +129,9 @@
     height: 100%;
     z-index: 0;
     overflow: hidden;
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgba(0, 0, 0, 0);
 
+    /* Controlled by JS */
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
