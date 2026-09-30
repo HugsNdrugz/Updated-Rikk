@@ -1,177 +1,201 @@
-/* assets/css/main_menu.css (159 lines) */
+/* assets/css/main_menu.css */
 /* === REVISED MAIN MENU STYLES === */
 #main-menu-nav {
     width: 100%;
     height: 100%;
-    /* display: flex; Allow children to stack normally or be absolutely positioned */
-    /* flex-direction: column; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #main-menu-content {
-    display: block; /* Changed from flex */
-    /* flex-direction: column; */ /* No longer needed */
-    /* align-items: center; */ /* No longer needed, child is absolute */
-    /* justify-content: center; */ /* No longer needed, child is absolute */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
+    max-width: 500px;
     height: 100%;
-    padding: var(--spacing-xl); /* This padding defines the boundary for absolute positioning */
-    /* text-align: center; */ /* Not relevant for a container of an absolute element */
-    position: relative; /* For z-indexing content above lights and for positioning children */
+    padding: var(--spacing-xl);
+    position: relative;
     z-index: 10;
-    box-sizing: border-box; /* Ensure padding is included in width/height calculations */
+    box-sizing: border-box;
 }
 
-/* Settings Cog Button (within #main-menu-nav) */
-/* This specific selector is no longer needed as the button is part of the split container */
-/*
-#main-menu-nav #settings-menu-btn {
-    ...
+/* === MAIN MENU HEADER & TITLE === */
+.main-menu-header {
+    margin-top: calc(var(--spacing-xl) * 1.5);
+    text-align: center;
+    animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
-*/
 
+.main-menu-title {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    color: var(--color-accent-gold, #f39c12);
+    text-shadow: 0 0 15px rgba(243, 156, 18, 0.7), 0 0 30px rgba(243, 156, 18, 0.4), 0 4px 8px rgba(0, 0, 0, 0.9);
+    letter-spacing: 3px;
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.1;
+}
+
+.main-menu-subtitle {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-base, #ffffff);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* === SPLIT BUTTON MAIN MENU STYLES === */
-/* FIX for BUG-004: Button positioning and stacking */
-/* REPLACE the entire ".split-button-container" rule with this: */
 .split-button-container {
-    position: absolute; /* Use absolute positioning */
-    bottom: var(--spacing-xl); /* Position from the bottom */
-    left: var(--spacing-xl);   /* Position from the left */
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: var(--spacing-xl);
     display: flex;
-    flex-direction: column; /* This stacks the items vertically */
-    align-items: flex-start;   /* Align items to the start (left) */
-    gap: var(--spacing-lg);  /* Adds space between the text and the cog */
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ADD these new rules for the text button and to style the cog in its new context */
-.text-btn-main {
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.menu-action-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     font-family: var(--font-display);
-    font-size: 2.2rem; /* A larger, more prominent font size */
-    color: var(--color-accent-gold); /* This variable provides a yellow color */
+    font-size: 1.25rem;
     text-decoration: none;
+    border-radius: var(--button-border-radius, 12px);
     cursor: pointer;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    transition: opacity var(--transition-duration-short) ease-in-out;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+    outline: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
-.text-btn-main:hover {
-    opacity: 0.85; /* Slight fade on hover for feedback */
+.menu-action-btn.primary {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.95), rgba(211, 84, 0, 0.9));
+    color: #000000;
+    border: 1px solid rgba(255, 220, 150, 0.6);
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.35), 0 0 10px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
 }
 
-.text-btn-main:active {
-    opacity: 0.6; /* Loses alpha (becomes more transparent) on press */
+.menu-action-btn.primary:hover {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 1), rgba(230, 126, 34, 1));
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.5), 0 0 15px rgba(243, 156, 18, 0.3);
+    color: #000000;
 }
 
-/* Style the settings cog and continue button in the new layout */
-.split-button-container #settings-menu-btn,
-.split-button-container .btn-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
+.menu-action-btn.primary:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+.menu-action-btn.secondary {
+    background: rgba(30, 30, 30, 0.85);
+    color: var(--color-text-base, #ffffff);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.menu-action-btn.secondary:hover {
+    background: rgba(45, 45, 45, 0.95);
+    border-color: var(--color-accent-gold, #f39c12);
+    color: var(--color-accent-gold, #f39c12);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+.menu-action-btn.settings {
+    background: rgba(20, 20, 20, 0.75);
+    color: var(--color-text-muted, #aaaaaa);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 1.1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--color-surface-medium);
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-border-medium);
-    cursor: pointer;
-    transition: all var(--transition-duration-short) ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.split-button-container #settings-menu-btn:hover,
-.split-button-container .btn-icon:hover {
-    background-color: var(--color-surface-light);
-    color: var(--color-text-base);
-    transform: rotate(45deg);
+.menu-action-btn.settings:hover {
+    background: rgba(35, 35, 35, 0.9);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
-/* REMOVE or COMMENT OUT the old button styles to prevent conflicts */
-/*
-.split-button-container .btn-icon,
-.split-button-container #settings-menu-btn { ... }
-
-.split-button-container .btn-main { ... }
-*/
-
-/* FIX for BUG-004: Apply icon styles to settings button too */
-/*
-.split-button-container .btn-icon,
-.split-button-container #settings-menu-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50px;
-    flex-shrink: 0;
-    font-size: 1.2rem;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--color-button-secondary-bg);
-    color: var(--color-button-secondary-text);
-    border: none;
-    cursor: pointer;
-    transition: all var(--transition-duration-short) ease-in-out;
+.menu-action-btn.settings i {
+    transition: transform 0.4s ease;
 }
 
-.split-button-container #settings-menu-btn:hover {
-     background-color: var(--color-button-secondary-hover-bg);
-     transform: rotate(45deg);
+.menu-action-btn.settings:hover i {
+    transform: rotate(90deg);
 }
-
-
-.split-button-container .btn-main {
-
-    padding: var(--spacing-lg) var(--spacing-xl);
-    font-size: 1.4rem;
-    border-radius: 50px;
-    text-transform: capitalize;
-}
-*/
-
-/* Hover states are handled by .btn-primary:hover and .btn-secondary:hover in components.css */
-/*
-.split-button-container .btn:active {
-    transform: scale(0.97);
-}
-*/
 
 
 /* === Sub-Menu Panel Styles === */
 .submenu-panel {
-    background-color: var(--color-surface);
-    padding: var(--spacing-lg); /* Reduced padding slightly */
-    border-radius: var(--modal-border-radius);
-    border: 1px solid var(--color-border-strong); /* Themed */
+    background-color: var(--color-surface, #1e1e1e);
+    padding: var(--spacing-lg);
+    border-radius: var(--modal-border-radius, 12px);
+    border: 1px solid var(--color-border-strong, #333333);
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
-    max-width: 450px; /* Consistent with other modals */
-    z-index: 1010; /* Above other screen content */
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-    color: var(--color-text-base); /* Themed */
-    max-height: 85vh; /* FIX: Ensure panel doesn't exceed viewport height */
-    overflow-y: auto; /* FIX: Allow scrolling if content overflows */
+    max-width: 450px;
+    z-index: 1010;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    color: var(--color-text-base, #e0e0e0);
+    max-height: 85vh;
+    overflow-y: auto;
 }
 
-.submenu-panel h2 { /* Targets h2 within any submenu-panel, including the ones with specific IDs */
+.submenu-panel h2 {
     font-family: var(--font-display);
-    color: var(--color-primary);
+    color: var(--color-primary, #bb86fc);
     text-align: center;
     margin-bottom: var(--spacing-lg);
-    font-size: 1.6rem; /* Slightly reduced */
+    font-size: 1.6rem;
 }
 
 .submenu-panel p {
     text-align: center;
     margin-bottom: var(--spacing-md);
     line-height: 1.6;
-    color: var(--color-text-muted); /* Muted text for paragraphs */
+    color: var(--color-text-muted, #aaaaaa);
 }
 
-.submenu-back-btn { /* Style as a neutral button */
+.submenu-back-btn {
     display: block;
     margin: var(--spacing-xl) auto 0;
     min-width: 150px;
@@ -184,11 +208,10 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    z-index: 0; /* Sit behind the menu content but over the background image */
+    z-index: 0;
     overflow: hidden;
-    background-color: rgba(0, 0, 0, 0); /* Add a dark overlay to make lights pop */
+    background-color: rgba(0, 0, 0, 0.35);
 
-    /* Controlled by JS */
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
 }
@@ -200,7 +223,7 @@
 #start-screen .light {
     position: absolute;
     top: var(--spacing-md);
-    left: calc(var(--spacing-md) * -1); /* -10px */
+    left: calc(var(--spacing-md) * -1);
     width: 150%;
     height: 150%;
     opacity: 0;
