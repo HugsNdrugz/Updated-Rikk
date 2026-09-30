@@ -32,7 +32,7 @@
             <!-- Splash Screen -->
             <section id="splash-screen" class="screen active" aria-label="Loading Game">
                 <div class="content-wrapper">
-                    
+                    <h1 class="splash-title">STREET HUSTLE</h1>
                     <p class="outfit-splash-tagline">Loading the Hustle...</p>
                     <div class="loader"></div>
                 </div>
@@ -51,13 +51,15 @@
                 </div>
     
                 <nav id="main-menu-nav" aria-label="Main menu">
-                    <!-- FIX for BUG-004: Consolidate all buttons into one container -->
                     <div id="main-menu-content">
+                        <div class="main-menu-header">
+                            <h1 class="main-menu-title">STREET HUSTLE</h1>
+                            <p class="main-menu-subtitle">SURVIVE & THRIVE ON THE BLOCK</p>
+                        </div>
                         <div class="split-button-container">
-                            <a href="#" id="new-game-btn" class="text-btn-main">Run It</a>
-                            <a href="#" id="continue-game-btn" class="text-btn-main hidden" aria-label="Load Game">Continue</a>
-
-                            <button id="settings-menu-btn" aria-label="Settings"><i class="fas fa-cog"></i></button>
+                            <a href="#" id="new-game-btn" class="menu-action-btn primary"><i class="fas fa-play"></i><span>Run It</span></a>
+                            <a href="#" id="continue-game-btn" class="menu-action-btn secondary hidden" aria-label="Load Game"><i class="fas fa-redo"></i><span>Continue</span></a>
+                            <button id="settings-menu-btn" class="menu-action-btn settings" aria-label="Settings"><i class="fas fa-cog"></i><span>Settings</span></button>
                         </div>
                     </div>
                 </nav>
