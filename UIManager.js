@@ -507,8 +507,13 @@ class UIManager {
 
                 const itemTypeDesc = item.itemTypeObj && item.itemTypeObj.description ? item.itemTypeObj.description : 'No description available.';
                 const itemIconClass = item.itemTypeObj && item.itemTypeObj.type ? item.itemTypeObj.type.toLowerCase() : 'unknown';
-                // Default purchasePrice to 'N/A' if not present, though it should always be there for inventory items
-                const displayPrice = typeof item.purchasePrice === 'number' ? item.purchasePrice : 'N/A';
+                // Resolve price using item.purchasePrice, falling back to baseValue if available, or 'N/A'
+                let displayPrice = 'N/A';
+                if (typeof item.purchasePrice === 'number') {
+                    displayPrice = item.purchasePrice;
+                } else if (item.itemTypeObj && typeof item.itemTypeObj.baseValue === 'number') {
+                    displayPrice = item.itemTypeObj.baseValue;
+                }
 
                 itemDiv.innerHTML = `
                     <div class="item-icon ${itemIconClass}"></div>

@@ -92,6 +92,7 @@ const DEFAULT_STARTING_INVENTORY = [
         name: "Bag of 'Green Crack'",
         quality: "Decent Batch",
         qualityIndex: 1,
+        purchasePrice: 20,
         description: "Budget-friendly, gets the job done.",
         itemTypeObj: itemTypes.find(it => it.id === "green_crack")
     }
@@ -887,7 +888,7 @@ function handleChoice(outcome) {
                     const price = outcome.price;
                     game.removeCash(price);
                     uiManager.showCashChangeAnimation(-price); // Cash lost
-                    game.addItemToInventory({ ...outcome.item });
+                    game.addItemToInventory({ ...outcome.item, purchasePrice: price });
                     dealSuccess = true;
                     loyaltyChange = 2; // Successful buy
                     narrationText = `Rikk copped "${outcome.item.name}".`;
